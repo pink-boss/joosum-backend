@@ -19,7 +19,7 @@ func SwaggerRoutes(router *mux.Router) {
 		httpSwagger.URL("http://"+serverConnURL+"/swagger/doc.json"),
 		httpSwagger.DeepLinking(true),
 		httpSwagger.DocExpansion("none"),
-		httpSwagger.DomID("#swagger-ui"),
+		httpSwagger.DomID("swagger-ui"),
 	)
 
 	// Routes for GET method:

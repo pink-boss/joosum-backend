@@ -1,25 +1,3 @@
-<<<<<<< HEAD
-# A default .gitignore for Create Go App project.
-# Author: Vic Shóstak <vic@shostak.dev> (https://shostak.dev)
-# For more information, please visit https://create-go.app/
-
-# macOS
-**/.DS_store
-
-# Go builds
-**/app/
-**/build/
-
-# Temporary files
-tmp/
-
-# Node.js dependencies
-**/node_modules/
-
-# Files
-hosts.ini
-*.out
-=======
 # If you prefer the allow list template instead of the deny list, see community template:
 # https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
 #
@@ -41,4 +19,3 @@ hosts.ini
 
 # Go workspace file
 go.work
->>>>>>> 4789f89a806078ab973a9e274053c303498f94a4

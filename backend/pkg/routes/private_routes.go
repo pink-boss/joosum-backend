@@ -3,9 +3,10 @@ package routes
 import (
 	"net/http"
 
+	"joosum-backend/app/controllers"
+	"joosum-backend/pkg/configs"
+
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
-	"github.com/create-go-app/net_http-go-template/app/controllers"
-	"github.com/create-go-app/net_http-go-template/pkg/configs"
 	"github.com/gorilla/mux"
 )
 

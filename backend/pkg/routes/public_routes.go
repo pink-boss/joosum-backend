@@ -3,7 +3,8 @@ package routes
 import (
 	"net/http"
 
-	"github.com/create-go-app/net_http-go-template/app/controllers"
+	"joosum-backend/app/controllers"
+
 	"github.com/gorilla/mux"
 )
 

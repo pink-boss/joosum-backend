@@ -1,8 +1,8 @@
 package main
 
 import (
+	"github.com/create-go-app/net_http-go-template/app/controllers"
 	_ "github.com/create-go-app/net_http-go-template/docs" // load Swagger docs
-	"github.com/create-go-app/net_http-go-template/pkg/routes"
 	"github.com/gin-gonic/gin"
 	_ "github.com/joho/godotenv/autoload" // load .env file automatically
 )
@@ -38,11 +38,13 @@ func main() {
 	//utils.StartServerWithGracefulShutdown(server)
 
 	router := gin.Default()
-	handler, _ := routes.NewHandler()
 
-	router.GET("/", handler.GetMainPage)
-	router.GET("/api/v1/users", handler.GetUsers)
-	router.GET("/api/v1/users/:id", handler.GetUser)
+	router.GET("/", controllers.GetMainPage)
+	router.GET("/api/v1/users", controllers.GetUsers)
+	router.GET("/api/v1/users/:id", controllers.GetUser)
+	router.POST("/api/v1/users", controllers.CreateUser)
+	router.PUT("/api/v1/users/:id", controllers.UpdateUser)
+	router.DELETE("/api/v1/users/:id", controllers.DeleteUser)
 
-	router.Run(":5001") // listen and serve on 0.0.0.0:5000 (for windows "localhost:5000")
+	router.Run(":5001") // listen and serve on 0.0.0.0:5001 (for windows "localhost:5001")
 }

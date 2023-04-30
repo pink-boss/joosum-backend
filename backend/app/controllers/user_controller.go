@@ -1,8 +1,15 @@
 package controllers
 
 import (
+	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 )
+
+func GetMainPage(c *gin.Context) {
+	log.Println("Main page....")
+	c.String(http.StatusOK, "Main page for secure API!!")
+}
 
 // GetUsers func gets all exists users.
 // @Description Get all exists users.
@@ -12,12 +19,8 @@ import (
 // @Produce json
 // @Success 200 {array} models.User
 // @Router /v1/users [get]
-func GetUsers(w http.ResponseWriter, r *http.Request) {
-	// Define content type.
-	w.Header().Set("Content-Type", "application/json")
-
-	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte("ok"))
+func GetUsers(c *gin.Context) {
+	c.String(http.StatusOK, "GetUsers API!!")
 }
 
 // GetUser func gets one user by given ID or 404 error.
@@ -29,13 +32,14 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 // @Param id path string true "User ID"
 // @Success 200 {object} models.User
 // @Router /v1/user/{id} [get]
-func GetUser(w http.ResponseWriter, r *http.Request) {
-	// Define content type and CORS.
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+func GetUser(c *gin.Context) {
+	id := c.Param("id")
 
-	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte("ok"))
+	c.JSON(http.StatusOK, gin.H{
+		"id":    id,
+		"name":  "홍길동",
+		"email": "gildong@gmail.com",
+	})
 }
 
 // CreateUser func for creates a new user.
@@ -48,12 +52,8 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} models.User
 // @Security ApiKeyAuth
 // @Router /v1/user [post]
-func CreateUser(w http.ResponseWriter, r *http.Request) {
-	// Define content type and CORS.
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte("ok"))
+func CreateUser(c *gin.Context) {
+	c.String(http.StatusOK, "CreateUser API!!")
 }
 
 // UpdateUser func for updates user by given ID.
@@ -68,13 +68,8 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} models.User
 // @Security ApiKeyAuth
 // @Router /v1/user [put]
-func UpdateUser(w http.ResponseWriter, r *http.Request) {
-	// Define content type and CORS.
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
-	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte("ok"))
+func UpdateUser(c *gin.Context) {
+	c.String(http.StatusOK, "UpdateUser API!!")
 }
 
 // DeleteUser func for deletes user by given ID.
@@ -87,11 +82,6 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {string} string "ok"
 // @Security ApiKeyAuth
 // @Router /v1/user [delete]
-func DeleteUser(w http.ResponseWriter, r *http.Request) {
-	// Define content type and CORS.
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
-	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte("ok"))
+func DeleteUser(c *gin.Context) {
+	c.String(http.StatusOK, "DeleteUser API!!")
 }

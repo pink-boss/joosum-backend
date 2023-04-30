@@ -1,13 +1,10 @@
 package main
 
 import (
-	"github.com/create-go-app/net_http-go-template/pkg/configs"
-	"github.com/create-go-app/net_http-go-template/pkg/routes"
-	"github.com/create-go-app/net_http-go-template/pkg/utils"
-	"github.com/gorilla/mux"
-
 	_ "github.com/create-go-app/net_http-go-template/docs" // load Swagger docs
-	_ "github.com/joho/godotenv/autoload"                  // load .env file automatically
+	"github.com/create-go-app/net_http-go-template/pkg/routes"
+	"github.com/gin-gonic/gin"
+	_ "github.com/joho/godotenv/autoload" // load .env file automatically
 )
 
 // @title API
@@ -23,20 +20,29 @@ import (
 // @name Authorization
 // @BasePath /api
 func main() {
-	// Initialize a new router.
-	router := mux.NewRouter()
+	//Initialize a new router.
+	//router := mux.NewRouter()
+	//
+	//// List of app routes:
+	//routes.PublicRoutes(router)
+	//routes.PrivateRoutes(router)
+	//routes.SwaggerRoutes(router)
+	//
+	//// Register middleware.
+	//router.Use(mux.CORSMethodMiddleware(router)) // enable CORS
+	//
+	//// Initialize server.
+	//server := configs.ServerConfig(router)
+	//
+	//// Start API server.
+	//utils.StartServerWithGracefulShutdown(server)
 
-	// List of app routes:
-	routes.PublicRoutes(router)
-	routes.PrivateRoutes(router)
-	routes.SwaggerRoutes(router)
+	router := gin.Default()
+	handler, _ := routes.NewHandler()
 
-	// Register middleware.
-	router.Use(mux.CORSMethodMiddleware(router)) // enable CORS
+	router.GET("/", handler.GetMainPage)
+	router.GET("/api/v1/users", handler.GetUsers)
+	router.GET("/api/v1/users/:id", handler.GetUser)
 
-	// Initialize server.
-	server := configs.ServerConfig(router)
-
-	// Start API server.
-	utils.StartServerWithGracefulShutdown(server)
+	router.Run(":5001") // listen and serve on 0.0.0.0:5000 (for windows "localhost:5000")
 }

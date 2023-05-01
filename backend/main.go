@@ -10,6 +10,8 @@ import (
 
 	_ "joosum-backend/docs" // load Swagger docs
 
+	"github.com/create-go-app/net_http-go-template/app/controllers"
+	"github.com/gin-gonic/gin"
 	_ "github.com/joho/godotenv/autoload" // load .env file automatically
 )
 
@@ -28,7 +30,6 @@ import (
 func main() {
 	//db connnect
 
-	/*
 		 * MongoDB 연결 예시
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
@@ -47,7 +48,6 @@ func main() {
 		}
 		fmt.Println("Disconnected from MongoDB")
 
-	*/
 
 	// Initialize a new router.
 	router := mux.NewRouter()
@@ -56,13 +56,31 @@ func main() {
 	routes.PublicRoutes(router)
 	routes.PrivateRoutes(router)
 	routes.SwaggerRoutes(router)
+	//Initialize a new router.
+	//router := mux.NewRouter()
+	//
+	//// List of app routes:
+	//routes.PublicRoutes(router)
+	//routes.PrivateRoutes(router)
+	//routes.SwaggerRoutes(router)
+	//
+	//// Register middleware.
+	//router.Use(mux.CORSMethodMiddleware(router)) // enable CORS
+	//
+	//// Initialize server.
+	//server := configs.ServerConfig(router)
+	//
+	//// Start API server.
+	//utils.StartServerWithGracefulShutdown(server)
 
-	// Register middleware.
-	router.Use(mux.CORSMethodMiddleware(router)) // enable CORS
+	router := gin.Default()
 
-	// Initialize server.
-	server := configs.ServerConfig(router)
+	router.GET("/", controllers.GetMainPage)
+	router.GET("/api/v1/users", controllers.GetUsers)
+	router.GET("/api/v1/users/:id", controllers.GetUser)
+	router.POST("/api/v1/users", controllers.CreateUser)
+	router.PUT("/api/v1/users/:id", controllers.UpdateUser)
+	router.DELETE("/api/v1/users/:id", controllers.DeleteUser)
 
-	// Start API server.
-	utils.StartServerWithGracefulShutdown(server)
+	router.Run(":5001") // listen and serve on 0.0.0.0:5001 (for windows "localhost:5001")
 }

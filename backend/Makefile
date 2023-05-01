@@ -34,8 +34,11 @@ docker.network:
 
 docker.run: docker.network swag docker.net_http
 
+# 서버 컨테이너를 내렸다가 다시 띄움
+docker.restart: docker.stop docker.run
+
 docker.stop:
-	docker stop cgapp-net_http cgapp-postgres
+	docker stop cgapp-net_http
 
 docker.net_http: docker.build
 	docker run --rm -d \

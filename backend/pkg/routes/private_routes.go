@@ -1,6 +1,12 @@
 package routes
 
 import (
+	"net/http"
+
+	"joosum-backend/app/controllers"
+	"joosum-backend/pkg/configs"
+
+	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	"github.com/gorilla/mux"
 )
 

@@ -1,6 +1,10 @@
 package routes
 
 import (
+	"net/http"
+
+	"joosum-backend/app/controllers"
+
 	"github.com/gorilla/mux"
 )
 

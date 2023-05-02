@@ -1,16 +1,10 @@
 package main
 
 import (
-	"joosum-backend/pkg/configs"
-	"joosum-backend/pkg/routes"
-
-	"joosum-backend/pkg/utils"
-
-	"github.com/gorilla/mux"
-
 	_ "joosum-backend/docs" // load Swagger docs
 
-	"github.com/create-go-app/net_http-go-template/app/controllers"
+	"joosum-backend/app/controllers"
+
 	"github.com/gin-gonic/gin"
 	_ "github.com/joho/godotenv/autoload" // load .env file automatically
 )
@@ -30,7 +24,7 @@ import (
 func main() {
 	//db connnect
 
-		 * MongoDB 연결 예시
+		/* MongoDB 연결 예시
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
@@ -47,15 +41,8 @@ func main() {
 			log.Fatalf("Failed to disconnect MongoDB: %v", err)
 		}
 		fmt.Println("Disconnected from MongoDB")
+*/
 
-
-	// Initialize a new router.
-	router := mux.NewRouter()
-
-	// List of app routes:
-	routes.PublicRoutes(router)
-	routes.PrivateRoutes(router)
-	routes.SwaggerRoutes(router)
 	//Initialize a new router.
 	//router := mux.NewRouter()
 	//

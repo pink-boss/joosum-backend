@@ -1,4 +1,4 @@
-package configs
+package config
 
 import (
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"

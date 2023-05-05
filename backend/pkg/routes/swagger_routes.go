@@ -3,7 +3,7 @@ package routes
 import (
 	"net/http"
 
-	"joosum-backend/pkg/utils"
+	"joosum-backend/pkg/util"
 
 	"github.com/gorilla/mux"
 
@@ -13,7 +13,7 @@ import (
 // SwaggerRoutes func for describe group of Swagger routes.
 func SwaggerRoutes(router *mux.Router) {
 	// Define server settings:
-	serverConnURL, _ := utils.ConnectionURLBuilder("server")
+	serverConnURL, _ := util.ConnectionURLBuilder("server")
 
 	// Build Swagger route.
 	getSwagger := httpSwagger.Handler(

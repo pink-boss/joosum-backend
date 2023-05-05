@@ -1,4 +1,4 @@
-package configs
+package config
 
 import (
 	"net/http"
@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"joosum-backend/pkg/utils"
+	"joosum-backend/pkg/util"
 
 	"github.com/gorilla/mux"
 )
@@ -14,7 +14,7 @@ import (
 // ServerConfig func for configuration net/http app.
 func ServerConfig(router *mux.Router) *http.Server {
 	// Define server settings:
-	serverConnURL, _ := utils.ConnectionURLBuilder("server")
+	serverConnURL, _ := util.ConnectionURLBuilder("server")
 	readTimeoutSecondsCount, _ := strconv.Atoi(os.Getenv("SERVER_READ_TIMEOUT"))
 
 	// Return server configuration.

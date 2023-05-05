@@ -1,9 +1,9 @@
 package main
 
 import (
+	"joosum-backend/app/auth"
+	"joosum-backend/app/user"
 	_ "joosum-backend/docs" // load Swagger docs
-
-	"joosum-backend/app/controllers"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/joho/godotenv/autoload" // load .env file automatically
@@ -24,24 +24,24 @@ import (
 func main() {
 	//db connnect
 
-		/* MongoDB 연결 예시
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
+	/* MongoDB 연결 예시
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-		mongoURI := "mongodb://localhost:27017"
+	mongoURI := "mongodb://localhost:27017"
 
-		client, err := mongodb.GetMongoClient(ctx, mongoURI)
-		if err != nil {
-			log.Fatalf("Failed to connect to MongoDB: %v", err)
-		}
+	client, err := mongodb.GetMongoClient(ctx, mongoURI)
+	if err != nil {
+		log.Fatalf("Failed to connect to MongoDB: %v", err)
+	}
 
-		// MongoDB 클라이언트 연결을 종료합니다.
-		err = mongodb.DisconnectMongoClient(ctx)
-		if err != nil {
-			log.Fatalf("Failed to disconnect MongoDB: %v", err)
-		}
-		fmt.Println("Disconnected from MongoDB")
-*/
+	// MongoDB 클라이언트 연결을 종료합니다.
+	err = mongodb.DisconnectMongoClient(ctx)
+	if err != nil {
+		log.Fatalf("Failed to disconnect MongoDB: %v", err)
+	}
+	fmt.Println("Disconnected from MongoDB")
+	*/
 
 	//Initialize a new router.
 	//router := mux.NewRouter()
@@ -62,12 +62,8 @@ func main() {
 
 	router := gin.Default()
 
-	router.GET("/", controllers.GetMainPage)
-	router.GET("/api/v1/users", controllers.GetUsers)
-	router.GET("/api/v1/users/:id", controllers.GetUser)
-	router.POST("/api/v1/users", controllers.CreateUser)
-	router.PUT("/api/v1/users/:id", controllers.UpdateUser)
-	router.DELETE("/api/v1/users/:id", controllers.DeleteUser)
+	router.GET("/", user.GetMainPage)
+	router.GET("/auth/google", auth.VerifyGoogleAccessToken)
 
 	router.Run(":5001") // listen and serve on 0.0.0.0:5001 (for windows "localhost:5001")
 }

@@ -26,6 +26,7 @@ var userCollection *mongo.Collection
 // InitUserCollection은 전달된 클라이언트 인스턴스를 사용하여 userCollection 변수를 설정합니다.
 func InitUserCollection(client *mongo.Client, dbName string) {
 	userCollection = client.Database(dbName).Collection("users")
+	EnsureIndexes(userCollection)
 }
 
 // TO DO

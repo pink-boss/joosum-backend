@@ -6,10 +6,21 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type AccessTokenRequest struct {
+	AccessToken string `json:"accessToken"`
+}
+
 func VerifyGoogleAccessToken(c *gin.Context) {
-	accessToken := c.PostForm("accessToken")
+	var req AccessTokenRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	accessToken := req.AccessToken
+
 	if accessToken == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "access_token is required"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "accessToken is required"})
 		return
 	}
 

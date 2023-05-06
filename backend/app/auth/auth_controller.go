@@ -7,7 +7,7 @@ import (
 )
 
 func VerifyGoogleAccessToken(c *gin.Context) {
-	accessToken := c.PostForm("access_token")
+	accessToken := c.PostForm("accessToken")
 	if accessToken == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "access_token is required"})
 		return

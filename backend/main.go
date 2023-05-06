@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"joosum-backend/app/auth"
 	"joosum-backend/app/user"
 	_ "joosum-backend/docs" // load Swagger docs
@@ -66,6 +67,7 @@ func main() {
 	//utils.StartServerWithGracefulShutdown(server)
 
 	config.EnvConfig()
+	fmt.Println(config.GetEnvConfig("mongoDB"))
 
 	// TO DO:
 	// db loader 로 이동 예정

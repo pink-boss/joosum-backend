@@ -9,7 +9,6 @@ RUN go mod download
 
 # Copy the code into the container.
 COPY . .
-COPY config.yml .
 
 # Set necessary environmet variables needed for our image and build the API server.
 ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64

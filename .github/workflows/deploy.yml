@@ -31,8 +31,8 @@ jobs:
     - name: Build and push Docker image
       uses: docker/build-push-action@v2
       with:
-        context: .
-        file: ./Dockerfile
+        context: ./backend
+        file: ./backend/Dockerfile
         platforms: linux/amd64
         tags: joosum.kr.ncr.ntruss.com/joosum-backend:${{ steps.date.outputs.date }}
         push: true
@@ -48,7 +48,7 @@ jobs:
 
     - name: Deploy to VM
       env:
-        VM_HOST: 49.50.165.241
+        VM_HOST: ${{ secrets.VM_HOST_IP }}
         VM_USERNAME: root
         VM_PORT: 22
         VM_PASSWORD: ${{ secrets.VM_PASSWORD }}

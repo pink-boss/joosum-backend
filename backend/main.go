@@ -64,6 +64,7 @@ func main() {
 
 	router.GET("/", user.GetMainPage)
 	router.GET("/auth/google", auth.VerifyGoogleAccessToken)
+	router.POST("/auth/apple", auth.VerifyAppleAccessToken)
 
 	router.Run(":5001") // listen and serve on 0.0.0.0:5001 (for windows "localhost:5001")
 }

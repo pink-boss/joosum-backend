@@ -18,6 +18,10 @@ jobs:
       run: |
         echo "::set-output name=date::$(date +'%y%m%d')"
 
+    - name: Create config.yml
+      run: |
+        echo "${{ secrets.CONFIG_YML }}" > ./backend/config.yml
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1
 

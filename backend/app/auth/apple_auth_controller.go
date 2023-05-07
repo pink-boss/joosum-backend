@@ -17,6 +17,12 @@ type authResponse struct {
 	IdToken string `json:"id_token"`
 }
 
+type tokenResponse struct {
+	State   string
+	Code    string
+	IdToken string `json:"id_token"`
+}
+
 func VerifyAppleAccessToken(c *gin.Context) {
 	reqAuth := authRequest{}
 	if err := c.Bind(&reqAuth); err != nil {
@@ -42,5 +48,15 @@ func VerifyAppleAccessToken(c *gin.Context) {
 }
 
 func GetAppleToken(c *gin.Context) {
+	reqAuth := authRequest{}
+	res, err := getToken(reqAuth)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
+	c.JSON(http.StatusOK, gin.H{
+		"msg": "success",
+		"res": res,
+	})
 }

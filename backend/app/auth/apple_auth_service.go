@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"github.com/go-resty/resty/v2"
 	"github.com/golang-jwt/jwt/v4"
+	"joosum-backend/pkg/config"
 	"math/big"
+	"time"
 )
 
 const ApplePublicKey = "https://appleid.apple.com/auth/keys"
@@ -79,4 +81,44 @@ func verifyToken(reqAuth authRequest) (jwt.MapClaims, error) {
 	// todo 사용자 정보 및 로그인 히스토리 DB 에 저장
 
 	return claims, nil
+}
+
+func getToken(reqAuth authRequest) (interface{}, error) {
+	client := resty.New()
+
+	appleClaims := jwt.MapClaims{
+		"iss": config.GetEnvConfig("apple.teamID"),
+		"aud": "https://appleid.apple.com",
+		"exp": time.Now().UTC().Add(24 * time.Hour * 100).Unix(),
+		"iat": time.Now().UTC().Unix(),
+		"sub": config.GetEnvConfig("apple.clientID"),
+	}
+
+	appleToken := jwt.NewWithClaims(jwt.SigningMethodES256, appleClaims)
+	appleToken.Header["kid"] = config.GetEnvConfig("apple.keyID")
+
+	privateKey := config.GetEnvConfig("apple.privateKey")
+	clientSecret, err := appleToken.SignedString(privateKey)
+	if err != nil {
+		return nil, fmt.Errorf("fail to signing with private key: %v", err)
+	}
+
+	formData := map[string]string{
+		"client_id":     config.GetEnvConfig("apple.clientID"),
+		"client_secret": clientSecret,
+		"code":          reqAuth.Code,
+		"grant_type":    "authorization_code",
+		"redirect_uri":  "/redirect",
+	}
+
+	token := tokenResponse{}
+	uri := "https://appleid.apple.com/auth/token"
+	result, err := client.R().SetFormData(formData).SetResult(&token).Post(uri)
+	if err != nil {
+		return nil, fmt.Errorf("response get failure.: %v", err)
+	}
+
+	fmt.Println(appleClaims)
+	fmt.Println(result)
+	return result, nil
 }

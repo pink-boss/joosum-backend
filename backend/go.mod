@@ -12,11 +12,12 @@ require (
 	github.com/swaggo/swag v1.16.1
 )
 
-require github.com/spf13/viper v1.15.0
+require (
+	github.com/go-resty/resty/v2 v2.7.0
+	github.com/spf13/viper v1.15.0
+)
 
 require (
-	cloud.google.com/go/compute/metadata v0.2.0 // indirect
-	github.com/go-resty/resty/v2 v2.7.0 // indirect
 	cloud.google.com/go/compute v1.14.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect

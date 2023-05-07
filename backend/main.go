@@ -4,6 +4,7 @@ import (
 	"joosum-backend/app/auth"
 	"joosum-backend/app/user"
 	_ "joosum-backend/docs" // load Swagger docs
+	"joosum-backend/pkg/config"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/joho/godotenv/autoload" // load .env file automatically
@@ -59,6 +60,8 @@ func main() {
 	//
 	//// Start API server.
 	//utils.StartServerWithGracefulShutdown(server)
+
+	config.EnvConfig()
 
 	router := gin.Default()
 

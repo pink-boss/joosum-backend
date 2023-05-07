@@ -11,6 +11,7 @@ import (
 func PublicRoutes(router *gin.Engine) {
 
 	router.GET("/", user.GetMainPage)
+
 	authRouter := router.Group("/auth")
 	{
 		authRouter.POST("/google", auth.VerifyGoogleAccessToken)

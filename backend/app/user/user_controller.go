@@ -18,7 +18,6 @@ func GetMainPage(c *gin.Context) {
 // @Tags Users
 // @Accept json
 // @Produce json
-// @Success 200 {array} models.User
 // @Router /v1/users [get]
 func GetUsers(c *gin.Context) {
 	c.String(http.StatusOK, "GetUsers API!!")
@@ -31,7 +30,6 @@ func GetUsers(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "User ID"
-// @Success 200 {object} models.User
 // @Router /v1/user/{id} [get]
 func GetUser(c *gin.Context) {
 	email := c.Param("email")
@@ -50,7 +48,6 @@ func GetUser(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param email body string true "E-mail"
-// @Success 200 {object} models.User
 // @Security ApiKeyAuth
 // @Router /v1/user [post]
 func CreateUser(c *gin.Context) {
@@ -65,8 +62,6 @@ func CreateUser(c *gin.Context) {
 // @Produce json
 // @Param id body string true "User ID"
 // @Param user_status body integer true "User status"
-// @Param user_attrs body models.UserAttrs true "User attributes"
-// @Success 200 {object} models.User
 // @Security ApiKeyAuth
 // @Router /v1/user [put]
 func UpdateUser(c *gin.Context) {

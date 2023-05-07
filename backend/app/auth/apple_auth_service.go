@@ -30,7 +30,7 @@ type applePublicKey struct {
 	Keys []appleKey `json:"Keys"`
 }
 
-func getApplePublicKeys(reqAuth authResponse) (interface{}, error) {
+func verifyToken(reqAuth authRequest) (jwt.MapClaims, error) {
 	pubKey := applePublicKey{}
 	publicSecret := publicSecret{}
 	client := resty.New()
@@ -52,7 +52,7 @@ func getApplePublicKeys(reqAuth authResponse) (interface{}, error) {
 			if kid == v.Kid {
 				n, _ := base64.RawURLEncoding.DecodeString(v.N)
 				publicSecret.N = n
-				e, _ := base64.RawURLEncoding.DecodeString(v.E)
+				e, _ := base64.StdEncoding.DecodeString(v.E)
 				publicSecret.E = e
 				break
 			}
@@ -67,7 +67,16 @@ func getApplePublicKeys(reqAuth authResponse) (interface{}, error) {
 		return rsaKey, nil
 	})
 	if err != nil {
-		return nil, fmt.Errorf("unable to verify access token")
+		return nil, fmt.Errorf("unable to verify access token: %v", err)
 	}
-	return idTk, nil
+
+	// verify 가 완료된 idTk의 payload 값을 받아와서 맞는 정보인지 검증
+	claims, ok := idTk.Claims.(jwt.MapClaims)
+	if !ok && !idTk.Valid {
+		return nil, fmt.Errorf("token is not valid: %v", err)
+	}
+
+	// todo 사용자 정보 및 로그인 히스토리 DB 에 저장
+
+	return claims, nil
 }

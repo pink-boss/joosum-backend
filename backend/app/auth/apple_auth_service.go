@@ -42,7 +42,7 @@ func verifyToken(reqAuth authRequest) (jwt.MapClaims, error) {
 	result := pubKeyResult.Result().(*applePublicKey)
 
 	if err != nil {
-		return nil, fmt.Errorf("get apple public key err")
+		return nil, fmt.Errorf("get apple public key err: %v", err)
 	}
 
 	idTk, err := jwt.Parse(reqAuth.IdToken, func(token *jwt.Token) (interface{}, error) {
@@ -72,7 +72,7 @@ func verifyToken(reqAuth authRequest) (jwt.MapClaims, error) {
 		return nil, fmt.Errorf("unable to verify access token: %v", err)
 	}
 
-	// verify 가 완료된 idTk의 payload 값을 받아와서 맞는 정보인지 검증
+	// verify 가 완료된 idTk의 payload 값을 받아옴
 	claims, ok := idTk.Claims.(jwt.MapClaims)
 	if !ok && !idTk.Valid {
 		return nil, fmt.Errorf("token is not valid: %v", err)
@@ -103,22 +103,25 @@ func getToken(reqAuth authRequest) (interface{}, error) {
 		return nil, fmt.Errorf("fail to signing with private key: %v", err)
 	}
 
+	clientID := config.GetEnvConfig("apple.clientID")
 	formData := map[string]string{
-		"client_id":     config.GetEnvConfig("apple.clientID"),
+		"client_id":     clientID,
 		"client_secret": clientSecret,
 		"code":          reqAuth.Code,
 		"grant_type":    "authorization_code",
-		"redirect_uri":  "/redirect",
 	}
 
 	token := tokenResponse{}
 	uri := "https://appleid.apple.com/auth/token"
 	result, err := client.R().SetFormData(formData).SetResult(&token).Post(uri)
+	if result.IsError() {
+		return nil, fmt.Errorf("fail to get the token from apple: %v", result.RawResponse)
+	}
+
+	response := result.Result().(*tokenResponse)
 	if err != nil {
 		return nil, fmt.Errorf("response get failure.: %v", err)
 	}
 
-	fmt.Println(appleClaims)
-	fmt.Println(result)
-	return result, nil
+	return response, nil
 }

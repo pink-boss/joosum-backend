@@ -1,9 +1,15 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"joosum-backend/app/auth"
 	"joosum-backend/app/user"
 	_ "joosum-backend/docs" // load Swagger docs
+	"joosum-backend/pkg/config"
+	"joosum-backend/pkg/database"
+	"log"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/joho/godotenv/autoload" // load .env file automatically
@@ -60,11 +66,27 @@ func main() {
 	//// Start API server.
 	//utils.StartServerWithGracefulShutdown(server)
 
+	config.EnvConfig()
+	fmt.Println(config.GetEnvConfig("mongoDB"))
+
+	// TO DO:
+	// db loader 로 이동 예정
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	client, err := database.GetMongoClient(ctx, config.GetEnvConfig("mongoDB"))
+	if err != nil {
+		log.Fatalf("Failed to connect to MongoDB: %v", err)
+	}
+	user.InitUserCollection(client, config.GetEnvConfig("dbName"))
+	// 여기 까지
+
 	router := gin.Default()
 
 	router.GET("/", user.GetMainPage)
-	router.GET("/auth/google", auth.VerifyGoogleAccessToken)
+	router.POST("/auth/google", auth.VerifyGoogleAccessToken)
 	router.POST("/auth/apple", auth.VerifyAppleAccessToken)
+	router.GET("/user", user.GetUser)
 
 	router.Run(":5001") // listen and serve on 0.0.0.0:5001 (for windows "localhost:5001")
 }

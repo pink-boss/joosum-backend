@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"log"
 	"sync"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -23,10 +24,15 @@ func GetMongoClient(ctx context.Context, mongoURI string) (*mongo.Client, error)
 		clientOptions := options.Client().ApplyURI(mongoURI)
 		client, err := mongo.Connect(ctx, clientOptions)
 		if err != nil {
+			log.Fatal(err)
 			return
+		}
+		if client == nil {
+			log.Fatal("Mongo client is nil")
 		}
 		err = client.Ping(ctx, nil)
 		if err != nil {
+			log.Fatal(err)
 			return
 		}
 		clientInstance = client

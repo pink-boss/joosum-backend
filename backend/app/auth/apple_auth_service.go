@@ -42,7 +42,7 @@ func verifyToken(reqAuth authRequest) (jwt.MapClaims, error) {
 	result := pubKeyResult.Result().(*applePublicKey)
 
 	if err != nil {
-		return nil, fmt.Errorf("get apple public key err")
+		return nil, fmt.Errorf("get apple public key err: %v", err)
 	}
 
 	idTk, err := jwt.Parse(reqAuth.IdToken, func(token *jwt.Token) (interface{}, error) {
@@ -103,22 +103,26 @@ func getToken(reqAuth authRequest) (interface{}, error) {
 		return nil, fmt.Errorf("fail to signing with private key: %v", err)
 	}
 
+	clientID := config.GetEnvConfig("apple.clientID")
 	formData := map[string]string{
-		"client_id":     config.GetEnvConfig("apple.clientID"),
+		"client_id":     clientID,
 		"client_secret": clientSecret,
 		"code":          reqAuth.Code,
 		"grant_type":    "authorization_code",
-		"redirect_uri":  "/redirect",
 	}
 
 	token := tokenResponse{}
 	uri := "https://appleid.apple.com/auth/token"
 	result, err := client.R().SetFormData(formData).SetResult(&token).Post(uri)
+  
+	if result.IsError() {
+		return nil, fmt.Errorf("fail to get the token from apple: %v", result.RawResponse)
+	}
+
+	response := result.Result().(*tokenResponse)
 	if err != nil {
 		return nil, fmt.Errorf("response get failure.: %v", err)
 	}
 
-	fmt.Println(appleClaims)
-	fmt.Println(result)
-	return result, nil
+	return response, nil
 }

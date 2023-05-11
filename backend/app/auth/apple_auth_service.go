@@ -72,7 +72,7 @@ func verifyToken(reqAuth authRequest) (jwt.MapClaims, error) {
 		return nil, fmt.Errorf("unable to verify access token: %v", err)
 	}
 
-	// verify 가 완료된 idTk의 payload 값을 받아옴
+	// verify 가 완료된 idTk의 payload 값을 받아와서 맞는 정보인지 검증
 	claims, ok := idTk.Claims.(jwt.MapClaims)
 	if !ok && !idTk.Valid {
 		return nil, fmt.Errorf("token is not valid: %v", err)
@@ -114,6 +114,7 @@ func getToken(reqAuth authRequest) (interface{}, error) {
 	token := tokenResponse{}
 	uri := "https://appleid.apple.com/auth/token"
 	result, err := client.R().SetFormData(formData).SetResult(&token).Post(uri)
+  
 	if result.IsError() {
 		return nil, fmt.Errorf("fail to get the token from apple: %v", result.RawResponse)
 	}

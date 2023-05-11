@@ -11,6 +11,7 @@ type authRequest struct {
 	IdToken string `json:"id_token"`
 }
 
+
 type tokenResponse map[string]interface{}
 
 func VerifyAppleAccessToken(c *gin.Context) {

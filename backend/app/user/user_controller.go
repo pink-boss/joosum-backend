@@ -7,30 +7,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// GetMainPage
+// @Tags Main
+// @Summary
+// @Router / [get]
 func GetMainPage(c *gin.Context) {
 	log.Println("Main page....")
 	c.String(http.StatusOK, "Main page for secure API!!")
 }
 
-// GetUsers func gets all exists users.
-// @Description Get all exists users.
-// @Summary get all exists users
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Router /v1/users [get]
 func GetUsers(c *gin.Context) {
 	c.String(http.StatusOK, "GetUsers API!!")
 }
 
-// GetUser func gets one user by given ID or 404 error.
-// @Description Get user by given Email.
-// @Summary get user by given Email
-// @Tags User
-// @Accept json
-// @Produce json
-// @Param id path string true "User ID"
-// @Router /v1/user/{id} [get]
 func GetUser(c *gin.Context) {
 	email := c.Param("email")
 	user, err := GetUserByEmail(email)
@@ -41,43 +30,14 @@ func GetUser(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-// CreateUser func for creates a new user.
-// @Description Create a new user.
-// @Summary create a new user
-// @Tags User
-// @Accept json
-// @Produce json
-// @Param email body string true "E-mail"
-// @Security ApiKeyAuth
-// @Router /v1/user [post]
 func CreateUser(c *gin.Context) {
 	c.String(http.StatusOK, "CreateUser API!!")
 }
 
-// UpdateUser func for updates user by given ID.
-// @Description Update user.
-// @Summary update user
-// @Tags User
-// @Accept json
-// @Produce json
-// @Param id body string true "User ID"
-// @Param user_status body integer true "User status"
-// @Security ApiKeyAuth
-// @Router /v1/user [put]
 func UpdateUser(c *gin.Context) {
 	c.String(http.StatusOK, "UpdateUser API!!")
 }
 
-// DeleteUser func for deletes user by given ID.
-// @Description Delete user by given ID.
-// @Summary delete user by given ID
-// @Tags User
-// @Accept json
-// @Produce json
-// @Param id body string true "User ID"
-// @Success 200 {string} string "ok"
-// @Security ApiKeyAuth
-// @Router /v1/user [delete]
 func DeleteUser(c *gin.Context) {
 	c.String(http.StatusOK, "DeleteUser API!!")
 }

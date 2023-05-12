@@ -9,12 +9,12 @@ import (
 	_ "github.com/joho/godotenv/autoload" // load .env file automatically
 )
 
-// @title API
+// @title Joosum App
 // @version 1.0
-// @description This is an auto-generated API Docs for Golang net/http Template.
+// @description This is API Docs for Joosum App.
 // @termsOfService http://swagger.io/terms/
-// @contact.name API Support
-// @contact.email your@mail.com
+// @contact.name Pinkboss
+// @contact.email pinkjoosum@gmail.com
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 // @securityDefinitions.apikey ApiKeyAuth

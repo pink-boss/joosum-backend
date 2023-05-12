@@ -14,9 +14,9 @@ type authRequest struct {
 type tokenResponse map[string]interface{}
 
 // VerifyAppleAccessToken
-// @Tags login
+// @Tags 로그인
 // @Summary 토큰 verify
-// @Router /api/auth/apple [post]
+// @Router /auth/apple [post]
 func VerifyAppleAccessToken(c *gin.Context) {
 	reqAuth := authRequest{}
 	if err := c.Bind(&reqAuth); err != nil {
@@ -42,9 +42,9 @@ func VerifyAppleAccessToken(c *gin.Context) {
 }
 
 // GetAppleToken
-// @Tags login
+// @Tags 로그인
 // @Summary access token, refresh 토큰 발급
-// @Router /api/auth/apple/token [post]
+// @Router /auth/apple/token [post]
 func GetAppleToken(c *gin.Context) {
 	reqAuth := authRequest{}
 	res, err := getToken(reqAuth)

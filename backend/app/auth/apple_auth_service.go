@@ -13,6 +13,7 @@ import (
 )
 
 const ApplePublicKey = "https://appleid.apple.com/auth/keys"
+const AppleBaseURL = "https://appleid.apple.com"
 
 type appleKey struct {
 	Kty string `json:"kty"`
@@ -88,7 +89,7 @@ func getToken(reqAuth authRequest) (interface{}, error) {
 
 	appleClaims := jwt.MapClaims{
 		"iss": config.GetEnvConfig("apple.teamID"),
-		"aud": "https://appleid.apple.com",
+		"aud": AppleBaseURL,
 		"exp": time.Now().UTC().Add(24 * time.Hour * 100).Unix(),
 		"iat": time.Now().UTC().Unix(),
 		"sub": config.GetEnvConfig("apple.clientID"),
@@ -112,9 +113,9 @@ func getToken(reqAuth authRequest) (interface{}, error) {
 	}
 
 	token := tokenResponse{}
-	uri := "https://appleid.apple.com/auth/token"
+	uri := AppleBaseURL + "/auth/token"
 	result, err := client.R().SetFormData(formData).SetResult(&token).Post(uri)
-  
+
 	if result.IsError() {
 		return nil, fmt.Errorf("fail to get the token from apple: %v", result.RawResponse)
 	}

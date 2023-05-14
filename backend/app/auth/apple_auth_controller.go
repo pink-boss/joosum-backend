@@ -47,7 +47,7 @@ func VerifyAppleAccessToken(c *gin.Context) {
 // @Router /api/auth/apple/token [post]
 func GetAppleToken(c *gin.Context) {
 	reqAuth := authRequest{}
-	res, err := getToken(reqAuth)
+	res, err := getTokenFromApple(reqAuth)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

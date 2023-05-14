@@ -23,3 +23,6 @@ go.work
 
 # private config file
 config.yml
+
+# pem key for apple login
+Apple_AuthKey.p8

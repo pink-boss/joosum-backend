@@ -1,12 +1,22 @@
 package routes
 
 import (
-	"github.com/gorilla/mux"
+	"joosum-backend/app/auth"
+	"joosum-backend/app/user"
+
+	"github.com/gin-gonic/gin"
 )
 
 // PublicRoutes func for describe group of public routes.
-func PublicRoutes(router *mux.Router) {
-	// Routes for GET method:
-	//router.HandleFunc("/api/v1/user/{id}", controllers.GetUser).Methods(http.MethodGet) // get one user by ID
-	//router.HandleFunc("/api/v1/users", controllers.GetUsers).Methods(http.MethodGet)    // Get list of all users
+func PublicRoutes(router *gin.Engine) {
+
+	router.GET("/", user.GetMainPage)
+
+	authRouter := router.Group("/auth")
+	{
+		authRouter.POST("/google", auth.VerifyGoogleAccessToken)
+		authRouter.POST("/apple", auth.VerifyAppleAccessToken)
+		authRouter.POST("/apple/token", auth.GetAppleToken)
+	}
+
 }

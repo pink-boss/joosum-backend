@@ -11,13 +11,17 @@ import (
 
 // GenerateNewJWTAccessToken func for generate a new JWT access (private) token
 // with user ID and permissions.
-func GenerateNewJWTAccessToken(credentials []string, id string) (string, error) {
+func GenerateNewJWTAccessToken(credentials []string, id, kid string) (string, error) {
 	// Catch JWT secret key from .env file.
 	secret := os.Getenv("JWT_SECRET_KEY")
 
 	// Create a new JWT access token and claims.
 	token := jwt.New(jwt.SigningMethodHS256)
+	headers := token.Header
 	claims := token.Claims.(jwt.MapClaims)
+
+	// Set public claims:
+	headers["kid"] = kid
 
 	// Set public claims:
 	claims["id"] = id

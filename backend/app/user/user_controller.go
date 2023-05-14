@@ -24,21 +24,21 @@ func GetUsers(c *gin.Context) {
 }
 
 // GetUser func gets one user by given ID or 404 error.
-// @Description Get user by given ID.
-// @Summary get user by given ID
+// @Description Get user by given Email.
+// @Summary get user by given Email
 // @Tags User
 // @Accept json
 // @Produce json
 // @Param id path string true "User ID"
 // @Router /v1/user/{id} [get]
 func GetUser(c *gin.Context) {
-	id := c.Param("id")
-
-	c.JSON(http.StatusOK, gin.H{
-		"id":    id,
-		"name":  "홍길동",
-		"email": "gildong@gmail.com",
-	})
+	email := c.Param("email")
+	user, err := GetUserByEmail(email)
+	if err != nil {
+		c.String(http.StatusNotFound, "User not found")
+		return
+	}
+	c.JSON(http.StatusOK, user)
 }
 
 // CreateUser func for creates a new user.

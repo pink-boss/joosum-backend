@@ -7,10 +7,13 @@ import (
 	"fmt"
 	"github.com/go-resty/resty/v2"
 	"github.com/golang-jwt/jwt/v4"
+	"joosum-backend/pkg/config"
 	"math/big"
+	"time"
 )
 
 const ApplePublicKey = "https://appleid.apple.com/auth/keys"
+const AppleBaseURL = "https://appleid.apple.com"
 
 type appleKey struct {
 	Kty string `json:"kty"`
@@ -30,7 +33,7 @@ type applePublicKey struct {
 	Keys []appleKey `json:"Keys"`
 }
 
-func getApplePublicKeys(reqAuth authResponse) (interface{}, error) {
+func verifyToken(reqAuth authRequest) (jwt.MapClaims, error) {
 	pubKey := applePublicKey{}
 	publicSecret := publicSecret{}
 	client := resty.New()
@@ -40,7 +43,7 @@ func getApplePublicKeys(reqAuth authResponse) (interface{}, error) {
 	result := pubKeyResult.Result().(*applePublicKey)
 
 	if err != nil {
-		return nil, fmt.Errorf("get apple public key err")
+		return nil, fmt.Errorf("get apple public key err: %v", err)
 	}
 
 	idTk, err := jwt.Parse(reqAuth.IdToken, func(token *jwt.Token) (interface{}, error) {
@@ -52,7 +55,7 @@ func getApplePublicKeys(reqAuth authResponse) (interface{}, error) {
 			if kid == v.Kid {
 				n, _ := base64.RawURLEncoding.DecodeString(v.N)
 				publicSecret.N = n
-				e, _ := base64.RawURLEncoding.DecodeString(v.E)
+				e, _ := base64.StdEncoding.DecodeString(v.E)
 				publicSecret.E = e
 				break
 			}
@@ -67,7 +70,60 @@ func getApplePublicKeys(reqAuth authResponse) (interface{}, error) {
 		return rsaKey, nil
 	})
 	if err != nil {
-		return nil, fmt.Errorf("unable to verify access token")
+		return nil, fmt.Errorf("unable to verify access token: %v", err)
 	}
-	return idTk, nil
+
+	// verify 가 완료된 idTk의 payload 값을 받아와서 맞는 정보인지 검증
+	claims, ok := idTk.Claims.(jwt.MapClaims)
+	if !ok && !idTk.Valid {
+		return nil, fmt.Errorf("token is not valid: %v", err)
+	}
+
+	// todo 사용자 정보 및 로그인 히스토리 DB 에 저장
+
+	return claims, nil
+}
+
+func getToken(reqAuth authRequest) (interface{}, error) {
+	client := resty.New()
+
+	appleClaims := jwt.MapClaims{
+		"iss": config.GetEnvConfig("apple.teamID"),
+		"aud": AppleBaseURL,
+		"exp": time.Now().UTC().Add(24 * time.Hour * 100).Unix(),
+		"iat": time.Now().UTC().Unix(),
+		"sub": config.GetEnvConfig("apple.clientID"),
+	}
+
+	appleToken := jwt.NewWithClaims(jwt.SigningMethodES256, appleClaims)
+	appleToken.Header["kid"] = config.GetEnvConfig("apple.keyID")
+
+	privateKey := config.GetEnvConfig("apple.privateKey")
+	clientSecret, err := appleToken.SignedString(privateKey)
+	if err != nil {
+		return nil, fmt.Errorf("fail to signing with private key: %v", err)
+	}
+
+	clientID := config.GetEnvConfig("apple.clientID")
+	formData := map[string]string{
+		"client_id":     clientID,
+		"client_secret": clientSecret,
+		"code":          reqAuth.Code,
+		"grant_type":    "authorization_code",
+	}
+
+	token := tokenResponse{}
+	uri := AppleBaseURL + "/auth/token"
+	result, err := client.R().SetFormData(formData).SetResult(&token).Post(uri)
+
+	if result.IsError() {
+		return nil, fmt.Errorf("fail to get the token from apple: %v", result.RawResponse)
+	}
+
+	response := result.Result().(*tokenResponse)
+	if err != nil {
+		return nil, fmt.Errorf("response get failure.: %v", err)
+	}
+
+	return response, nil
 }

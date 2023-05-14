@@ -1,28 +1,16 @@
 package routes
 
 import (
-	"net/http"
+	docs "joosum-backend/docs"
 
-	"joosum-backend/pkg/util"
-
-	"github.com/gorilla/mux"
-
-	httpSwagger "github.com/swaggo/http-swagger"
+	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // SwaggerRoutes func for describe group of Swagger routes.
-func SwaggerRoutes(router *mux.Router) {
-	// Define server settings:
-	serverConnURL, _ := util.ConnectionURLBuilder("server")
+func SwaggerRoutes(router *gin.Engine) {
+	docs.SwaggerInfo.BasePath = "/"
 
-	// Build Swagger route.
-	getSwagger := httpSwagger.Handler(
-		httpSwagger.URL("http://"+serverConnURL+"/swagger/doc.json"),
-		httpSwagger.DeepLinking(true),
-		httpSwagger.DocExpansion("none"),
-		httpSwagger.DomID("swagger-ui"),
-	)
-
-	// Routes for GET method:
-	router.PathPrefix("/swagger/").Handler(getSwagger).Methods(http.MethodGet) // get one user by ID
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 }

@@ -15,24 +15,6 @@ import (
 const ApplePublicKey = "https://appleid.apple.com/auth/keys"
 const AppleBaseURL = "https://appleid.apple.com"
 
-type appleKey struct {
-	Kty string `json:"kty"`
-	Kid string `json:"kid"`
-	Use string `json:"Use"`
-	Als string `json:"Als"`
-	N   string `json:"N"`
-	E   string `json:"E"`
-}
-
-type publicSecret struct {
-	N []byte
-	E []byte
-}
-
-type applePublicKey struct {
-	Keys []appleKey `json:"Keys"`
-}
-
 func verifyToken(reqAuth authRequest) (jwt.MapClaims, error) {
 	pubKey := applePublicKey{}
 	publicSecret := publicSecret{}

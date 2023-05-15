@@ -5,14 +5,6 @@ import (
 	"net/http"
 )
 
-type authRequest struct {
-	State   string
-	Code    string
-	IdToken string `json:"id_token"`
-}
-
-type tokenResponse map[string]interface{}
-
 // VerifyAppleAccessToken
 // @Tags login
 // @Summary 토큰 verify

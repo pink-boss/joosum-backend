@@ -8,6 +8,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/golang-jwt/jwt/v4"
 	"joosum-backend/pkg/config"
+	"joosum-backend/pkg/util"
 	"math/big"
 	"time"
 )
@@ -66,7 +67,7 @@ func verifyToken(reqAuth authRequest) (jwt.MapClaims, error) {
 	return claims, nil
 }
 
-func getToken(reqAuth authRequest) (interface{}, error) {
+func getTokenFromApple(reqAuth authRequest) (interface{}, error) {
 	client := resty.New()
 
 	appleClaims := jwt.MapClaims{
@@ -80,7 +81,11 @@ func getToken(reqAuth authRequest) (interface{}, error) {
 	appleToken := jwt.NewWithClaims(jwt.SigningMethodES256, appleClaims)
 	appleToken.Header["kid"] = config.GetEnvConfig("apple.keyID")
 
-	privateKey := config.GetEnvConfig("apple.privateKey")
+	privateKey, err := util.LoadPrivateKey("Apple_AuthKey.p8")
+	if err != nil {
+		return nil, fmt.Errorf("failed to get private key: %v", err)
+	}
+
 	clientSecret, err := appleToken.SignedString(privateKey)
 	if err != nil {
 		return nil, fmt.Errorf("fail to signing with private key: %v", err)

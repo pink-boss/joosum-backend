@@ -16,14 +16,14 @@ import (
 const ApplePublicKey = "https://appleid.apple.com/auth/keys"
 const AppleBaseURL = "https://appleid.apple.com"
 
-func verifyToken(reqAuth authRequest) (jwt.MapClaims, error) {
+func issueTokenFromApple(reqAuth authRequest) (interface{}, error) {
 	pubKey := applePublicKey{}
 	publicSecret := publicSecret{}
 	client := resty.New()
 
 	// 애플이 제공하는 public key 들을 가져옴
 	pubKeyResult, err := client.R().SetResult(&pubKey).Get(ApplePublicKey)
-	result := pubKeyResult.Result().(*applePublicKey)
+	JWKS := pubKeyResult.Result().(*applePublicKey)
 
 	if err != nil {
 		return nil, fmt.Errorf("get apple public key err: %v", err)
@@ -33,8 +33,8 @@ func verifyToken(reqAuth authRequest) (jwt.MapClaims, error) {
 		// kid 값 저장 | public key 대조에 필요하기 때문에
 		kid := token.Header["kid"].(string)
 
-		for _, v := range result.Keys {
-			// 받아온 public key중 id_token과 kid 일치하는지 확인 후 n, e 값 저장
+		for _, v := range JWKS.Keys {
+			// 받아온 public key 중 id_token 과 kid 일치하는지 확인 후 n, e 값 저장
 			if kid == v.Kid {
 				n, _ := base64.RawURLEncoding.DecodeString(v.N)
 				publicSecret.N = n
@@ -45,7 +45,7 @@ func verifyToken(reqAuth authRequest) (jwt.MapClaims, error) {
 		}
 		publicKeyE := binary.LittleEndian.Uint32(append(publicSecret.E, 0))
 
-		// 이 rsaKey로 id_token verify
+		// 이 rsaKey 로 id_token verify
 		rsaKey := &rsa.PublicKey{
 			N: new(big.Int).SetBytes(publicSecret.N),
 			E: int(publicKeyE),
@@ -63,38 +63,38 @@ func verifyToken(reqAuth authRequest) (jwt.MapClaims, error) {
 	}
 
 	// todo 사용자 정보 및 로그인 히스토리 DB 에 저장
+	fmt.Println(claims)
 
-	return claims, nil
-}
+	// 애플한테 access, refresh token 받기
 
-func getTokenFromApple(reqAuth authRequest) (interface{}, error) {
-	client := resty.New()
+	clientID := config.GetEnvConfig("apple.clientID")
+	teamID := config.GetEnvConfig("apple.teamID")
+	keyID := config.GetEnvConfig("apple.keyID")
 
 	appleClaims := jwt.MapClaims{
-		"iss": config.GetEnvConfig("apple.teamID"),
+		"iss": teamID,
 		"aud": AppleBaseURL,
 		"exp": time.Now().UTC().Add(24 * time.Hour * 100).Unix(),
 		"iat": time.Now().UTC().Unix(),
-		"sub": config.GetEnvConfig("apple.clientID"),
+		"sub": clientID,
 	}
 
 	appleToken := jwt.NewWithClaims(jwt.SigningMethodES256, appleClaims)
-	appleToken.Header["kid"] = config.GetEnvConfig("apple.keyID")
+	appleToken.Header["kid"] = keyID
 
 	privateKey, err := util.LoadPrivateKey("Apple_AuthKey.p8")
 	if err != nil {
 		return nil, fmt.Errorf("failed to get private key: %v", err)
 	}
 
-	clientSecret, err := appleToken.SignedString(privateKey)
+	signedToken, err := appleToken.SignedString(privateKey)
 	if err != nil {
 		return nil, fmt.Errorf("fail to signing with private key: %v", err)
 	}
 
-	clientID := config.GetEnvConfig("apple.clientID")
 	formData := map[string]string{
 		"client_id":     clientID,
-		"client_secret": clientSecret,
+		"client_secret": signedToken,
 		"code":          reqAuth.Code,
 		"grant_type":    "authorization_code",
 	}

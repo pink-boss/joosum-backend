@@ -97,6 +97,7 @@ func issueTokenFromApple(reqAuth authRequest) (interface{}, error) {
 		"client_secret": signedToken,
 		"code":          reqAuth.Code,
 		"grant_type":    "authorization_code",
+		"redirect_uri":  "https://39d0-121-130-33-16.ngrok-free.app/auth/apple/callback",
 	}
 
 	token := tokenResponse{}

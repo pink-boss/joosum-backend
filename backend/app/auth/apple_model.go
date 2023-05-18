@@ -6,7 +6,13 @@ type authRequest struct {
 	IdToken string `json:"id_token"`
 }
 
-type tokenResponse map[string]interface{}
+type tokenResponse struct {
+	AccessToken  string `json:"access_token"`
+	ExpiresIn    string `json:"expires_in"`
+	IdToken      string `json:"id_token"`
+	RefreshToken string `json:"refresh_token"`
+	TokenType    string `json:"token_type"`
+}
 
 type appleKey struct {
 	Kty string `json:"kty"`

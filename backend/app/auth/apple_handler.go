@@ -32,3 +32,16 @@ func IssueTokenFromApple(c *gin.Context) {
 		"data":    token,
 	})
 }
+
+func GetTokenFromApple(c *gin.Context) {
+	reqAuth := tokenResponse{}
+	if err := c.Bind(&reqAuth); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "binding failure"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "success",
+		"data":    reqAuth,
+	})
+}

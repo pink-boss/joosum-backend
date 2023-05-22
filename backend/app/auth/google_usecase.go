@@ -10,10 +10,10 @@ import (
 	"google.golang.org/api/option"
 )
 
-// validate google access token
-// if valid, return true
-// else, return false
-func ValidateAccessToken(accessToken string) (bool, error) {
+type GoogleUsecae struct {
+}
+
+func (GoogleUsecae) ValidateAccessToken(accessToken string) (bool, error) {
 	ctx := context.Background()
 
 	oauth2Service, err := oauth2.NewService(ctx, option.WithAPIKey(localConfig.GetEnvConfig("googleApiKey")))
@@ -37,7 +37,7 @@ func ValidateAccessToken(accessToken string) (bool, error) {
 	return false, fmt.Errorf("access token is not issued by this app")
 }
 
-func GetUserEmail(accessToken string) (string, error) {
+func (GoogleUsecae) GetUserEmail(accessToken string) (string, error) {
 	ctx := context.Background()
 
 	oauth2Service, err := oauth2.NewService(ctx, option.WithAPIKey(localConfig.GetEnvConfig("googleApiKey")))

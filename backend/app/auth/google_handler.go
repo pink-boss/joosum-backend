@@ -15,7 +15,7 @@ type GoogleHandler struct {
 	googleUsecae GoogleUsecae
 }
 
-func (h GoogleHandler) VerifyGoogleAccessToken(c *gin.Context) {
+func (h *GoogleHandler) VerifyGoogleAccessToken(c *gin.Context) {
 	var req AccessTokenRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
@@ -29,35 +29,36 @@ func (h GoogleHandler) VerifyGoogleAccessToken(c *gin.Context) {
 		return
 	}
 
-	valid, err := h.googleUsecae.ValidateAccessToken(accessToken)
+	if valid, err := h.googleUsecae.ValidateAccessToken(req.AccessToken); err != nil || !valid {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid access token"})
+		return
+	}
+
+	email, err := h.googleUsecae.GetUserEmail(accessToken)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	user, err := user.GetUserByEmail(email)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	if valid {
-		email, err := h.googleUsecae.GetUserEmail(accessToken)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-			return
-		}
-
-		user, err := user.RegisterUser(email, "google")
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		accessToken, refreshToken, err := h.authUsecae.GenerateNewJWTToken([]string{"USER", "ADMIN"}, user.Email)
-
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusOK, gin.H{"email": user.Email,
-			"accessToken":  accessToken,
-			"refreshToken": refreshToken})
-	} else {
-		c.JSON(http.StatusUnauthorized, gin.H{"valid": false})
+	if user == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"accessToken": "", "refreshToken": ""})
+		return
 	}
+
+	accessToken, refreshToken, err := h.authUsecae.GenerateNewJWTToken([]string{"USER", "ADMIN"}, email)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"accessToken":  accessToken,
+		"refreshToken": refreshToken})
+
 }

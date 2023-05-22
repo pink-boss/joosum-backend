@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"joosum-backend/app/user"
 	"joosum-backend/pkg/util"
 )
 
@@ -19,4 +20,12 @@ func (u *AuthUsecae) GenerateNewJWTToken(roles []string, email string) (string, 
 	}
 
 	return accessToken, refreshToken, nil
+}
+
+func (u *AuthUsecae) SignUp(email string, social string) (*user.User, error) {
+	user, err := user.CreatUser(email, social)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }

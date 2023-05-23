@@ -34,11 +34,11 @@ type appleKey struct {
 	E   string `json:"E"`
 }
 
-type publicSecret struct {
+type PublicSecret struct {
 	N []byte
 	E []byte
 }
 
-type applePublicKey struct {
+type ApplePublicKey struct {
 	Keys []appleKey `json:"Keys"`
 }

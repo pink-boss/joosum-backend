@@ -10,7 +10,7 @@ import (
 // @Summary id_token 을 verify 한 후 애플로 부터 토큰 발급
 // @Param request body auth.authRequest true "code 와 id_token"
 // @Success 200 {object} auth.tokenResponse
-// @Router /api/auth/apple [post]
+// @Router /auth/apple [post]
 func IssueTokenFromApple(c *gin.Context) {
 	reqAuth := authRequest{}
 	if err := c.Bind(&reqAuth); err != nil {

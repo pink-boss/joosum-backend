@@ -1,12 +1,11 @@
 package main
 
 import (
+	"github.com/gin-gonic/gin"
+	_ "github.com/joho/godotenv/autoload" // load .env file automatically
 	"joosum-backend/pkg/config"
 	"joosum-backend/pkg/routes"
 	"joosum-backend/pkg/util"
-
-	"github.com/gin-gonic/gin"
-	_ "github.com/joho/godotenv/autoload" // load .env file automatically
 )
 
 // @title Joosum App
@@ -25,10 +24,14 @@ func main() {
 	config.EnvConfig()
 
 	util.StartMongoDB()
+	util.LoadApplePublicKeys()
 
 	router := gin.Default()
 	routes.PublicRoutes(router)
 	routes.SwaggerRoutes(router)
+
+	// SwaggerRoutes 보다 위에 있으면 swagger 문서가 보이지 않음
+	routes.PrivateRoutes(router)
 
 	router.Run(":5001") // listen and serve on 0.0.0.0:5001 (for windows "localhost:5001")
 }

@@ -13,17 +13,17 @@ import (
 	"time"
 )
 
-const ApplePublicKey = "https://appleid.apple.com/auth/keys"
+const ApplePublicKeyURL = "https://appleid.apple.com/auth/keys"
 const AppleBaseURL = "https://appleid.apple.com"
 
 func issueTokenFromApple(reqAuth authRequest) (*clientResponse, error) {
-	pubKey := applePublicKey{}
-	publicSecret := publicSecret{}
+	pubKey := ApplePublicKey{}
+	publicSecret := PublicSecret{}
 	client := resty.New()
 
 	// 애플이 제공하는 public key 들을 가져옴
-	pubKeyResult, err := client.R().SetResult(&pubKey).Get(ApplePublicKey)
-	JWKS := pubKeyResult.Result().(*applePublicKey)
+	pubKeyResult, err := client.R().SetResult(&pubKey).Get(ApplePublicKeyURL)
+	JWKS := pubKeyResult.Result().(*ApplePublicKey)
 
 	if err != nil {
 		return nil, fmt.Errorf("get apple public key err: %v", err)

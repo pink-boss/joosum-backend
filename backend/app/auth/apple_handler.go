@@ -5,14 +5,6 @@ import (
 	"net/http"
 )
 
-type authRequest struct {
-	State   string
-	Code    string
-	IdToken string `json:"id_token"`
-}
-
-type tokenResponse map[string]interface{}
-
 // VerifyAppleAccessToken
 // @Tags login
 // @Summary 토큰 verify
@@ -47,7 +39,7 @@ func VerifyAppleAccessToken(c *gin.Context) {
 // @Router /api/auth/apple/token [post]
 func GetAppleToken(c *gin.Context) {
 	reqAuth := authRequest{}
-	res, err := getToken(reqAuth)
+	res, err := getTokenFromApple(reqAuth)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

@@ -5,11 +5,13 @@ import (
 	"net/http"
 )
 
-// VerifyAppleAccessToken
+// IssueTokenFromApple
 // @Tags 로그인
-// @Summary 토큰 verify
+// @Summary id_token 을 verify 한 후 애플로 부터 토큰 발급
+// @Param request body auth.authRequest true "code 와 id_token"
+// @Success 200 {object} auth.tokenResponse
 // @Router /auth/apple [post]
-func VerifyAppleAccessToken(c *gin.Context) {
+func IssueTokenFromApple(c *gin.Context) {
 	reqAuth := authRequest{}
 	if err := c.Bind(&reqAuth); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "binding failure"})
@@ -21,32 +23,14 @@ func VerifyAppleAccessToken(c *gin.Context) {
 		return
 	}
 
-	claims, err := verifyToken(reqAuth)
+	resToken, err := issueTokenFromApple(reqAuth)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"msg":    "success",
-		"claims": claims,
-	})
-}
-
-// GetAppleToken
-// @Tags 로그인
-// @Summary access token, refresh 토큰 발급
-// @Router /auth/apple/token [post]
-func GetAppleToken(c *gin.Context) {
-	reqAuth := authRequest{}
-	res, err := getTokenFromApple(reqAuth)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"msg": "success",
-		"res": res,
+	c.JSON(http.StatusOK, tokenResponse{
+		AccessToken:  resToken.IdToken,
+		RefreshToken: resToken.RefreshToken,
 	})
 }

@@ -15,6 +15,10 @@ type GoogleHandler struct {
 	googleUsecae GoogleUsecae
 }
 
+// VerifyGoogleAccessToken
+// @Tags 로그인
+// @Summary 토큰 verify
+// @Router /auth/google [post]
 func (h *GoogleHandler) VerifyGoogleAccessToken(c *gin.Context) {
 	var req AccessTokenRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

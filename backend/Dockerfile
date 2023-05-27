@@ -17,7 +17,7 @@ RUN go build -ldflags="-s -w" -o apiserver .
 FROM scratch
 
 # Copy binary and config files from /build to root folder of scratch container.
-COPY --from=builder ["/build/apiserver", "/build/config.yml", "/build/Apple_AuthKey.p8", "/"]
+COPY --from=builder ["/build/apiserver", "/build/config.yml", "/"]
 
 # Command to run when starting the container.
 ENTRYPOINT ["/apiserver"]

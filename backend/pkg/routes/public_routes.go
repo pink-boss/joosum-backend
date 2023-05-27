@@ -11,11 +11,12 @@ import (
 func PublicRoutes(router *gin.Engine) {
 
 	router.GET("/", user.GetMainPage)
+	googleHandler := auth.GoogleHandler{}
 
 	authRouter := router.Group("/auth")
 	{
-		authRouter.POST("/google", auth.VerifyGoogleAccessToken)
 		authRouter.POST("/apple", auth.IssueTokenFromApple)
+		authRouter.POST("/google", googleHandler.VerifyGoogleAccessToken)
 	}
 
 }

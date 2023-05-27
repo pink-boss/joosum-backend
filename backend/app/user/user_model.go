@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -13,9 +14,10 @@ import (
 // User 스키마 정의
 type User struct {
 	ID        primitive.ObjectID `bson:"_id,omitempty"`
-	UID       string             `bson:"uid"`
+	UserId    string             `bson:"user_id"`
 	Name      string             `bson:"name"`
 	Email     string             `bson:"email"`
+	Social    string             `bson:"social"`
 	CreatedAt time.Time          `bson:"created_at"`
 	UpdatedAt time.Time          `bson:"updated_at"`
 }
@@ -59,6 +61,37 @@ func FindUserByEmail(email string) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	return user, nil
+}
+
+func CreatUser(email string, socialType string) (*User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	uniqueKey := make(chan string)
+
+	go func() {
+		uid := uuid.New()
+		uniqueKey <- uid.String()
+	}()
+
+	uid := <-uniqueKey
+
+	user := &User{
+		UserId:    uid,
+		Email:     email,
+		Social:    socialType,
+		UpdatedAt: time.Now(),
+		CreatedAt: time.Now(),
+	}
+
+	result, err := userCollection.InsertOne(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+
+	user.ID = result.InsertedID.(primitive.ObjectID)
 
 	return user, nil
 }

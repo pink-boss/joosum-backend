@@ -1,6 +1,7 @@
 package user
 
 import (
+	"bytes"
 	"context"
 	"time"
 
@@ -10,6 +11,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+type UserModel struct{}
 
 // User 스키마 정의
 type User struct {
@@ -50,7 +53,7 @@ func EnsureIndexes(collection *mongo.Collection) error {
 }
 
 // FindUserByEmail은 주어진 이메일을 가진 사용자를 찾아 반환합니다.
-func FindUserByEmail(email string) (*User, error) {
+func (*UserModel)FindUserByEmail(email string) (*User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -65,15 +68,19 @@ func FindUserByEmail(email string) (*User, error) {
 	return user, nil
 }
 
-func CreatUser(email string, socialType string) (*User, error) {
+func (*UserModel)CreatUser(email string, socialType string) (*User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	uniqueKey := make(chan string)
 
+	// TO DO : uid generater 만들기
 	go func() {
+		s := "User-"
+		buf := bytes.NewBufferString(s)
 		uid := uuid.New()
-		uniqueKey <- uid.String()
+		buf.WriteString(uid.String())
+		uniqueKey <- buf.String()
 	}()
 
 	uid := <-uniqueKey

@@ -14,8 +14,8 @@ type AppleHandler struct {
 
 // VerifyAndIssueToken
 // @Tags 로그인
-// @Summary id_token 을 verify 한 후 애플로 부터 토큰 발급
-// @Param request body auth.authRequest true "code 와 id_token"
+// @Summary 애플로그인 후 받은 id token 을 verify 한 후 주섬 JWT 토큰 발급
+// @Param request body auth.authRequest true "애플로그인 후 받은 id token"
 // @Success 200 {object} auth.tokenResponse
 // @Router /auth/apple [post]
 func (h *AppleHandler) VerifyAndIssueToken(c *gin.Context) {

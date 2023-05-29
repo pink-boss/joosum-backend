@@ -1,7 +1,6 @@
 package tag
 
 import (
-	"joosum-backend/app/user"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -9,23 +8,24 @@ import (
 
 type TagHandler struct {
 	tagUsecae *TagUsecase
-	userUsecae *user.UserUsecase
 }
 
 type CreateTagRequest struct {
 	Name string `json:"name"`
 }
 
-// CreateTag
+// CreateTag godoc
 // @Tags 태그
 // @Summary 태그를 생성합니다.
+// @Description 사용자 아이디와 태그 이름을 통해 새로운 태그를 생성합니다.
+// @Accept  json
+// @Produce  json
+// @Param request body CreateTagRequest true "태그 생성 요청 본문"
+// @Success 200 {object} Tag "태그 생성이 성공적으로 이루어졌을 때 새로 생성된 태그 객체 반환"
+// @Failure 400 {object} httputil.HTTPError "요청 본문이 유효하지 않을 때 반환합니다."
+// @Failure 401 {object} httputil.HTTPError "Authorization 헤더가 없을 때 반환합니다."
+// @Failure 500 {object} httputil.HTTPError "태그 생성 과정에서 오류가 발생한 경우 반환합니다."
 // @Router /tags [post]
-// @Param request body CreateTagRequest
-// @Success      200  {array}   Tag
-// @Failure      400  {object}  httputil.HTTPError
-// @Failure      401  {object}  httputil.HTTPError
-// @Failure      404  {object}  httputil.HTTPError
-// @Failure      500  {object}  httputil.HTTPError
 func (h TagHandler) CreateTag(c *gin.Context) {
 	userId, exists := c.Get("user_id")
 	if !exists {
@@ -52,12 +52,16 @@ func (h TagHandler) CreateTag(c *gin.Context) {
 	c.JSON(http.StatusOK, tags)
 }
 
-// GetTags
+// GetTags godoc
 // @Tags 태그
 // @Summary 태그를 조회합니다.
+// @Description 사용자 아이디를 통해 해당 사용자의 모든 태그를 조회합니다.
+// @Accept  json
+// @Produce  json
+// @Success 200 {array} Tag "태그 조회가 성공적으로 이루어졌을 때 태그 배열 반환"
+// @Failure 401 {object} httputil.HTTPError "Authorization 헤더가 없을 때 반환합니다."
+// @Failure 500 {object} httputil.HTTPError "태그 조회 과정에서 오류가 발생한 경우 반환합니다."
 // @Router /tags [get]
-// @Success      200  {array}   Tag
-// @Failure      500  {object}  httputil.HTTPError
 func (h TagHandler) GetTags(c *gin.Context) {
 	userId, exists := c.Get("user_id")
 	if !exists {
@@ -77,15 +81,18 @@ func (h TagHandler) GetTags(c *gin.Context) {
 	c.JSON(http.StatusOK, tags)
 }
 
-// DeleteTag
+// DeleteTag godoc
 // @Tags 태그
 // @Summary 태그를 삭제합니다.
-// @Param        id   path      int  true  "Account ID"
+// @Description 사용자 아이디와 태그 아이디를 통해 해당 태그를 삭제합니다.
+// @Accept  json
+// @Produce  json
+// @Param id path int true "태그 ID"
+// @Success 200 {boolean} true "태그 삭제가 성공적으로 이루어졌을 때 true 반환"
+// @Failure 400 {object} httputil.HTTPError "요청이 유효하지 않을 때 반환합니다."
+// @Failure 401 {object} httputil.HTTPError "Authorization 헤더가 없을 때 반환합니다."
+// @Failure 500 {object} httputil.HTTPError "태그 삭제 과정에서 오류가 발생한 경우 반환합니다."
 // @Router /tags/{id} [delete]
-// @Success      200  {boolean} 	true
-// @Failure      400  {object}  httputil.HTTPError
-// @Failure      404  {object}  httputil.HTTPError
-// @Failure      500  {object}  httputil.HTTPError
 func (h TagHandler) DeleteTag(c *gin.Context) {
 	userId, exists := c.Get("user_id")
 	if !exists {

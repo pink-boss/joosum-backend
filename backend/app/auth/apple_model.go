@@ -1,28 +1,12 @@
 package auth
 
 type authRequest struct {
-	Code    string
-	IdToken string `json:"id_token"`
-}
-
-//	{
-//	 "access_token": "adg61...67Or9",
-//	 "token_type": "Bearer",
-//	 "expires_in": 3600,
-//	 "refresh_token": "rca7...lABoQ",
-//	 "id_token": "eyJra...96sZg"
-//	}
-type clientResponse struct {
-	AccessToken  string `json:"access_token"`
-	ExpiresIn    int64  `json:"expires_in"`
-	IdToken      string `json:"id_token"`
-	RefreshToken string `json:"refresh_token"`
-	TokenType    string `json:"token_type"`
+	IdToken string `json:"idToken" example:"eyJra...LFmZQ"`
 }
 
 type tokenResponse struct {
-	AccessToken  string `json:"access_token" example:"adg61...67Or9"`
-	RefreshToken string `json:"refresh_token" example:"rca7...lABoQ"`
+	AccessToken  string `json:"accessToken" example:"eyJhb...S_HK4"`
+	RefreshToken string `json:"refreshToken" example:"46c67...2f891"`
 }
 
 type appleKey struct {

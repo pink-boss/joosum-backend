@@ -21,6 +21,8 @@ type User struct {
 	Name      string             `bson:"name"`
 	Email     string             `bson:"email"`
 	Social    string             `bson:"social"`
+	Gender    string             `bson:"gender"`
+	Age       uint8              `bson:"age"`
 	CreatedAt time.Time          `bson:"created_at"`
 	UpdatedAt time.Time          `bson:"updated_at"`
 }
@@ -68,7 +70,7 @@ func (*UserModel)FindUserByEmail(email string) (*User, error) {
 	return user, nil
 }
 
-func (*UserModel)CreatUser(email string, socialType string) (*User, error) {
+func (*UserModel)CreatUser(userInfo User) (*User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -84,21 +86,23 @@ func (*UserModel)CreatUser(email string, socialType string) (*User, error) {
 	}()
 
 	uid := <-uniqueKey
-
-	user := &User{
+	newUserInfo := &User{
 		UserId:    uid,
-		Email:     email,
-		Social:    socialType,
-		UpdatedAt: time.Now(),
+		Name:      userInfo.Name,
+		Email:     userInfo.Email,
+		Social:    userInfo.Social,
+		Gender:    userInfo.Gender,
+		Age:       userInfo.Age,
 		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
-	result, err := userCollection.InsertOne(ctx, user)
+	result, err := userCollection.InsertOne(ctx, newUserInfo)
 	if err != nil {
 		return nil, err
 	}
 
-	user.ID = result.InsertedID.(primitive.ObjectID)
+	newUserInfo.ID = result.InsertedID.(primitive.ObjectID)
 
-	return user, nil
+	return newUserInfo, nil
 }

@@ -20,6 +20,8 @@ type CreateTagRequest struct {
 // @Tags 태그
 // @Summary 태그를 생성합니다.
 // @Router /tags [post]
+// @Accept  json
+// @Produce  json
 // @Param request body CreateTagRequest
 // @Success      200  {array}   Tag
 // @Failure      400  {object}  httputil.HTTPError

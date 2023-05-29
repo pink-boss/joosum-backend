@@ -22,9 +22,9 @@ type CreateTagRequest struct {
 // @Produce  json
 // @Param request body CreateTagRequest true "태그 생성 요청 본문"
 // @Success 200 {object} Tag "태그 생성이 성공적으로 이루어졌을 때 새로 생성된 태그 객체 반환"
-// @Failure 400 {object} httputil.HTTPError "요청 본문이 유효하지 않을 때 반환합니다."
-// @Failure 401 {object} httputil.HTTPError "Authorization 헤더가 없을 때 반환합니다."
-// @Failure 500 {object} httputil.HTTPError "태그 생성 과정에서 오류가 발생한 경우 반환합니다."
+// @Failure 400 {object} util.APIError "요청 본문이 유효하지 않을 때 반환합니다."
+// @Failure 401 {object} util.APIError "Authorization 헤더가 없을 때 반환합니다."
+// @Failure 500 {object} util.APIError "태그 생성 과정에서 오류가 발생한 경우 반환합니다."
 // @Router /tags [post]
 func (h TagHandler) CreateTag(c *gin.Context) {
 	userId, exists := c.Get("user_id")
@@ -59,8 +59,8 @@ func (h TagHandler) CreateTag(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Success 200 {array} Tag "태그 조회가 성공적으로 이루어졌을 때 태그 배열 반환"
-// @Failure 401 {object} httputil.HTTPError "Authorization 헤더가 없을 때 반환합니다."
-// @Failure 500 {object} httputil.HTTPError "태그 조회 과정에서 오류가 발생한 경우 반환합니다."
+// @Failure 401 {object} util.APIError "Authorization 헤더가 없을 때 반환합니다."
+// @Failure 500 {object} util.APIError "태그 조회 과정에서 오류가 발생한 경우 반환합니다."
 // @Router /tags [get]
 func (h TagHandler) GetTags(c *gin.Context) {
 	userId, exists := c.Get("user_id")
@@ -89,9 +89,9 @@ func (h TagHandler) GetTags(c *gin.Context) {
 // @Produce  json
 // @Param id path int true "태그 ID"
 // @Success 200 {boolean} true "태그 삭제가 성공적으로 이루어졌을 때 true 반환"
-// @Failure 400 {object} httputil.HTTPError "요청이 유효하지 않을 때 반환합니다."
-// @Failure 401 {object} httputil.HTTPError "Authorization 헤더가 없을 때 반환합니다."
-// @Failure 500 {object} httputil.HTTPError "태그 삭제 과정에서 오류가 발생한 경우 반환합니다."
+// @Failure 400 {object} util.APIError "요청이 유효하지 않을 때 반환합니다."
+// @Failure 401 {object} util.APIError "Authorization 헤더가 없을 때 반환합니다."
+// @Failure 500 {object} util.APIError "태그 삭제 과정에서 오류가 발생한 경우 반환합니다."
 // @Router /tags/{id} [delete]
 func (h TagHandler) DeleteTag(c *gin.Context) {
 	userId, exists := c.Get("user_id")

@@ -7,16 +7,15 @@ import (
 	"fmt"
 	"github.com/go-resty/resty/v2"
 	"github.com/golang-jwt/jwt/v4"
-	"joosum-backend/pkg/config"
-	"joosum-backend/pkg/util"
 	"math/big"
-	"time"
 )
 
 const ApplePublicKeyURL = "https://appleid.apple.com/auth/keys"
-const AppleBaseURL = "https://appleid.apple.com"
 
-func issueTokenFromApple(reqAuth authRequest) (*clientResponse, error) {
+type AppleUsecase struct {
+}
+
+func (AppleUsecase) VerifyAccessToken(reqAuth authRequest) (jwt.MapClaims, error) {
 	pubKey := ApplePublicKey{}
 	publicSecret := PublicSecret{}
 	client := resty.New()
@@ -52,6 +51,11 @@ func issueTokenFromApple(reqAuth authRequest) (*clientResponse, error) {
 		}
 		return rsaKey, nil
 	})
+
+	/**
+	[에러 종류]
+	- Token is expired
+	*/
 	if err != nil {
 		return nil, fmt.Errorf("unable to verify access token: %v", err)
 	}
@@ -63,52 +67,6 @@ func issueTokenFromApple(reqAuth authRequest) (*clientResponse, error) {
 	}
 
 	// todo 사용자 정보 및 로그인 히스토리 DB 에 저장
-	fmt.Println(claims)
 
-	// 애플한테 access, refresh token 받기
-
-	clientID := config.GetEnvConfig("apple.clientID")
-	teamID := config.GetEnvConfig("apple.teamID")
-	keyID := config.GetEnvConfig("apple.keyID")
-
-	appleClaims := jwt.MapClaims{
-		"iss": teamID,
-		"aud": AppleBaseURL,
-		"exp": time.Now().UTC().Add(24 * time.Hour * 100).Unix(),
-		"iat": time.Now().UTC().Unix(),
-		"sub": clientID,
-	}
-
-	appleToken := jwt.NewWithClaims(jwt.SigningMethodES256, appleClaims)
-	appleToken.Header["kid"] = keyID
-
-	privateKey, err := util.LoadPrivateKey("Apple_AuthKey.p8")
-	if err != nil {
-		return nil, fmt.Errorf("failed to get private key: %v", err)
-	}
-
-	signedToken, err := appleToken.SignedString(privateKey)
-	if err != nil {
-		return nil, fmt.Errorf("fail to signing with private key: %v", err)
-	}
-
-	formData := map[string]string{
-		"client_id":     clientID,
-		"client_secret": signedToken,
-		"code":          reqAuth.Code,
-		"grant_type":    "authorization_code",
-	}
-
-	resToken := clientResponse{}
-	uri := AppleBaseURL + "/auth/token"
-	result, err := client.R().SetFormData(formData).SetResult(&resToken).Post(uri)
-
-	if result.IsError() {
-		return nil, fmt.Errorf("fail to get the token from apple: %v", result.RawResponse)
-	}
-	if err != nil {
-		return nil, fmt.Errorf("response get failure.: %v", err)
-	}
-
-	return result.Result().(*clientResponse), nil
+	return claims, nil
 }

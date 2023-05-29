@@ -13,6 +13,7 @@ type GoogleHandler struct {
 	// please write private
 	authUsecae   AuthUsecae
 	googleUsecae GoogleUsecae
+	userUsecase user.UserUsecase
 }
 
 // VerifyGoogleAccessToken
@@ -44,7 +45,7 @@ func (h *GoogleHandler) VerifyGoogleAccessToken(c *gin.Context) {
 		return
 	}
 
-	user, err := user.GetUserByEmail(email)
+	user, err := h.userUsecase.GetUserByEmail(email)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

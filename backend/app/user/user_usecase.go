@@ -1,16 +1,20 @@
 package user
 
-func GetUserByEmail(email string) (*User, error) {
-	user, err := FindUserByEmail(email)
+type UserUsecase struct {
+	userModel UserModel
+}
+
+func (u UserUsecase)GetUserByEmail(email string) (*User, error) {
+	user, err := u.userModel.FindUserByEmail(email)
 	if err != nil {
 		return nil, err
 	}
 	return user, err
 }
 
-func RegisterUser(email string, socialType string) (*User, error) {
+func (u UserUsecase)RegisterUser(email string, socialType string) (*User, error) {
 	// find email for check user exist
-	isExistUser, err := GetUserByEmail(email)
+	isExistUser, err := u.GetUserByEmail(email)
 	if err == nil {
 		return nil, err
 	}
@@ -19,7 +23,7 @@ func RegisterUser(email string, socialType string) (*User, error) {
 		return nil, err
 	}
 
-	user, err := CreatUser(email, socialType)
+	user, err := u.userModel.CreatUser(email, socialType)
 	if err != nil {
 		return nil, err
 	}

@@ -7,6 +7,7 @@ import (
 
 type AuthUsecae struct {
 	salt string
+	userModel user.UserModel
 }
 
 func (u *AuthUsecae) GenerateNewJWTToken(roles []string, email string) (string, string, error) {
@@ -23,7 +24,7 @@ func (u *AuthUsecae) GenerateNewJWTToken(roles []string, email string) (string, 
 }
 
 func (u *AuthUsecae) SignUp(email string, social string) (*user.User, error) {
-	user, err := user.CreatUser(email, social)
+	user, err := u.userModel.CreatUser(email, social)
 	if err != nil {
 		return nil, err
 	}

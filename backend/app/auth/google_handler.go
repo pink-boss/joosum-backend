@@ -18,7 +18,7 @@ type GoogleHandler struct {
 
 // @Summary Google 액세스 토큰 검증
 // @Description Google 액세스 토큰의 유효성을 검사하고 새 JWT 토큰 쌍을 생성합니다.
-// @Tags Google
+// @Tags Auth
 // @Accept  json
 // @Produce  json
 // @Param request body AccessTokenRequest true "액세스 토큰 요청 본문"

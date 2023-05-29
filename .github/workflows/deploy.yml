@@ -59,6 +59,11 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
+      
+    - name: Generate date
+      id: date
+      run: |
+        echo "::set-output name=date::$(date +'%y%m%d')"
 
     - name: Deploy to VM
       env:

@@ -1,6 +1,7 @@
 package user
 
 import (
+	"bytes"
 	"context"
 	"time"
 
@@ -11,6 +12,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+type UserModel struct{}
+
 // User 스키마 정의
 type User struct {
 	ID        primitive.ObjectID `bson:"_id,omitempty"`
@@ -18,6 +21,8 @@ type User struct {
 	Name      string             `bson:"name"`
 	Email     string             `bson:"email"`
 	Social    string             `bson:"social"`
+	Gender    string             `bson:"gender"`
+	Age       uint8              `bson:"age"`
 	CreatedAt time.Time          `bson:"created_at"`
 	UpdatedAt time.Time          `bson:"updated_at"`
 }
@@ -50,7 +55,7 @@ func EnsureIndexes(collection *mongo.Collection) error {
 }
 
 // FindUserByEmail은 주어진 이메일을 가진 사용자를 찾아 반환합니다.
-func FindUserByEmail(email string) (*User, error) {
+func (*UserModel)FindUserByEmail(email string) (*User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -65,33 +70,39 @@ func FindUserByEmail(email string) (*User, error) {
 	return user, nil
 }
 
-func CreatUser(email string, socialType string) (*User, error) {
+func (*UserModel)CreatUser(userInfo User) (*User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	uniqueKey := make(chan string)
 
+	// TO DO : uid generater 만들기
 	go func() {
+		s := "User-"
+		buf := bytes.NewBufferString(s)
 		uid := uuid.New()
-		uniqueKey <- uid.String()
+		buf.WriteString(uid.String())
+		uniqueKey <- buf.String()
 	}()
 
 	uid := <-uniqueKey
-
-	user := &User{
+	newUserInfo := &User{
 		UserId:    uid,
-		Email:     email,
-		Social:    socialType,
-		UpdatedAt: time.Now(),
+		Name:      userInfo.Name,
+		Email:     userInfo.Email,
+		Social:    userInfo.Social,
+		Gender:    userInfo.Gender,
+		Age:       userInfo.Age,
 		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
-	result, err := userCollection.InsertOne(ctx, user)
+	result, err := userCollection.InsertOne(ctx, newUserInfo)
 	if err != nil {
 		return nil, err
 	}
 
-	user.ID = result.InsertedID.(primitive.ObjectID)
+	newUserInfo.ID = result.InsertedID.(primitive.ObjectID)
 
-	return user, nil
+	return newUserInfo, nil
 }

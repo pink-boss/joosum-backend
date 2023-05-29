@@ -1,15 +1,24 @@
 package routes
 
 import (
-	"github.com/gin-gonic/gin"
-	"joosum-backend/app/user"
+	"joosum-backend/app/tag"
 	"joosum-backend/pkg/middleware"
+
+	"github.com/gin-gonic/gin"
 )
 
 // PrivateRoutes func for describe group of private routes.
 func PrivateRoutes(router *gin.Engine) {
-	router.Use(middleware.AppleAuthMiddleware())
 
-	// Protected route
-	router.GET("/protected", user.Protected)
+	tagHandler := tag.TagHandler{}
+
+	router.Use(middleware.SetUserData())
+
+	tagRouter := router.Group("/tag")
+	{
+		tagRouter.GET("/", tagHandler.GetTags)
+		tagRouter.POST("/", tagHandler.CreateTag)
+		tagRouter.DELETE("/:id", tagHandler.DeleteTag)
+	}
+
 }

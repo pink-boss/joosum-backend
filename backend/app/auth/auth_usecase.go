@@ -5,11 +5,12 @@ import (
 	"joosum-backend/pkg/util"
 )
 
-type AuthUsecae struct {
+type AuthUsecase struct {
 	salt string
+	userModel user.UserModel
 }
 
-func (u *AuthUsecae) GenerateNewJWTToken(roles []string, email string) (string, string, error) {
+func (u *AuthUsecase) GenerateNewJWTToken(roles []string, email string) (string, string, error) {
 	accessToken, err := util.GenerateNewJWTAccessToken([]string{"USER", "ADMIN"}, email, u.salt)
 	if err != nil {
 		return "", "", err
@@ -22,8 +23,8 @@ func (u *AuthUsecae) GenerateNewJWTToken(roles []string, email string) (string, 
 	return accessToken, refreshToken, nil
 }
 
-func (u *AuthUsecae) SignUp(email string, social string) (*user.User, error) {
-	user, err := user.CreatUser(email, social)
+func (u *AuthUsecase) SignUp(userInfo user.User) (*user.User, error) {
+	user, err := u.userModel.CreatUser(userInfo)
 	if err != nil {
 		return nil, err
 	}

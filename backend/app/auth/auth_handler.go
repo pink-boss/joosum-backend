@@ -10,8 +10,8 @@ import (
 )
 
 type AuthHandler struct {
-	authUsecase *AuthUsecase
-	userUsecase *user.UserUsecase
+	authUsecase AuthUsecase
+	userUsecase user.UserUsecase
 }
 
 // SignUp godoc
@@ -26,20 +26,16 @@ type AuthHandler struct {
 // @Failure 409 {object} util.APIError "이미 존재하는 사용자의 경우 Conflict를 반환합니다."
 // @Failure 500 {object} util.APIError "회원 가입 또는 JWT 토큰 생성 과정에서 오류가 발생한 경우 Internal Server Error를 반환합니다."
 // @Router /auth/signup [post]
-func (h *AuthHandler) SignUp(c *gin.Context) {
+func (h AuthHandler) SignUp(c *gin.Context) {
 	var req SignUpRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, util.APIError{Error: "Invalid request body"})
 		return
 	}
 
-	isExist, err := h.userUsecase.GetUserByEmail(req.Email); 
+	isExist, _ := h.userUsecase.GetUserByEmail(req.Email); 
 	if isExist != nil {
 		c.JSON(http.StatusConflict, util.APIError{Error: "user already exists"})
-		return
-	}
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, util.APIError{Error: err.Error()})
 		return
 	}
 
@@ -50,7 +46,7 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 	userInfo.Age = req.Age
 	userInfo.Gender = req.Gender
 
-	_, err = h.authUsecase.SignUp(userInfo)
+	_, err := h.authUsecase.SignUp(userInfo)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, util.APIError{Error: err.Error()})
 		return
@@ -65,3 +61,18 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 
 	c.JSON(http.StatusOK, util.TokenResponse{AccessToken: accessToken , RefreshToken: refreshToken})
 }
+
+/*
+curl -X 'POST' \
+  'http://127.0.0.1:5001/auth/signup' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "access_token": "string",
+  "age": 20,
+  "email": "mono@test.com",
+  "gender": "m",
+  "nickname": "string",
+  "social": "google"
+}'
+*/

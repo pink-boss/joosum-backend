@@ -1,13 +1,14 @@
 package auth
 
 import (
-	"github.com/gin-gonic/gin"
 	"joosum-backend/app/user"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type AppleHandler struct {
-	authUsecae   AuthUsecase
+	authUsecase   AuthUsecase
 	appleUsecase AppleUsecase
 	userUsecase  user.UserUsecase
 }
@@ -52,7 +53,7 @@ func (h *AppleHandler) VerifyAndIssueToken(c *gin.Context) {
 	}
 
 	// 주섬토큰 발급
-	accessToken, refreshToken, err := h.authUsecae.GenerateNewJWTToken([]string{"USER", "ADMIN"}, email)
+	accessToken, refreshToken, err := h.authUsecase.GenerateNewJWTToken([]string{"USER", "ADMIN"}, email)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

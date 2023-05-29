@@ -2,8 +2,8 @@ package middleware
 
 import (
 	"joosum-backend/app/user"
+	"joosum-backend/pkg/config"
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
@@ -24,7 +24,7 @@ func SetUserData() gin.HandlerFunc {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, jwt.ErrSignatureInvalid
 			}
-			return []byte(os.Getenv("JWT_SECRET_KEY")), nil
+			return []byte(config.GetEnvConfig("jwt_secret")), nil
 		})
 
 		if err != nil || !token.Valid {

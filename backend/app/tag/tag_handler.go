@@ -1,7 +1,6 @@
 package tag
 
 import (
-	"joosum-backend/app/user"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -9,7 +8,6 @@ import (
 
 type TagHandler struct {
 	tagUsecae *TagUsecase
-	userUsecae *user.UserUsecase
 }
 
 type CreateTagRequest struct {

@@ -7,7 +7,7 @@ import (
 )
 
 type AppleHandler struct {
-	authUsecae   AuthUsecae
+	authUsecae   AuthUsecase
 	appleUsecase AppleUsecase
 	userUsecase  user.UserUsecase
 }

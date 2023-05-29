@@ -3,7 +3,7 @@ package util
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"os"
+	"joosum-backend/pkg/config"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -13,7 +13,7 @@ import (
 // with user ID and permissions.
 func GenerateNewJWTAccessToken(credentials []string, id, kid string) (string, error) {
 	// Catch JWT secret key from .env file.
-	secret := os.Getenv("JWT_SECRET_KEY")
+	secret := config.GetEnvConfig("jwt_secret")
 
 	// Create a new JWT access token and claims.
 	token := jwt.New(jwt.SigningMethodHS256)
@@ -48,7 +48,7 @@ func GenerateNewJWTRefreshToken() (string, error) {
 	hash := sha256.New()
 
 	// Create a new now date and time string with salt.
-	refresh := os.Getenv("JWT_REFRESH_KEY") + time.Now().String()
+	refresh := config.GetEnvConfig("jwt_refresh") + time.Now().String()
 
 	// See: https://pkg.go.dev/io#Writer.Write
 	_, err := hash.Write([]byte(refresh))

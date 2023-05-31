@@ -6,12 +6,12 @@ import (
 )
 
 type AuthUsecase struct {
-	salt string
+	salt      string
 	userModel user.UserModel
 }
 
 func (u *AuthUsecase) GenerateNewJWTToken(roles []string, email string) (string, string, error) {
-	accessToken, err := util.GenerateNewJWTAccessToken([]string{"USER", "ADMIN"}, email, u.salt)
+	accessToken, err := util.GenerateNewJWTAccessToken([]string{"USER", "ADMIN"}, email)
 	if err != nil {
 		return "", "", err
 	}

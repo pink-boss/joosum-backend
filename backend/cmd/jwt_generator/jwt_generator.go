@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	token, err := util.GenerateNewJWTAccessToken([]string{"USER", "ADMIN"}, "1", "fh6Bs8C")
+	token, err := util.GenerateNewJWTAccessToken([]string{"USER", "ADMIN"}, "1")
 	if err != nil {
 		println(err)
 	}

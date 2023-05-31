@@ -1,10 +1,10 @@
 package util
 
 type APIError struct {
-    Error string `json:"error"`
+	Error string `json:"error"`
 }
 
 type TokenResponse struct {
-	AccessToken string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
 }

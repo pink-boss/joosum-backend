@@ -1,17 +1,24 @@
 package auth
 
 import (
+	"crypto/rsa"
+	"encoding/base64"
+	"encoding/binary"
+	"fmt"
+	"github.com/go-resty/resty/v2"
+	"github.com/golang-jwt/jwt/v4"
 	"joosum-backend/app/user"
 	"joosum-backend/pkg/util"
+	"math/big"
 )
 
 type AuthUsecase struct {
-	salt string
+	salt      string
 	userModel user.UserModel
 }
 
 func (u *AuthUsecase) GenerateNewJWTToken(roles []string, email string) (string, string, error) {
-	accessToken, err := util.GenerateNewJWTAccessToken([]string{"USER", "ADMIN"}, email, u.salt)
+	accessToken, err := util.GenerateNewJWTAccessToken([]string{"USER", "ADMIN"}, email)
 	if err != nil {
 		return "", "", err
 	}
@@ -29,4 +36,54 @@ func (u *AuthUsecase) SignUp(userInfo user.User) (*user.User, error) {
 		return nil, err
 	}
 	return user, nil
+}
+
+func (u *AuthUsecase) GetEmailFromJWT(social, accessToken string) (string, error) {
+	if social == "apple" {
+		pubKey := ApplePublicKey{}
+		publicSecret := PublicSecret{}
+		client := resty.New()
+
+		// 애플이 제공하는 public key 들을 가져옴
+		pubKeyResult, err := client.R().SetResult(&pubKey).Get(ApplePublicKeyURL)
+		JWKS := pubKeyResult.Result().(*ApplePublicKey)
+
+		if err != nil {
+			return "", fmt.Errorf("get apple public key err: %v", err)
+		}
+
+		claims := jwt.MapClaims{}
+		_, err = jwt.ParseWithClaims(accessToken, &claims, func(token *jwt.Token) (interface{}, error) {
+			// kid 값 저장 | public key 대조에 필요하기 때문에
+			kid := token.Header["kid"].(string)
+
+			for _, v := range JWKS.Keys {
+				// 받아온 public key 중 id_token 과 kid 일치하는지 확인 후 n, e 값 저장
+				if kid == v.Kid {
+					n, _ := base64.RawURLEncoding.DecodeString(v.N)
+					publicSecret.N = n
+					e, _ := base64.StdEncoding.DecodeString(v.E)
+					publicSecret.E = e
+					break
+				}
+			}
+			publicKeyE := binary.LittleEndian.Uint32(append(publicSecret.E, 0))
+
+			// 이 rsaKey 로 id_token verify
+			rsaKey := &rsa.PublicKey{
+				N: new(big.Int).SetBytes(publicSecret.N),
+				E: int(publicKeyE),
+			}
+			return rsaKey, nil
+		})
+		email := claims["email"].(string)
+
+		return email, nil
+	} else if social == "google" {
+
+		// Todo 구글 JWT 에서 email 꺼내기
+		return "google@gmail.com", nil
+	} else {
+		return "", fmt.Errorf("invalid social name")
+	}
 }

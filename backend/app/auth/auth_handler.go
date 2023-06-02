@@ -1,10 +1,10 @@
 package auth
 
 import (
-	"net/http"
-
+	"fmt"
 	"joosum-backend/app/user"
 	"joosum-backend/pkg/util"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -33,24 +33,32 @@ func (h AuthHandler) SignUp(c *gin.Context) {
 		return
 	}
 
-	isExist, _ := h.userUsecase.GetUserByEmail(req.Email); 
+	isExist, _ := h.userUsecase.GetUserByEmail(req.Email)
 	if isExist != nil {
 		c.JSON(http.StatusConflict, util.APIError{Error: "user already exists"})
 		return
 	}
 
 	var userInfo user.User
-	userInfo.Email = req.Email
+
+	email, err := h.authUsecase.GetEmailFromJWT(req.Social, req.AccessToken)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, util.APIError{Error: fmt.Sprintf("failed to get email from the JWT token: %v", err.Error())})
+		return
+	}
+
+	userInfo.Email = email
 	userInfo.Social = req.Social
 	userInfo.Name = req.Nickname
 	userInfo.Age = req.Age
 	userInfo.Gender = req.Gender
 
-	_, err := h.authUsecase.SignUp(userInfo)
+	temp, err := h.authUsecase.SignUp(userInfo)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, util.APIError{Error: err.Error()})
 		return
 	}
+	print(temp)
 
 	accessToken, refreshToken, err := h.authUsecase.GenerateNewJWTToken([]string{"USER", "ADMIN"}, req.Email)
 
@@ -59,7 +67,7 @@ func (h AuthHandler) SignUp(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, util.TokenResponse{AccessToken: accessToken , RefreshToken: refreshToken})
+	c.JSON(http.StatusOK, util.TokenResponse{AccessToken: accessToken, RefreshToken: refreshToken})
 }
 
 /*

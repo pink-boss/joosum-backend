@@ -8,7 +8,7 @@ import (
 )
 
 type AppleHandler struct {
-	authUsecase   AuthUsecase
+	authUsecase  AuthUsecase
 	appleUsecase AppleUsecase
 	userUsecase  user.UserUsecase
 }
@@ -27,7 +27,7 @@ func (h *AppleHandler) VerifyAndIssueToken(c *gin.Context) {
 	}
 
 	if reqAuth.IdToken == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "id_token is required"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "idToken is required"})
 		return
 	}
 
@@ -48,7 +48,10 @@ func (h *AppleHandler) VerifyAndIssueToken(c *gin.Context) {
 	}
 
 	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"accessToken": "", "refreshToken": ""})
+		c.JSON(http.StatusUnauthorized, tokenResponse{
+			AccessToken:  "",
+			RefreshToken: "",
+		})
 		return
 	}
 

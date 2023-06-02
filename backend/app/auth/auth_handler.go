@@ -33,19 +33,19 @@ func (h AuthHandler) SignUp(c *gin.Context) {
 		return
 	}
 
-	isExist, _ := h.userUsecase.GetUserByEmail(req.Email)
+	email, err := h.authUsecase.GetEmailFromJWT(req.Social, req.AccessToken)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, util.APIError{Error: fmt.Sprintf("failed to get email from the JWT token: %v", err.Error())})
+		return
+	}
+
+	isExist, _ := h.userUsecase.GetUserByEmail(email)
 	if isExist != nil {
 		c.JSON(http.StatusConflict, util.APIError{Error: "user already exists"})
 		return
 	}
 
 	var userInfo user.User
-
-	email, err := h.authUsecase.GetEmailFromJWT(req.Social, req.AccessToken)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, util.APIError{Error: fmt.Sprintf("failed to get email from the JWT token: %v", err.Error())})
-		return
-	}
 
 	userInfo.Email = email
 	userInfo.Social = req.Social
@@ -60,7 +60,7 @@ func (h AuthHandler) SignUp(c *gin.Context) {
 	}
 	print(temp)
 
-	accessToken, refreshToken, err := h.authUsecase.GenerateNewJWTToken([]string{"USER", "ADMIN"}, req.Email)
+	accessToken, refreshToken, err := h.authUsecase.GenerateNewJWTToken([]string{"USER", "ADMIN"}, email)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, util.APIError{Error: err.Error()})

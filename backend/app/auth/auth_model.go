@@ -2,7 +2,6 @@ package auth
 
 type SignUpRequest struct {
 	AccessToken string `json:"accessToken"`
-	Email       string `json:"email"`
 	Social      string `json:"social"  example:"google"`
 	Nickname    string `json:"nickname"`
 	Gender      string `json:"gender" example:"m"`

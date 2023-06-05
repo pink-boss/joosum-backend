@@ -41,11 +41,7 @@ func (h *AppleHandler) VerifyAndIssueToken(c *gin.Context) {
 	email := claims["email"].(string)
 
 	// 정보를 입력하고 회원가입을 했는지 확인
-	user, err := h.userUsecase.GetUserByEmail(email)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+	user, _ := h.userUsecase.GetUserByEmail(email)
 
 	if user == nil {
 		c.JSON(http.StatusUnauthorized, tokenResponse{

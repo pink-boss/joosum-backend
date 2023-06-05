@@ -12,9 +12,9 @@ import (
 type GoogleHandler struct {
 	// DI
 	// please write private
-	authUsecase   AuthUsecase
+	authUsecase  AuthUsecase
 	googleUsecae GoogleUsecae
-	userUsecase user.UserUsecase
+	userUsecase  user.UserUsecase
 }
 
 // @Summary Google 액세스 토큰 검증
@@ -53,11 +53,7 @@ func (h *GoogleHandler) VerifyGoogleAccessToken(c *gin.Context) {
 		return
 	}
 
-	user, err := h.userUsecase.GetUserByEmail(email)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, util.APIError{Error: err.Error()})
-		return
-	}
+	user, _ := h.userUsecase.GetUserByEmail(email)
 
 	if user == nil {
 		c.JSON(http.StatusUnauthorized, util.TokenResponse{AccessToken: "", RefreshToken: ""})
@@ -67,7 +63,7 @@ func (h *GoogleHandler) VerifyGoogleAccessToken(c *gin.Context) {
 	accessToken, refreshToken, err := h.authUsecase.GenerateNewJWTToken([]string{"USER", "ADMIN"}, email)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, util.APIError{Error : err.Error()})
+		c.JSON(http.StatusInternalServerError, util.APIError{Error: err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, util.TokenResponse{

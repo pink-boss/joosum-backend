@@ -7,7 +7,7 @@ import (
 )
 
 type TagHandler struct {
-	tagUsecae *TagUsecase
+	tagUsecase *TagUsecase
 }
 
 type CreateTagRequest struct {
@@ -41,7 +41,7 @@ func (h TagHandler) CreateTag(c *gin.Context) {
 		return
 	}
 
-	tags, err := h.tagUsecae.CreateTag(userId.(string), req.Name)
+	tags, err := h.tagUsecase.CreateTag(userId.(string), req.Name)
 	if err != nil {
 		// 500 Internal Server Error
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -70,7 +70,7 @@ func (h TagHandler) GetTags(c *gin.Context) {
 		return
 	}
 
-	tags, err := h.tagUsecae.FindTagByUserId(userId.(string))
+	tags, err := h.tagUsecase.FindTagByUserId(userId.(string))
 	if err != nil {
 		// 500 Internal Server Error
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -103,7 +103,7 @@ func (h TagHandler) DeleteTag(c *gin.Context) {
 
 	tagId := c.Param("id")
 
-	if err := h.tagUsecae.DeleteTag(userId.(string), tagId); err != nil {
+	if err := h.tagUsecase.DeleteTag(userId.(string), tagId); err != nil {
 		// 500 Internal Server Error
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

@@ -1,10 +1,10 @@
 package auth
 
 import (
-	"net/http"
-
+	"fmt"
 	"joosum-backend/app/user"
 	"joosum-backend/pkg/util"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -33,33 +33,50 @@ func (h AuthHandler) SignUp(c *gin.Context) {
 		return
 	}
 
-	isExist, _ := h.userUsecase.GetUserByEmail(req.Email); 
+	email, err := h.authUsecase.GetEmailFromJWT(req.Social, req.AccessToken)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, util.APIError{Error: fmt.Sprintf("failed to get email from the JWT token: %v", err.Error())})
+		return
+	}
+
+	isExist, _ := h.userUsecase.GetUserByEmail(email)
 	if isExist != nil {
 		c.JSON(http.StatusConflict, util.APIError{Error: "user already exists"})
 		return
 	}
 
 	var userInfo user.User
-	userInfo.Email = req.Email
+
+	userInfo.Email = email
 	userInfo.Social = req.Social
 	userInfo.Name = req.Nickname
 	userInfo.Age = req.Age
 	userInfo.Gender = req.Gender
 
-	_, err := h.authUsecase.SignUp(userInfo)
+	temp, err := h.authUsecase.SignUp(userInfo)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, util.APIError{Error: err.Error()})
+		return
+	}
+	print(temp)
+
+	accessToken, refreshToken, err := h.authUsecase.GenerateNewJWTToken([]string{"USER", "ADMIN"}, email)
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, util.APIError{Error: err.Error()})
 		return
 	}
 
-	accessToken, refreshToken, err := h.authUsecase.GenerateNewJWTToken([]string{"USER", "ADMIN"}, req.Email)
+	c.JSON(http.StatusOK, util.TokenResponse{AccessToken: accessToken, RefreshToken: refreshToken})
+}
 
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, util.APIError{Error: err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, util.TokenResponse{AccessToken: accessToken , RefreshToken: refreshToken})
+// Protected
+// @Tags 로그인
+// @Summary 액세스토큰 테스트
+// @Description 테스트하고자 하는 액세스토큰을 헤더에 넣고 요청을 보내면 success 를 반환합니다.
+// @Router /protected [get]
+func (h AuthHandler) Protected(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"message": "success"})
 }
 
 /*

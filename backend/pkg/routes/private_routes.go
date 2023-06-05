@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"joosum-backend/app/auth"
 	"joosum-backend/app/tag"
 	"joosum-backend/pkg/middleware"
 
@@ -11,10 +12,13 @@ import (
 func PrivateRoutes(router *gin.Engine) {
 
 	tagHandler := tag.TagHandler{}
+	authHandler := auth.AuthHandler{}
 
 	router.Use(middleware.SetUserData())
 
-	tagRouter := router.Group("/tag")
+	router.GET("/protected", authHandler.Protected)
+
+	tagRouter := router.Group("/tags")
 	{
 		tagRouter.GET("/", tagHandler.GetTags)
 		tagRouter.POST("/", tagHandler.CreateTag)

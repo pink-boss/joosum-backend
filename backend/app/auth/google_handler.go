@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"fmt"
+	"go.mongodb.org/mongo-driver/mongo"
 	"joosum-backend/app/user"
 	"joosum-backend/pkg/util"
 	"net/http"
@@ -53,10 +55,14 @@ func (h *GoogleHandler) VerifyGoogleAccessToken(c *gin.Context) {
 		return
 	}
 
-	user, _ := h.userUsecase.GetUserByEmail(email)
+	user, err := h.userUsecase.GetUserByEmail(email)
+	if err != nil && err != mongo.ErrNoDocuments {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("failed to get user by email: %v", err.Error())})
+		return
+	}
 
 	if user == nil {
-		c.JSON(http.StatusUnauthorized, util.TokenResponse{AccessToken: "", RefreshToken: ""})
+		c.JSON(http.StatusOK, util.TokenResponse{AccessToken: "", RefreshToken: ""})
 		return
 	}
 

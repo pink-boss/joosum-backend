@@ -25,6 +25,7 @@ type CreateTagRequest struct {
 // @Failure 400 {object} util.APIError "요청 본문이 유효하지 않을 때 반환합니다."
 // @Failure 401 {object} util.APIError "Authorization 헤더가 없을 때 반환합니다."
 // @Failure 500 {object} util.APIError "태그 생성 과정에서 오류가 발생한 경우 반환합니다."
+// @Security ApiKeyAuth
 // @Router /tags [post]
 func (h TagHandler) CreateTag(c *gin.Context) {
 	userId, exists := c.Get("user_id")
@@ -61,6 +62,7 @@ func (h TagHandler) CreateTag(c *gin.Context) {
 // @Success 200 {array} Tag "태그 조회가 성공적으로 이루어졌을 때 태그 배열 반환"
 // @Failure 401 {object} util.APIError "Authorization 헤더가 없을 때 반환합니다."
 // @Failure 500 {object} util.APIError "태그 조회 과정에서 오류가 발생한 경우 반환합니다."
+// @Security ApiKeyAuth
 // @Router /tags [get]
 func (h TagHandler) GetTags(c *gin.Context) {
 	userId, exists := c.Get("user_id")
@@ -92,6 +94,7 @@ func (h TagHandler) GetTags(c *gin.Context) {
 // @Failure 400 {object} util.APIError "요청이 유효하지 않을 때 반환합니다."
 // @Failure 401 {object} util.APIError "Authorization 헤더가 없을 때 반환합니다."
 // @Failure 500 {object} util.APIError "태그 삭제 과정에서 오류가 발생한 경우 반환합니다."
+// @Security ApiKeyAuth
 // @Router /tags/{id} [delete]
 func (h TagHandler) DeleteTag(c *gin.Context) {
 	userId, exists := c.Get("user_id")

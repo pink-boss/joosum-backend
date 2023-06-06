@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"fmt"
+	"go.mongodb.org/mongo-driver/mongo"
 	"joosum-backend/app/user"
 	"net/http"
 
@@ -41,10 +43,14 @@ func (h *AppleHandler) VerifyAndIssueToken(c *gin.Context) {
 	email := claims["email"].(string)
 
 	// 정보를 입력하고 회원가입을 했는지 확인
-	user, _ := h.userUsecase.GetUserByEmail(email)
+	user, err := h.userUsecase.GetUserByEmail(email)
+	if err != nil && err != mongo.ErrNoDocuments {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("failed to get user by email: %v", err.Error())})
+		return
+	}
 
 	if user == nil {
-		c.JSON(http.StatusUnauthorized, tokenResponse{
+		c.JSON(http.StatusOK, tokenResponse{
 			AccessToken:  "",
 			RefreshToken: "",
 		})

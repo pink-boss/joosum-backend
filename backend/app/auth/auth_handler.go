@@ -74,6 +74,7 @@ func (h AuthHandler) SignUp(c *gin.Context) {
 // @Tags 로그인
 // @Summary 액세스토큰 테스트
 // @Description 테스트하고자 하는 액세스토큰을 헤더에 넣고 요청을 보내면 success 를 반환합니다.
+// @Security ApiKeyAuth
 // @Router /protected [get]
 func (h AuthHandler) Protected(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "success"})

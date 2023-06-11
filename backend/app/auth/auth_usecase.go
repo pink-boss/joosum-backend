@@ -18,7 +18,6 @@ import (
 )
 
 type AuthUsecase struct {
-	salt      string
 	userModel user.UserModel
 }
 

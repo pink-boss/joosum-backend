@@ -16,3 +16,8 @@ type SignUpInfo struct {
 	Age        uint8  `json:"age" example:"20"`
 	SignUpDate string `json:"sign_up_date"`
 }
+
+type RefreshTokenRequest struct {
+	RefreshToken string `json:"refreshToken"`
+	Social 	 string `json:"social"  example:"google"`
+}

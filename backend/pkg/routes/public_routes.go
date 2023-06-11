@@ -19,6 +19,7 @@ func PublicRoutes(router *gin.Engine) {
 	{
 		authRouter.POST("/apple", appleHandler.VerifyAndIssueToken)
 		authRouter.POST("/google", googleHandler.VerifyGoogleAccessToken)
+		authRouter.POST("/refresh", authHandler.UpdateAccessToken)
 		authRouter.POST("/signup", authHandler.SignUp)
 	}
 

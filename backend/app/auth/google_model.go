@@ -1,5 +1,5 @@
 package auth
 
 type AccessTokenRequest struct {
-	AccessToken string `json:"accessToken"`
+	IdToken string `json:"idToken"`
 }

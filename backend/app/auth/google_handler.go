@@ -37,7 +37,7 @@ func (h *GoogleHandler) VerifyGoogleAccessToken(c *gin.Context) {
 		return
 	}
 
-	accessToken := req.AccessToken
+	accessToken := req.IdToken
 
 	if accessToken == "" {
 		c.JSON(http.StatusBadRequest, util.APIError{Error: "accessToken is required"})

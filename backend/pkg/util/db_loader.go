@@ -2,9 +2,8 @@ package util
 
 import (
 	"context"
-	"joosum-backend/app/user"
 	"joosum-backend/pkg/config"
-	"joosum-backend/pkg/database"
+	"joosum-backend/pkg/db"
 	"log"
 	"time"
 )
@@ -14,12 +13,15 @@ func StartMongoDB() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	client, err := database.GetMongoClient(ctx, config.GetEnvConfig("mongoDB"))
+	client, err := db.GetMongoClient(ctx, config.GetEnvConfig("mongoDB"))
 	if err != nil {
 		log.Fatalf("Failed to connect to MongoDB: %v", err)
 	}
 
+	dbName := config.GetEnvConfig("dbName")
+
 	// Collection load
-	user.InitUserCollection(client, config.GetEnvConfig("dbName"))
+	db.InitUserCollection(client, dbName)
+	db.InitLinkBookCollection(client, dbName)
 
 }

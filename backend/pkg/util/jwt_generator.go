@@ -21,7 +21,9 @@ func GenerateNewJWTAccessToken(credentials []string, email string) (string, erro
 
 	// Set public claims:
 	claims["email"] = email
-	claims["expires"] = time.Now().Add(time.Hour * 72).Unix()
+
+	// 개발을 위해 임시로 토큰 만료시간을 3달로 설정
+	claims["expires"] = time.Now().Add(time.Hour * 2160).Unix()
 
 	// Set private token credentials:
 	for _, credential := range credentials {

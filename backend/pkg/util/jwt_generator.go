@@ -21,7 +21,6 @@ func GenerateNewJWTAccessToken(credentials []string, email string) (string, erro
 
 	// Set public claims:
 	claims["email"] = email
-	claims["expires"] = time.Now().Add(time.Hour * 72).Unix()
 
 	// Set private token credentials:
 	for _, credential := range credentials {

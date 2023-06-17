@@ -2,10 +2,11 @@ package auth
 
 import (
 	"fmt"
-	"go.mongodb.org/mongo-driver/mongo"
 	"joosum-backend/app/user"
 	"joosum-backend/pkg/util"
 	"net/http"
+
+	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/gin-gonic/gin"
 )
@@ -44,7 +45,7 @@ func (h *GoogleHandler) VerifyGoogleAccessToken(c *gin.Context) {
 		return
 	}
 
-	if valid, err := h.googleUsecae.ValidateAccessToken(req.AccessToken); err != nil || !valid {
+	if valid, err := h.googleUsecae.ValidateAccessToken(accessToken); err != nil || !valid {
 		c.JSON(http.StatusInternalServerError, util.APIError{Error: "Invalid access token"})
 		return
 	}

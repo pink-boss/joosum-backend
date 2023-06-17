@@ -13,7 +13,7 @@ import (
 type GoogleUsecae struct {
 }
 
-func (GoogleUsecae) ValidateAccessToken(accessToken string) (bool, error) {
+func (GoogleUsecae) ValidateIdToken(idToken string) (bool, error) {
 	ctx := context.Background()
 
 	oauth2Service, err := oauth2.NewService(ctx, option.WithAPIKey(localConfig.GetEnvConfig("googleApiKey")))
@@ -22,11 +22,11 @@ func (GoogleUsecae) ValidateAccessToken(accessToken string) (bool, error) {
 	}
 
 	tokenInfoCall := oauth2Service.Tokeninfo()
-	tokenInfoCall.AccessToken(accessToken)
+	tokenInfoCall.IdToken(idToken)
 
 	tokenInfo, err := tokenInfoCall.Do()
 	if err != nil {
-		return false, fmt.Errorf("unable to verify access token: %v", err)
+		return false, fmt.Errorf("unable to verify id token: %v", err)
 	}
 
 	// Check if the token's audience matches your app's client ID.
@@ -34,10 +34,10 @@ func (GoogleUsecae) ValidateAccessToken(accessToken string) (bool, error) {
 		return true, nil
 	}
 
-	return false, fmt.Errorf("access token is not issued by this app")
+	return false, fmt.Errorf("id token is not issued by this app")
 }
 
-func (GoogleUsecae) GetUserEmail(accessToken string) (string, error) {
+func (GoogleUsecae) GetUserEmail(idToken string) (string, error) {
 	ctx := context.Background()
 
 	oauth2Service, err := oauth2.NewService(ctx, option.WithAPIKey(localConfig.GetEnvConfig("googleApiKey")))
@@ -46,16 +46,16 @@ func (GoogleUsecae) GetUserEmail(accessToken string) (string, error) {
 	}
 
 	tokenInfoCall := oauth2Service.Tokeninfo()
-	tokenInfoCall.AccessToken(accessToken)
+	tokenInfoCall.IdToken(idToken)
 
 	tokenInfo, err := tokenInfoCall.Do()
 	if err != nil {
-		return "", fmt.Errorf("unable to verify access token: %v", err)
+		return "", fmt.Errorf("unable to verify id token: %v", err)
 	}
 
 	// Check if the token's audience matches your app's client ID.
 	if tokenInfo.Audience != localConfig.GetEnvConfig("googleClientID") {
-		return "", fmt.Errorf("access token is not issued by this app")
+		return "", fmt.Errorf("id token is not issued by this app")
 	}
 
 	// Return the user's email address.

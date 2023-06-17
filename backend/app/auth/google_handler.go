@@ -41,12 +41,12 @@ func (h *GoogleHandler) VerifyGoogleAccessToken(c *gin.Context) {
 	accessToken := req.IdToken
 
 	if accessToken == "" {
-		c.JSON(http.StatusBadRequest, util.APIError{Error: "accessToken is required"})
+		c.JSON(http.StatusBadRequest, util.APIError{Error: "idToken is required"})
 		return
 	}
 
-	if valid, err := h.googleUsecae.ValidateAccessToken(accessToken); err != nil || !valid {
-		c.JSON(http.StatusInternalServerError, util.APIError{Error: "Invalid access token"})
+	if valid, err := h.googleUsecae.ValidateIdToken(accessToken); err != nil || !valid {
+		c.JSON(http.StatusInternalServerError, util.APIError{Error: "Invalid id token"})
 		return
 	}
 

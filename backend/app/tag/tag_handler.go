@@ -10,7 +10,7 @@ type TagHandler struct {
 	tagUsecase *TagUsecase
 }
 
-type CreateTagRequest struct {
+type CreateTagReq struct {
 	Name string `json:"name"`
 }
 
@@ -20,7 +20,7 @@ type CreateTagRequest struct {
 // @Description 사용자 아이디와 태그 이름을 통해 새로운 태그를 생성합니다.
 // @Accept  json
 // @Produce  json
-// @Param request body CreateTagRequest true "태그 생성 요청 본문"
+// @Param request body CreateTagReq true "태그 생성 요청 본문"
 // @Success 200 {object} Tag "태그 생성이 성공적으로 이루어졌을 때 새로 생성된 태그 객체 반환"
 // @Failure 400 {object} util.APIError "요청 본문이 유효하지 않을 때 반환합니다."
 // @Failure 401 {object} util.APIError "Authorization 헤더가 없을 때 반환합니다."
@@ -35,7 +35,7 @@ func (h TagHandler) CreateTag(c *gin.Context) {
 		return
 	}
 
-	var req CreateTagRequest
+	var req CreateTagReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		// 400 Bad Request
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})

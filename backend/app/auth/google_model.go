@@ -1,5 +1,5 @@
 package auth
 
-type AccessTokenRequest struct {
+type AccessTokenReq struct {
 	IdToken string `json:"idToken"`
 }

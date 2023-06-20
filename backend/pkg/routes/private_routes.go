@@ -2,6 +2,7 @@ package routes
 
 import (
 	"joosum-backend/app/auth"
+	"joosum-backend/app/link"
 	"joosum-backend/app/tag"
 	"joosum-backend/pkg/middleware"
 
@@ -13,6 +14,7 @@ func PrivateRoutes(router *gin.Engine) {
 
 	tagHandler := tag.TagHandler{}
 	authHandler := auth.AuthHandler{}
+	linkBookHandler := link.LinkBookHandler{}
 
 	router.Use(middleware.SetUserData())
 
@@ -23,6 +25,13 @@ func PrivateRoutes(router *gin.Engine) {
 		tagRouter.GET("/", tagHandler.GetTags)
 		tagRouter.POST("/", tagHandler.CreateTag)
 		tagRouter.DELETE("/:id", tagHandler.DeleteTag)
+	}
+
+	linkRouter := router.Group("/link-books")
+	{
+		//linkRouter.GET("/", tagHandler.GetTags)
+		linkRouter.POST("/", linkBookHandler.CreateLinkBook)
+		//linkRouter.DELETE("/:id", tagHandler.DeleteTag)
 	}
 
 }

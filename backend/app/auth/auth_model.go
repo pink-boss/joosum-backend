@@ -1,6 +1,6 @@
 package auth
 
-type SignUpRequest struct {
+type SignUpReq struct {
 	AccessToken string `json:"accessToken"`
 	Social      string `json:"social"  example:"google"`
 	Nickname    string `json:"nickname"`

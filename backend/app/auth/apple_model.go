@@ -1,10 +1,10 @@
 package auth
 
-type authRequest struct {
+type authReq struct {
 	IdToken string `json:"idToken" example:"eyJra...LFmZQ"`
 }
 
-type tokenResponse struct {
+type tokenRes struct {
 	AccessToken  string `json:"accessToken" example:"eyJhb...S_HK4"`
 	RefreshToken string `json:"refreshToken" example:"46c67...2f891"`
 }

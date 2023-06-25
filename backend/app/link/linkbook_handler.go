@@ -1,14 +1,15 @@
 package link
 
 import (
-	"github.com/gin-gonic/gin"
 	"joosum-backend/app/user"
 	"joosum-backend/pkg/util"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type LinkBookHandler struct {
-	linkUsecase LinkUsecase
+	linkBookUsecase LinkBookUsecase
 }
 
 // CreateLinkBook
@@ -34,7 +35,7 @@ func (h LinkBookHandler) CreateLinkBook(c *gin.Context) {
 
 	userId := currentUser.(*user.User).UserId
 
-	res, err := h.linkUsecase.CreateLinkBook(req, userId)
+	res, err := h.linkBookUsecase.CreateLinkBook(req, userId)
 	if err != nil {
 		// 500 Internal Server Error
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

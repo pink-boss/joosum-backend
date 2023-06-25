@@ -2,11 +2,11 @@ package link
 
 import "time"
 
-type LinkUsecase struct {
-	linkModel LinkModel
+type LinkBookUsecase struct {
+	linkBookModel LinkBookModel
 }
 
-func (u LinkUsecase) CreateLinkBook(req LinkBookReq, userId string) (interface{}, error) {
+func (u LinkBookUsecase) CreateLinkBook(req LinkBookReq, userId string) (interface{}, error) {
 
 	link := LinkBookRes{
 		Title:           req.Title,
@@ -18,7 +18,7 @@ func (u LinkUsecase) CreateLinkBook(req LinkBookReq, userId string) (interface{}
 		UserId:          userId,
 	}
 
-	res, err := u.linkModel.CreateLinkBook(link)
+	res, err := u.linkBookModel.CreateLinkBook(link)
 	if err != nil {
 		return nil, err
 	}

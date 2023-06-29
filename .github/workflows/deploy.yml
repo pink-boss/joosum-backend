@@ -64,17 +64,15 @@ jobs:
       id: date
       run: |
         echo "::set-output name=date::$(date +'%y%m%d')"
-
-    - name: Deploy to VM
-      env:
-        VM_HOST: ${{ secrets.VM_HOST_IP }}
-        VM_USERNAME: root
-        VM_PORT: 22
-        VM_PASSWORD: ${{ secrets.VM_PASSWORD }}
-      run: |
-        echo $VM_PASSWORD | sshpass ssh -o StrictHostKeyChecking=no -p $VM_PORT $VM_USERNAME@$VM_HOST <<EOF
+        
+    - name: Deploy
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.VM_HOST_IP }}
+        username: root
+        password: ${{ secrets.VM_PASSWORD }}
+        script: |
           docker pull joosum.kr.ncr.ntruss.com/joosum-backend:${{ steps.date.outputs.date }}
           docker stop $(docker ps -q -f 'expose=5001')
           docker rm $(docker ps -aq -f 'expose=5001')
           docker run -d -v /etc/ssl/certs:/etc/ssl/certs -p 5001:5001 joosum.kr.ncr.ntruss.com/joosum-backend:${{ steps.date.outputs.date }}
-        EOF

@@ -6,9 +6,17 @@ type LinkUsecase struct {
 	linkModel LinkModel
 }
 
-func (u LinkUsecase) CreateLinkBook(req LinkBookReq, userId string) (interface{}, error) {
+func (u LinkUsecase) GetLinkBooks(req LinkBookListReq, userId string) ([]LinkBook, error) {
+	res, err := u.linkModel.GetLinkBooks(req, userId)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
 
-	link := LinkBookRes{
+func (u LinkUsecase) CreateLinkBook(req LinkBookCreateReq, userId string) (interface{}, error) {
+
+	link := LinkBook{
 		Title:           req.Title,
 		BackgroundColor: req.BackgroundColor,
 		TitleColor:      req.TitleColor,

@@ -15,8 +15,9 @@ type LinkBookHandler struct {
 // GetLinkBooks
 // @Tags 링크
 // @Summary 링크북 목록 조회
+// @Description 파라미터로 전달되는 `sort` 는 고도화 때 enum 으로 바꾸면 좋을 것 같습니다.
 // @Param request query link.LinkBookListReq true "request"
-// @Success 200 {object} []link.LinkBook
+// @Success 200 {object} link.LinkBookListRes
 // @Security ApiKeyAuth
 // @Router /link-books [get]
 func (h LinkBookHandler) GetLinkBooks(c *gin.Context) {

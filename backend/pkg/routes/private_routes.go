@@ -30,9 +30,8 @@ func PrivateRoutes(router *gin.Engine) {
 
 	linkBookRouter := router.Group("/link-books")
 	{
-		//linkBookRouter.GET("/", tagHandler.GetTags)
+		linkBookRouter.GET("/", linkBookHandler.GetLinkBooks)
 		linkBookRouter.POST("/", linkBookHandler.CreateLinkBook)
-		//linkBookRouter.DELETE("/:id", tagHandler.DeleteTag)
 	}
 
 	linkRouter := router.Group("/links")

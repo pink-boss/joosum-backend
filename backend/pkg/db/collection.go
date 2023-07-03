@@ -35,9 +35,9 @@ func EnsureIndexes(collection *mongo.Collection) error {
 	return err
 }
 
-var LinkCollection *mongo.Collection
+var LinkBookCollection *mongo.Collection
 
 func InitLinkBookCollection(client *mongo.Client, dbName string) {
-	LinkCollection = client.Database(dbName).Collection("linkBooks")
+	LinkBookCollection = client.Database(dbName).Collection("linkBooks")
 	//EnsureIndexes(linkCollection)
 }

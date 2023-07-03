@@ -39,5 +39,4 @@ var LinkBookCollection *mongo.Collection
 
 func InitLinkBookCollection(client *mongo.Client, dbName string) {
 	LinkBookCollection = client.Database(dbName).Collection("linkBooks")
-	//EnsureIndexes(linkCollection)
 }

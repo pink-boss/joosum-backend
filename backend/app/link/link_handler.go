@@ -28,8 +28,8 @@ type UpdateLinkReq struct {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param request body CreateTagReq true "태그 생성 요청 본문"
-// @Success 200 {object} Tag "링크 생성이 성공적으로 이루어졌을 때 새로 생성된 태그 객체 반환"
+// @Param request body tag.CreateTagReq true "태그 생성 요청 본문"
+// @Success 200 {object} tag.Tag "링크 생성이 성공적으로 이루어졌을 때 새로 생성된 태그 객체 반환"
 // @Failure 400 {object} util.APIError "요청 본문이 유효하지 않을 때 반환합니다."
 // @Failure 401 {object} util.APIError "Authorization 헤더가 없을 때 반환합니다."
 // @Failure 500 {object} util.APIError "링크 생성 과정에서 오류가 발생한 경우 반환합니다."

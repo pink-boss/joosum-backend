@@ -9,7 +9,6 @@ import (
 )
 
 // @title Joosum App
-// @version 230606
 // @description This is API Docs for Joosum App.
 // @termsOfService http://swagger.io/terms/
 // @contact.name Pinkboss

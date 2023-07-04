@@ -18,11 +18,11 @@ type AppleHandler struct {
 // VerifyAndIssueToken
 // @Tags 로그인
 // @Summary 애플로그인 후 받은 id token 을 verify 한 후 주섬 JWT 토큰 발급
-// @Param request body auth.authRequest true "애플로그인 후 받은 id token"
-// @Success 200 {object} auth.tokenResponse
+// @Param request body auth.authReq true "애플로그인 후 받은 id token"
+// @Success 200 {object} auth.tokenRes
 // @Router /auth/apple [post]
 func (h *AppleHandler) VerifyAndIssueToken(c *gin.Context) {
-	reqAuth := authRequest{}
+	reqAuth := authReq{}
 	if err := c.Bind(&reqAuth); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "binding failure"})
 		return
@@ -50,7 +50,7 @@ func (h *AppleHandler) VerifyAndIssueToken(c *gin.Context) {
 	}
 
 	if user == nil {
-		c.JSON(http.StatusOK, tokenResponse{
+		c.JSON(http.StatusOK, tokenRes{
 			AccessToken:  "",
 			RefreshToken: "",
 		})
@@ -65,7 +65,7 @@ func (h *AppleHandler) VerifyAndIssueToken(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, tokenResponse{
+	c.JSON(http.StatusOK, tokenRes{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	})

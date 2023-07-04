@@ -20,14 +20,14 @@ type AuthHandler struct {
 // @Tags 로그인
 // @Accept  json
 // @Produce  json
-// @Param request body SignUpRequest true "회원 가입 요청 본문"
-// @Success 200 {object} util.TokenResponse "회원 가입이 성공적으로 이루어지면 JWT 토큰 쌍을 반환합니다."
+// @Param request body SignUpReq true "회원 가입 요청 본문"
+// @Success 200 {object} util.TokenRes "회원 가입이 성공적으로 이루어지면 JWT 토큰 쌍을 반환합니다."
 // @Failure 400 {object} util.APIError "요청 본문이 유효하지 않는 경우 Bad Request를 반환합니다."
 // @Failure 409 {object} util.APIError "이미 존재하는 사용자의 경우 Conflict를 반환합니다."
 // @Failure 500 {object} util.APIError "회원 가입 또는 JWT 토큰 생성 과정에서 오류가 발생한 경우 Internal Server Error를 반환합니다."
 // @Router /auth/signup [post]
 func (h AuthHandler) SignUp(c *gin.Context) {
-	var req SignUpRequest
+	var req SignUpReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, util.APIError{Error: "Invalid request body"})
 		return
@@ -67,7 +67,7 @@ func (h AuthHandler) SignUp(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, util.TokenResponse{AccessToken: accessToken, RefreshToken: refreshToken})
+	c.JSON(http.StatusOK, util.TokenRes{AccessToken: accessToken, RefreshToken: refreshToken})
 }
 
 // Protected

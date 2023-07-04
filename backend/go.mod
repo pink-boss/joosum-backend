@@ -6,12 +6,13 @@ require (
 	github.com/auth0/go-jwt-middleware v1.0.1
 	github.com/go-playground/validator/v10 v10.13.0
 	github.com/golang-jwt/jwt/v4 v4.4.3
-	github.com/gorilla/mux v1.8.0
+	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/joho/godotenv v1.5.1
 	github.com/swaggo/swag v1.16.1
 )
 
 require (
+	github.com/google/uuid v1.3.0
 	github.com/spf13/viper v1.15.0
 	github.com/swaggo/files v1.0.1
 )
@@ -35,7 +36,6 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/s2a-go v0.1.3 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
 	github.com/googleapis/gax-go/v2 v2.8.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect

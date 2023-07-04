@@ -15,7 +15,7 @@ const ApplePublicKeyURL = "https://appleid.apple.com/auth/keys"
 type AppleUsecase struct {
 }
 
-func (AppleUsecase) VerifyAccessToken(reqAuth authRequest) (jwt.MapClaims, error) {
+func (AppleUsecase) VerifyAccessToken(reqAuth authReq) (jwt.MapClaims, error) {
 	pubKey := ApplePublicKey{}
 	publicSecret := PublicSecret{}
 	client := resty.New()

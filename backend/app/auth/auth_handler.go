@@ -45,11 +45,16 @@ func (h AuthHandler) SignUp(c *gin.Context) {
 		return
 	}
 
+	temp_nickname := req.Nickname
+	if temp_nickname == "" {
+		temp_nickname = "user_" + util.RandomString(10)
+	}
+
 	var userInfo user.User
 
 	userInfo.Email = email
 	userInfo.Social = req.Social
-	userInfo.Name = req.Nickname
+	userInfo.Name = temp_nickname
 	userInfo.Age = req.Age
 	userInfo.Gender = req.Gender
 

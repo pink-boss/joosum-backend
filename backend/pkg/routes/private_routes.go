@@ -21,6 +21,10 @@ func PrivateRoutes(router *gin.Engine) {
 
 	router.GET("/protected", authHandler.Protected)
 
+	authRouter := router.Group("/auth")
+	{
+		authRouter.POST("/me", authHandler.GetMe)
+	}
 	tagRouter := router.Group("/tags")
 	{
 		tagRouter.GET("/", tagHandler.GetTags)

@@ -78,3 +78,18 @@ func (*UserModel) CreatUser(userInfo User) (*User, error) {
 
 	return newUserInfo, nil
 }
+
+func (*UserModel) FindUserById(id string) (*User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.M{"user_id": id}
+	user := &User{}
+
+	err := db.UserCollection.FindOne(ctx, filter).Decode(user)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}

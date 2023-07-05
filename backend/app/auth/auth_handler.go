@@ -75,6 +75,31 @@ func (h AuthHandler) SignUp(c *gin.Context) {
 	c.JSON(http.StatusOK, util.TokenRes{AccessToken: accessToken, RefreshToken: refreshToken})
 }
 
+// GetMe godoc
+// @Summary 내 정보 조회
+// @Description 현재 로그인된 사용자의 정보를 반환합니다.
+// @Tags 로그인
+// @Accept  json
+// @Produce  json
+// @Security ApiKeyAuth
+// @Success 200 {object} User "현재 로그인된 사용자의 정보를 반환합니다."
+// @Failure 401 {object} util.APIError "로그인이 되어있지 않은 경우 Unauthorized를 반환합니다."
+// @Router /auth/me [get]
+func (h AuthHandler) GetMe(c *gin.Context) {
+	currentUser, exists := c.Get("user_id")
+	if !exists {
+		// 401 Unauthorized
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
+		return
+	}
+
+	userId := currentUser.(*user.User).UserId
+	h.userUsecase.GetUserById(userId)
+
+	c.JSON(http.StatusOK, currentUser)
+
+}
+
 // Protected
 // @Tags 로그인
 // @Summary 액세스토큰 테스트

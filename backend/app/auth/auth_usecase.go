@@ -93,16 +93,16 @@ func (u *AuthUsecase) GetEmailFromJWT(social, accessToken string) (string, error
 		}
 	
 		tokenInfoCall := oauth2Service.Tokeninfo()
-		tokenInfoCall.AccessToken(accessToken)
+		tokenInfoCall.IdToken(accessToken)
 	
 		tokenInfo, err := tokenInfoCall.Do()
 		if err != nil {
-			return "", fmt.Errorf("unable to verify access token: %v", err)
+			return "", fmt.Errorf("unable to verify IdToken: %v", err)
 		}
 	
 		// Check if the token's audience matches your app's client ID.
 		if tokenInfo.Audience != localConfig.GetEnvConfig("googleClientID") {
-			return "", fmt.Errorf("access token is not issued by this app")
+			return "", fmt.Errorf("IdToken is not issued by this app")
 		}
 	
 		// Return the user's email address.

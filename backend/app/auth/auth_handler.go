@@ -82,7 +82,7 @@ func (h AuthHandler) SignUp(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Security ApiKeyAuth
-// @Success 200 {object} User "현재 로그인된 사용자의 정보를 반환합니다."
+// @Success 200 {object} user.User "현재 로그인된 사용자의 정보를 반환합니다."
 // @Failure 401 {object} util.APIError "로그인이 되어있지 않은 경우 Unauthorized를 반환합니다."
 // @Router /auth/me [get]
 func (h AuthHandler) GetMe(c *gin.Context) {

@@ -43,7 +43,7 @@ func (u *AuthUsecase) SignUp(userInfo user.User) (*user.User, error) {
 	return user, nil
 }
 
-func (u *AuthUsecase) GetEmailFromJWT(social, accessToken string) (string, error) {
+func (u *AuthUsecase) GetEmailFromJWT(social, idToken string) (string, error) {
 	if social == "apple" {
 		pubKey := ApplePublicKey{}
 		publicSecret := PublicSecret{}
@@ -58,7 +58,7 @@ func (u *AuthUsecase) GetEmailFromJWT(social, accessToken string) (string, error
 		}
 
 		claims := jwt.MapClaims{}
-		_, err = jwt.ParseWithClaims(accessToken, &claims, func(token *jwt.Token) (interface{}, error) {
+		_, err = jwt.ParseWithClaims(idToken, &claims, func(token *jwt.Token) (interface{}, error) {
 			// kid 값 저장 | public key 대조에 필요하기 때문에
 			kid := token.Header["kid"].(string)
 
@@ -93,7 +93,7 @@ func (u *AuthUsecase) GetEmailFromJWT(social, accessToken string) (string, error
 		}
 	
 		tokenInfoCall := oauth2Service.Tokeninfo()
-		tokenInfoCall.IdToken(accessToken)
+		tokenInfoCall.IdToken(idToken)
 	
 		tokenInfo, err := tokenInfoCall.Do()
 		if err != nil {

@@ -3,6 +3,7 @@ package link
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"joosum-backend/pkg/db"
 	"time"
@@ -45,10 +46,10 @@ type LinkBook struct {
 	BackgroundColor string    `bson:"background_color" json:"backgroundColor"`
 	TitleColor      string    `bson:"title_color" json:"titleColor"`
 	Illustration    *string   `bson:"illustration" json:"illustration"`
-	CreatedAt       time.Time `bson:"created_at"`
-	LastSavedAt     time.Time `bson:"last_saved_at"`
-	UserId          string    `bson:"user_id" example:"User-0767d6af-a802-469c-9505-5ca91e03b354"`
-	IsDefault       string    `bson:"is_default"`
+	CreatedAt       time.Time `bson:"created_at" json:"createdAt"`
+	LastSavedAt     time.Time `bson:"last_saved_at" json:"lastSavedAt"`
+	UserId          string    `bson:"user_id" example:"User-0767d6af-a802-469c-9505-5ca91e03b354" json:"userId"`
+	IsDefault       string    `bson:"is_default" json:"isDefault"`
 }
 
 func (LinkBookModel) GetLinkBooks(req LinkBookListReq, userId string) ([]LinkBookRes, error) {
@@ -127,4 +128,25 @@ func (LinkBookModel) GetDefaultLinkBook(userId string) (*LinkBook, error) {
 	}
 
 	return linkBook, nil
+}
+
+func (LinkBookModel) UpdateLinkBook(linkBook LinkBook) (*mongo.UpdateResult, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	update := bson.M{
+		"$set": bson.M{
+			"title":            linkBook.Title,
+			"background_color": linkBook.BackgroundColor,
+			"title_color":      linkBook.TitleColor,
+			"illustration":     linkBook.Illustration,
+		},
+	}
+
+	result, err := db.LinkBookCollection.UpdateByID(ctx, linkBook.ID, update)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }

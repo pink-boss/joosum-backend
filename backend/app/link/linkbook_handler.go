@@ -79,3 +79,30 @@ func (h LinkBookHandler) CreateLinkBook(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, res)
 }
+
+// UpdateLinkBook
+// @Tags 링크북
+// @Summary 링크북 수정
+// @Param        linkBookId   path      string  true  "ID"
+// @Param request body link.LinkBookCreateReq true "request"
+// @Success 200 {object} db.UpdateResult
+// @Security ApiKeyAuth
+// @Router /link-books/{linkBookId} [put]
+func (h LinkBookHandler) UpdateLinkBook(c *gin.Context) {
+	var req LinkBookCreateReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, util.APIError{Error: "Invalid request body"})
+		return
+	}
+
+	linkBookId := c.Param("linkBookId")
+
+	res, err := h.linkBookUsecase.UpdateLinkBook(linkBookId, req)
+	if err != nil {
+		// 500 Internal Server Error
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
+}

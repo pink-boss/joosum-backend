@@ -6,8 +6,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"joosum-backend/pkg/db"
 	"time"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type LinkBookModel struct{}
@@ -22,35 +20,35 @@ type LinkBookListRes struct {
 }
 
 type LinkBookRes struct {
-	ID              primitive.ObjectID `bson:"_id,omitempty" json:"id" example:"649028fab77fe1a8a3b0815e"`
-	Title           string             `bson:"title" json:"title"`
-	BackgroundColor string             `bson:"background_color" json:"backgroundColor"`
-	TitleColor      string             `bson:"title_color" json:"titleColor"`
-	Illustration    *string            `bson:"illustration" json:"illustration"`
-	CreatedAt       time.Time          `bson:"created_at" json:"createdAt"`
-	LastSavedAt     time.Time          `bson:"last_saved_at" json:"lastSavedAt"`
-	UserId          string             `bson:"user_id" example:"User-0767d6af-a802-469c-9505-5ca91e03b354" json:"userId"`
-	LinkCount       int64              `json:"linkCount"`
-	IsDefault       string             `bson:"is_default" json:"isDefault"`
+	ID              string    `bson:"_id,omitempty" json:"id" example:"649028fab77fe1a8a3b0815e"`
+	Title           string    `bson:"title" json:"title"`
+	BackgroundColor string    `bson:"background_color" json:"backgroundColor"`
+	TitleColor      string    `bson:"title_color" json:"titleColor"`
+	Illustration    *string   `bson:"illustration" json:"illustration"`
+	CreatedAt       time.Time `bson:"created_at" json:"createdAt"`
+	LastSavedAt     time.Time `bson:"last_saved_at" json:"lastSavedAt"`
+	UserId          string    `bson:"user_id" example:"User-0767d6af-a802-469c-9505-5ca91e03b354" json:"userId"`
+	LinkCount       int64     `json:"linkCount"`
+	IsDefault       string    `bson:"is_default" json:"isDefault"`
 }
 
 type LinkBookCreateReq struct {
-	Title           string  `json:"title"`
-	BackgroundColor string  `json:"backgroundColor"`
-	TitleColor      string  `json:"titleColor"`
+	Title           string  `json:"title" example:"title"`
+	BackgroundColor string  `json:"backgroundColor" example:"#6D6D6F"`
+	TitleColor      string  `json:"titleColor" example:"#FFFFFF"`
 	Illustration    *string `json:"illustration"`
 }
 
 type LinkBook struct {
-	ID              primitive.ObjectID `bson:"_id,omitempty" json:"id" example:"649028fab77fe1a8a3b0815e"`
-	Title           string             `bson:"title" json:"title"`
-	BackgroundColor string             `bson:"background_color" json:"backgroundColor"`
-	TitleColor      string             `bson:"title_color" json:"titleColor"`
-	Illustration    *string            `bson:"illustration" json:"illustration"`
-	CreatedAt       time.Time          `bson:"created_at"`
-	LastSavedAt     time.Time          `bson:"last_saved_at"`
-	UserId          string             `bson:"user_id" example:"User-0767d6af-a802-469c-9505-5ca91e03b354"`
-	IsDefault       string             `bson:"is_default"`
+	ID              string    `bson:"_id,omitempty" json:"id" example:"649028fab77fe1a8a3b0815e"`
+	Title           string    `bson:"title" json:"title"`
+	BackgroundColor string    `bson:"background_color" json:"backgroundColor"`
+	TitleColor      string    `bson:"title_color" json:"titleColor"`
+	Illustration    *string   `bson:"illustration" json:"illustration"`
+	CreatedAt       time.Time `bson:"created_at"`
+	LastSavedAt     time.Time `bson:"last_saved_at"`
+	UserId          string    `bson:"user_id" example:"User-0767d6af-a802-469c-9505-5ca91e03b354"`
+	IsDefault       string    `bson:"is_default"`
 }
 
 func (LinkBookModel) GetLinkBooks(req LinkBookListReq, userId string) ([]LinkBookRes, error) {
@@ -106,12 +104,10 @@ func (LinkBookModel) CreateLinkBook(linkBook LinkBook) (*LinkBook, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	result, err := db.LinkBookCollection.InsertOne(ctx, linkBook)
+	_, err := db.LinkBookCollection.InsertOne(ctx, linkBook)
 	if err != nil {
 		return nil, err
 	}
-
-	linkBook.ID = result.InsertedID.(primitive.ObjectID)
 
 	return &linkBook, nil
 }

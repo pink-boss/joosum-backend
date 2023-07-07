@@ -1,6 +1,9 @@
 package link
 
-import "time"
+import (
+	"github.com/google/uuid"
+	"time"
+)
 
 type LinkBookUsecase struct {
 	linkBookModel LinkBookModel
@@ -25,6 +28,7 @@ func (u LinkBookUsecase) GetLinkBooks(req LinkBookListReq, userId string) (*Link
 func (u LinkBookUsecase) CreateLinkBook(req LinkBookCreateReq, userId string) (interface{}, error) {
 
 	linkBook := LinkBook{
+		ID:              uuid.New().String(),
 		Title:           req.Title,
 		BackgroundColor: req.BackgroundColor,
 		TitleColor:      req.TitleColor,
@@ -44,6 +48,7 @@ func (u LinkBookUsecase) CreateLinkBook(req LinkBookCreateReq, userId string) (i
 func (u LinkBookUsecase) CreateDefaultLinkBook(userId string) (interface{}, error) {
 
 	linkBook := LinkBook{
+		ID:              uuid.New().String(),
 		Title:           "기본",
 		BackgroundColor: "#6D6D6F",
 		TitleColor:      "#FFFFFF",

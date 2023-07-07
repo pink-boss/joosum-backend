@@ -93,3 +93,23 @@ func (*UserModel) FindUserById(id string) (*User, error) {
 
 	return user, nil
 }
+
+func (*UserModel) FindUsers() ([]*User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var users []*User
+
+	cursor, err := db.UserCollection.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+
+	for cursor.Next(ctx) {
+		var user User
+		cursor.Decode(&user)
+		users = append(users, &user)
+	}
+
+	return users, nil
+}

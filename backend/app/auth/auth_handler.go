@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+	"joosum-backend/app/link"
 	"joosum-backend/app/user"
 	"joosum-backend/pkg/util"
 	"net/http"
@@ -10,8 +11,9 @@ import (
 )
 
 type AuthHandler struct {
-	authUsecase AuthUsecase
-	userUsecase user.UserUsecase
+	authUsecase     AuthUsecase
+	userUsecase     user.UserUsecase
+	linkBookUsecase link.LinkBookUsecase
 }
 
 // SignUp godoc
@@ -58,12 +60,11 @@ func (h AuthHandler) SignUp(c *gin.Context) {
 	userInfo.Age = req.Age
 	userInfo.Gender = req.Gender
 
-	temp, err := h.authUsecase.SignUp(userInfo)
+	user, err := h.authUsecase.SignUp(userInfo)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, util.APIError{Error: err.Error()})
 		return
 	}
-	print(temp)
 
 	accessToken, refreshToken, err := h.authUsecase.GenerateNewJWTToken([]string{"USER", "ADMIN"}, email)
 
@@ -71,6 +72,9 @@ func (h AuthHandler) SignUp(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, util.APIError{Error: err.Error()})
 		return
 	}
+
+	// 회원가입 시 기본 링크북 폴더 생성
+	h.linkBookUsecase.CreateDefaultLinkBook(user.UserId)
 
 	c.JSON(http.StatusOK, util.TokenRes{AccessToken: accessToken, RefreshToken: refreshToken})
 }

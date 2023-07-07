@@ -27,25 +27,25 @@ func PrivateRoutes(router *gin.Engine) {
 	}
 	tagRouter := router.Group("/tags")
 	{
-		tagRouter.GET("/", tagHandler.GetTags)
-		tagRouter.POST("/", tagHandler.CreateTag)
+		tagRouter.GET("", tagHandler.GetTags)
+		tagRouter.POST("", tagHandler.CreateTag)
 		tagRouter.DELETE("/:id", tagHandler.DeleteTag)
 	}
 
 	linkBookRouter := router.Group("/link-books")
 	{
-		linkBookRouter.GET("/", linkBookHandler.GetLinkBooks)
-		linkBookRouter.POST("/", linkBookHandler.CreateLinkBook)
+		linkBookRouter.GET("", linkBookHandler.GetLinkBooks)
+		linkBookRouter.POST("", linkBookHandler.CreateLinkBook)
 	}
 
 	linkRouter := router.Group("/links")
 	{
-		linkRouter.POST("/", linkHandler.CreateLink)
-		linkRouter.GET("/", linkHandler.GetLinks)
+		linkRouter.POST("", linkHandler.CreateLink)
+		linkRouter.GET("", linkHandler.GetLinks)
 		linkRouter.GET("/:linkId", linkHandler.GetLinkByLinkId)
 		linkRouter.GET("/link-books/:linkBookId/links", linkHandler.GetLinksByLinkBookId)
 		linkRouter.DELETE("/:linkId", linkHandler.DeleteLinkByLinkId)
-		linkRouter.DELETE("/", linkHandler.DeleteLinksByUserId)
+		linkRouter.DELETE("", linkHandler.DeleteLinksByUserId)
 		linkRouter.DELETE("/link-books/:linkBookId/links", linkHandler.DeleteLinksByLinkBookId)
 		linkRouter.PUT("/:linkId/read-count", linkHandler.UpdateReadCount)
 		linkRouter.PUT("/:linkId/link-book-id/:linkBookId", linkHandler.UpdateLinkBookIdByLinkId)

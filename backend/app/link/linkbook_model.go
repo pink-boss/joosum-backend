@@ -27,7 +27,7 @@ type LinkBookRes struct {
 	Title           string             `bson:"title" json:"title"`
 	BackgroundColor string             `bson:"background_color" json:"backgroundColor"`
 	TitleColor      string             `bson:"title_color" json:"titleColor"`
-	Illustration    string             `bson:"illustration" json:"illustration"`
+	Illustration    *string            `bson:"illustration" json:"illustration"`
 	CreatedAt       time.Time          `bson:"created_at"`
 	LastSavedAt     time.Time          `bson:"last_saved_at"`
 	UserId          string             `bson:"user_id" example:"User-0767d6af-a802-469c-9505-5ca91e03b354"`
@@ -35,10 +35,10 @@ type LinkBookRes struct {
 }
 
 type LinkBookCreateReq struct {
-	Title           string `json:"title"`
-	BackgroundColor string `json:"backgroundColor"`
-	TitleColor      string `json:"titleColor"`
-	Illustration    string `json:"illustration"`
+	Title           string  `json:"title"`
+	BackgroundColor string  `json:"backgroundColor"`
+	TitleColor      string  `json:"titleColor"`
+	Illustration    *string `json:"illustration"`
 }
 
 type LinkBook struct {
@@ -46,10 +46,11 @@ type LinkBook struct {
 	Title           string             `bson:"title" json:"title"`
 	BackgroundColor string             `bson:"background_color" json:"backgroundColor"`
 	TitleColor      string             `bson:"title_color" json:"titleColor"`
-	Illustration    string             `bson:"illustration" json:"illustration"`
+	Illustration    *string            `bson:"illustration" json:"illustration"`
 	CreatedAt       time.Time          `bson:"created_at"`
 	LastSavedAt     time.Time          `bson:"last_saved_at"`
 	UserId          string             `bson:"user_id" example:"User-0767d6af-a802-469c-9505-5ca91e03b354"`
+	IsDefault       string             `bson:"is_default"`
 }
 
 func (LinkBookModel) GetLinkBooks(req LinkBookListReq, userId string) ([]LinkBookRes, error) {
@@ -103,4 +104,18 @@ func (LinkBookModel) CreateLinkBook(linkBook LinkBook) (*LinkBook, error) {
 	linkBook.ID = result.InsertedID.(primitive.ObjectID)
 
 	return &linkBook, nil
+}
+
+func (LinkBookModel) GetDefaultLinkBook(userId string) (*LinkBook, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var linkBook *LinkBook
+	error := db.LinkBookCollection.FindOne(ctx, bson.M{"user_id": userId}).Decode(&linkBook)
+
+	if error != nil {
+		return nil, error
+	}
+
+	return linkBook, nil
 }

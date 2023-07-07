@@ -32,6 +32,25 @@ func (u LinkBookUsecase) CreateLinkBook(req LinkBookCreateReq, userId string) (i
 		Illustration:    req.Illustration,
 		CreatedAt:       time.Now(),
 		UserId:          userId,
+		IsDefault:       "n",
+	}
+
+	res, err := u.linkBookModel.CreateLinkBook(linkBook)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (u LinkBookUsecase) CreateDefaultLinkBook(userId string) (interface{}, error) {
+
+	linkBook := LinkBook{
+		Title:           "기본",
+		BackgroundColor: "#6D6D6F",
+		TitleColor:      "#FFFFFF",
+		CreatedAt:       time.Now(),
+		UserId:          userId,
+		IsDefault:       "y",
 	}
 
 	res, err := u.linkBookModel.CreateLinkBook(linkBook)

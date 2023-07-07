@@ -24,7 +24,7 @@ func SwaggerRoutes(router *gin.Engine) {
 		//ginSwagger.DeepLinking(),                // If set to true, enables deep linking for tags and operations. See the Deep Linking documentation for more information.
 		//ginSwagger.DefaultModelsExpandDepth(), // 	Default expansion depth for models (set to -1 completely hide the models).
 		//ginSwagger.InstanceName(), // The instance name of the swagger document. If multiple different swagger instances should be deployed on one gin router, ensure that each instance has a unique name (use the --instanceName parameter to generate swagger documents with swag init).
-		ginSwagger.PersistAuthorization(true), // 	If set to true, it persists authorization data and it would not be lost on browser close/refresh.
+		//ginSwagger.PersistAuthorization(true), // 	If set to true, it persists authorization data and it would not be lost on browser close/refresh.
 		//ginSwagger.Oauth2DefaultClientID(),      // If set, it's used to prepopulate the client_id field of the OAuth2 Authorization dialog.
 	))
 }

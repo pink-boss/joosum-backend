@@ -32,5 +32,5 @@ func main() {
 		}
 	}
 
-	fmt.Printf("%d 개의 기본 링크북 폴더가 생성되었습니다.", CreatedCount)
+	fmt.Printf("%d 개의 기본 링크북 폴더가 생성되었습니다.\n", CreatedCount)
 }

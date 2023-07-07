@@ -17,9 +17,8 @@ type LinkBookListReq struct {
 }
 
 type LinkBookListRes struct {
-	LinkBooks         []LinkBookRes `json:"linkBooks,omitempty"`
-	TotalLinkCount    int64         `json:"TotalLinkCount,omitempty" example:"324"`
-	NoFolderLinkCount int64         `json:"NoFolderLinkCount,omitempty" example:"13"`
+	LinkBooks      []LinkBookRes `json:"linkBooks,omitempty"`
+	TotalLinkCount int64         `json:"totalLinkCount,omitempty" example:"324"`
 }
 
 type LinkBookRes struct {
@@ -28,10 +27,11 @@ type LinkBookRes struct {
 	BackgroundColor string             `bson:"background_color" json:"backgroundColor"`
 	TitleColor      string             `bson:"title_color" json:"titleColor"`
 	Illustration    *string            `bson:"illustration" json:"illustration"`
-	CreatedAt       time.Time          `bson:"created_at"`
-	LastSavedAt     time.Time          `bson:"last_saved_at"`
-	UserId          string             `bson:"user_id" example:"User-0767d6af-a802-469c-9505-5ca91e03b354"`
+	CreatedAt       time.Time          `bson:"created_at" json:"createdAt"`
+	LastSavedAt     time.Time          `bson:"last_saved_at" json:"lastSavedAt"`
+	UserId          string             `bson:"user_id" example:"User-0767d6af-a802-469c-9505-5ca91e03b354" json:"userId"`
 	LinkCount       int64              `json:"linkCount"`
+	IsDefault       string             `bson:"is_default" json:"isDefault"`
 }
 
 type LinkBookCreateReq struct {
@@ -57,14 +57,24 @@ func (LinkBookModel) GetLinkBooks(req LinkBookListReq, userId string) ([]LinkBoo
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
+	sort := -1
+
 	// 정렬 순서 디폴트: 생성 순
 	if req.Sort == "" {
 		req.Sort = "created_at"
 	}
 
+	// 폴더명 순일 때는 오름차순
+	if req.Sort == "title" {
+		sort = 1
+	}
+
 	// 폴더 정렬
 	opts := options.Find()
-	opts.SetSort(bson.M{req.Sort: -1})
+	opts.SetSort(bson.D{
+		{Key: "is_default", Value: 1}, // ""-n-y 정렬 (lmn opqr...vwxyz)
+		{Key: req.Sort, Value: sort},
+	})
 
 	cur, err := db.LinkBookCollection.Find(ctx, map[string]string{"user_id": userId}, opts)
 	if err != nil {
@@ -111,7 +121,10 @@ func (LinkBookModel) GetDefaultLinkBook(userId string) (*LinkBook, error) {
 	defer cancel()
 
 	var linkBook *LinkBook
-	error := db.LinkBookCollection.FindOne(ctx, bson.M{"user_id": userId}).Decode(&linkBook)
+	error := db.LinkBookCollection.FindOne(ctx, bson.M{
+		"user_id":    userId,
+		"is_default": "y",
+	}).Decode(&linkBook)
 
 	if error != nil {
 		return nil, error

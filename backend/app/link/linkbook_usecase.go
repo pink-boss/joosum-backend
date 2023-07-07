@@ -17,7 +17,6 @@ func (u LinkBookUsecase) GetLinkBooks(req LinkBookListReq, userId string) (*Link
 	res := &LinkBookListRes{
 		linkBooks,
 		132,
-		13,
 	}
 
 	return res, nil

@@ -33,7 +33,7 @@ func (h AuthHandler) SignUp(c *gin.Context) {
 		return
 	}
 
-	email, err := h.authUsecase.GetEmailFromJWT(req.Social, req.AccessToken)
+	email, err := h.authUsecase.GetEmailFromJWT(req.Social, req.IdToken)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, util.APIError{Error: fmt.Sprintf("failed to get email from the JWT token: %v", err.Error())})
 		return

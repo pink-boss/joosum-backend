@@ -2,10 +2,12 @@ package link
 
 import (
 	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
 type LinkBookUsecase struct {
+	linkModel     LinkModel
 	linkBookModel LinkBookModel
 }
 
@@ -15,7 +17,27 @@ func (u LinkBookUsecase) GetLinkBooks(req LinkBookListReq, userId string) (*Link
 		return nil, err
 	}
 
-	// todo total count 및 no folder count 추가
+	//todo total count 및 no folder count 추가
+
+	//for _, linkBook := range linkBooks {
+	//	linkCount, err := u.linkModel.GetLinkCount(linkBook.ID)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	linkBook.LinkCount = *linkCount
+	//}
+
+	type Link struct {
+		LinkId     string    `bson:"link_id" json:"linkId"`
+		URL        string    `bson:"url" json:"url"`
+		UserID     string    `bson:"user_id" json:"userId"`
+		Title      string    `bson:"title" json:"title"`
+		LinkBookId string    `bson:"link_book_id" json:"linkBookId"`
+		ReadCount  int       `bson:"read_count" json:"readCount"`
+		LastReadAt time.Time `bson:"last_read_at" json:"LastReadAt"`
+		CreatedAt  time.Time `bson:"created_at" json:"CreatedAt"`
+		UpdatedAt  time.Time `bson:"updated_at" json:"UpdatedAt"`
+	}
 
 	res := &LinkBookListRes{
 		linkBooks,
@@ -58,6 +80,23 @@ func (u LinkBookUsecase) CreateDefaultLinkBook(userId string) (interface{}, erro
 	}
 
 	res, err := u.linkBookModel.CreateLinkBook(linkBook)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (u LinkBookUsecase) UpdateLinkBook(linkBookId string, req LinkBookCreateReq) (*mongo.UpdateResult, error) {
+
+	linkBook := LinkBook{
+		ID:              linkBookId,
+		Title:           req.Title,
+		BackgroundColor: req.BackgroundColor,
+		TitleColor:      req.TitleColor,
+		Illustration:    req.Illustration,
+	}
+
+	res, err := u.linkBookModel.UpdateLinkBook(linkBook)
 	if err != nil {
 		return nil, err
 	}

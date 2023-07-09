@@ -3,12 +3,11 @@ package link
 import (
 	"bytes"
 	"context"
+	"joosum-backend/pkg/db"
 	"time"
 
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Link struct {
@@ -24,42 +23,6 @@ type Link struct {
 }
 
 type LinkModel struct {
-}
-
-var linkCollection *mongo.Collection
-
-func InitLinkCollection(client *mongo.Client, dbName string) {
-	linkCollection = client.Database(dbName).Collection("links")
-	EnsureIndexes(linkCollection)
-}
-
-func EnsureIndexes(collection *mongo.Collection) error {
-	userIdIndexModel := mongo.IndexModel{
-		Keys: bson.D{
-			{Key: "user_id", Value: 1},
-		},
-		Options: options.Index().SetUnique(true),
-	}
-
-	linkIdIndexModel := mongo.IndexModel{
-		Keys: bson.D{
-			{Key: "link_id", Value: 1},
-		},
-		Options: options.Index().SetUnique(true),
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	_, err := collection.Indexes().CreateOne(ctx, userIdIndexModel)
-
-	if err != nil {
-		return err
-	}
-
-	_, err = collection.Indexes().CreateOne(ctx, linkIdIndexModel)
-
-	return err
 }
 
 func (LinkModel) CreateLink(url string, title string, userId string, linkBookId string) (*Link, error) {
@@ -90,7 +53,7 @@ func (LinkModel) CreateLink(url string, title string, userId string, linkBookId 
 		UpdatedAt:  time.Now(),
 	}
 
-	_, err := linkCollection.InsertOne(ctx, link)
+	_, err := db.LinkCollection.InsertOne(ctx, link)
 
 	return &link, err
 }
@@ -101,7 +64,7 @@ func (LinkModel) GetAllLinkByUserId(userId string) ([]*Link, error) {
 
 	var links []*Link
 
-	cursor, err := linkCollection.Find(ctx, bson.M{"user_id": userId})
+	cursor, err := db.LinkCollection.Find(ctx, bson.M{"user_id": userId})
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +84,7 @@ func (LinkModel) GetAllLinkByUserIdAndLinkBookId(userId string, linkBookId strin
 
 	var links []*Link
 
-	cursor, err := linkCollection.Find(ctx, bson.M{"user_id": userId, "link_book_id": linkBookId})
+	cursor, err := db.LinkCollection.Find(ctx, bson.M{"user_id": userId, "link_book_id": linkBookId})
 	if err != nil {
 		return nil, err
 	}
@@ -141,7 +104,7 @@ func (LinkModel) GetOneLinkByLinkId(linkId string) (*Link, error) {
 
 	var link *Link
 
-	error := linkCollection.FindOne(ctx, bson.M{"link_id": linkId}).Decode(&link)
+	error := db.LinkCollection.FindOne(ctx, bson.M{"link_id": linkId}).Decode(&link)
 
 	if error != nil {
 		return nil, error
@@ -166,7 +129,7 @@ func (LinkModel) DeleteOneByLinkId(linkId string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	_, err := linkCollection.DeleteOne(ctx, bson.M{"link_id": linkId})
+	_, err := db.LinkCollection.DeleteOne(ctx, bson.M{"link_id": linkId})
 
 	return err
 }
@@ -175,7 +138,7 @@ func (LinkModel) DeleteAllLinksByUserId(userId string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	_, err := linkCollection.DeleteMany(ctx, bson.M{"user_id": userId})
+	_, err := db.LinkCollection.DeleteMany(ctx, bson.M{"user_id": userId})
 
 	return err
 }
@@ -184,7 +147,7 @@ func (LinkModel) DeleteAllLinksByLinkBookId(userId string, linkBookId string) er
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	_, err := linkCollection.DeleteMany(ctx, bson.M{"user_id": userId, "link_book_id": linkBookId})
+	_, err := db.LinkCollection.DeleteMany(ctx, bson.M{"user_id": userId, "link_book_id": linkBookId})
 
 	return err
 }
@@ -193,7 +156,7 @@ func (LinkModel) UpdateReadCountByLinkId(linkId string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	_, err := linkCollection.UpdateOne(ctx, bson.M{"link_id": linkId}, bson.M{"last_read_at": time.Now(), "$inc": bson.M{"read_count": 1}})
+	_, err := db.LinkCollection.UpdateOne(ctx, bson.M{"link_id": linkId}, bson.M{"$set": bson.M{"last_read_at": time.Now()}, "$inc": bson.M{"read_count": 1}})
 
 	return err
 }
@@ -202,7 +165,7 @@ func (LinkModel) UpdateLinkBookIdByLinkId(linkId string, linkBookId string) erro
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	_, err := linkCollection.UpdateOne(ctx, bson.M{"link_id": linkId}, bson.M{"link_book_id": linkBookId})
+	_, err := db.LinkCollection.UpdateOne(ctx, bson.M{"link_id": linkId}, bson.M{"$set": bson.M{"link_book_id": linkBookId}})
 
 	return err
 }
@@ -211,7 +174,21 @@ func (LinkModel) UpdateTitleAndUrlByLinkId(linkId string, url string, title stri
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	_, err := linkCollection.UpdateOne(ctx, bson.M{"link_id": linkId}, bson.M{"url": url, "title": title})
+	updateFields := bson.M{}
+
+	if url != "" {
+		updateFields["url"] = url
+	}
+
+	if title != "" {
+		updateFields["title"] = title
+	}
+
+	if len(updateFields) == 0 {
+		return nil
+	}
+
+	_, err := db.LinkCollection.UpdateOne(ctx, bson.M{"link_id": linkId}, bson.M{"$set": updateFields})
 
 	return err
 }

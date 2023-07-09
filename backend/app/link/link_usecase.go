@@ -28,6 +28,11 @@ func (u LinkUsecase) FindAllLinksByUserId(userId string) ([]*Link, error) {
 		return nil, err
 	}
 
+	// if links length 0 return []
+	if len(links) == 0 {
+		return []*Link{}, nil
+	}
+
 	return links, nil
 }
 

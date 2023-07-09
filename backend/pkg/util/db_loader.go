@@ -22,6 +22,7 @@ func StartMongoDB() {
 
 	// Collection load
 	db.InitUserCollection(client, dbName)
+	db.InitLinkCollection(client, dbName)
 	db.InitLinkBookCollection(client, dbName)
 
 }

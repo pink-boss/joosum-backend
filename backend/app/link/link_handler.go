@@ -328,7 +328,7 @@ func (h LinkHandler) UpdateTitleAndUrlByLinkId(c *gin.Context) {
 		return
 	}
 
-	err := h.linkUsecase.UpdateTitleAndUrlByLinkId(linkId, req.Title, req.URL)
+	err := h.linkUsecase.UpdateTitleAndUrlByLinkId(linkId, req.URL, req.Title)
 	if err != nil {
 		// 404 Not Found
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})

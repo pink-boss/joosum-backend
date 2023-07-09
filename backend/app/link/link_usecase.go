@@ -14,19 +14,21 @@ func (u LinkUsecase) CreateLink(url string, title string, userId string, linkBoo
 			return nil, err
 		}
 
-		link, err := u.linkModel.CreateLink(url, title, userId, defaultLinkBook.LinkBookId)
-		if err != nil {
-			return nil, err
-		}
-		return link, nil
-
-	} else {
-		link, err := u.linkModel.CreateLink(url, title, userId, linkBookId)
-		if err != nil {
-			return nil, err
-		}
-		return link, nil
+		linkBookId = defaultLinkBook.LinkBookId
 	}
+
+	link, err := u.linkModel.CreateLink(url, title, userId, linkBookId)
+	if err != nil {
+		return nil, err
+	}
+
+	// 링크북 최근 링크등록일 업데이트
+	err = u.linkBookModel.UpdateLinkBookLastSavedAt(linkBookId)
+	if err != nil {
+		return nil, err
+	}
+
+	return link, nil
 }
 
 func (u LinkUsecase) Get9LinksByUserId(userId string) ([]*Link, error) {

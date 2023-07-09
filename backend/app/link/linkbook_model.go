@@ -150,3 +150,21 @@ func (LinkBookModel) UpdateLinkBook(linkBook LinkBook) (*mongo.UpdateResult, err
 
 	return result, nil
 }
+
+func (LinkBookModel) UpdateLinkBookLastSavedAt(linkBookId string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	update := bson.M{
+		"$set": bson.M{
+			"last_saved_at": time.Now(),
+		},
+	}
+
+	_, err := db.LinkBookCollection.UpdateByID(ctx, linkBookId, update)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

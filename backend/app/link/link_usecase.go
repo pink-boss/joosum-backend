@@ -11,6 +11,16 @@ func (u LinkUsecase) CreateLink(url string, title string, userId string, linkBoo
 	}
 
 	return link, nil
+
+}
+
+func (u LinkUsecase) Get9LinksByUserId(userId string) ([]*Link, error) {
+	links, err := u.linkModel.Get9LinksByUserId(userId)
+	if err != nil {
+		return nil, err
+	}
+
+	return links, nil
 }
 
 func (u LinkUsecase) FindOneLinkByLinkId(linkId string) (*Link, error) {
@@ -26,6 +36,11 @@ func (u LinkUsecase) FindAllLinksByUserId(userId string) ([]*Link, error) {
 	links, err := u.linkModel.GetAllLinkByUserId(userId)
 	if err != nil {
 		return nil, err
+	}
+
+	// if links length 0 return []
+	if len(links) == 0 {
+		return []*Link{}, nil
 	}
 
 	return links, nil

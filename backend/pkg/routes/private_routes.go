@@ -3,6 +3,7 @@ package routes
 import (
 	"joosum-backend/app/auth"
 	"joosum-backend/app/link"
+	"joosum-backend/app/page"
 	"joosum-backend/app/tag"
 	"joosum-backend/pkg/middleware"
 
@@ -16,10 +17,16 @@ func PrivateRoutes(router *gin.Engine) {
 	authHandler := auth.AuthHandler{}
 	linkBookHandler := link.LinkBookHandler{}
 	linkHandler := link.LinkHandler{}
+	pageHandler := page.PageHandler{}
 
 	router.Use(middleware.SetUserData())
 
 	router.GET("/protected", authHandler.Protected)
+
+	pageRouter := router.Group("/pages")
+	{
+		pageRouter.GET("/main", pageHandler.GetMainPage)
+	}
 
 	authRouter := router.Group("/auth")
 	{

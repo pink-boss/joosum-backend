@@ -83,7 +83,7 @@ func (h LinkBookHandler) CreateLinkBook(c *gin.Context) {
 // UpdateLinkBook
 // @Tags 링크북
 // @Summary 링크북 수정
-// @Param        linkBookId   path      string  true  "ID"
+// @Param        linkBookId   path      string  true  "LinkBookId"
 // @Param request body link.LinkBookCreateReq true "request"
 // @Success 200 {object} db.UpdateResult
 // @Security ApiKeyAuth

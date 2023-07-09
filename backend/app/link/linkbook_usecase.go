@@ -34,8 +34,6 @@ func (u LinkBookUsecase) GetLinkBooks(req LinkBookListReq, userId string) (*Link
 		return nil, err
 	}
 
-	//todo total count 및 no folder count 추가
-
 	for i, linkBook := range linkBooks {
 		linkCount, err := u.linkModel.GetLinkBookLinkCount(linkBook.LinkBookId)
 		if err != nil {

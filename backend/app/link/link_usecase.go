@@ -1,17 +1,32 @@
 package link
 
 type LinkUsecase struct {
-	linkModel LinkModel
+	linkModel     LinkModel
+	linkBookModel LinkBookModel
 }
 
 func (u LinkUsecase) CreateLink(url string, title string, userId string, linkBookId string) (*Link, error) {
-	link, err := u.linkModel.CreateLink(url, title, userId, linkBookId)
-	if err != nil {
-		return nil, err
+
+	// linkBookId 가 root 이거나 빈 스트링이라면 기본 폴더에 저장
+	if linkBookId == "root" || linkBookId == "" {
+		defaultLinkBook, err := u.linkBookModel.GetDefaultLinkBook(userId)
+		if err != nil {
+			return nil, err
+		}
+
+		link, err := u.linkModel.CreateLink(url, title, userId, defaultLinkBook.LinkBookId)
+		if err != nil {
+			return nil, err
+		}
+		return link, nil
+
+	} else {
+		link, err := u.linkModel.CreateLink(url, title, userId, linkBookId)
+		if err != nil {
+			return nil, err
+		}
+		return link, nil
 	}
-
-	return link, nil
-
 }
 
 func (u LinkUsecase) Get9LinksByUserId(userId string) ([]*Link, error) {

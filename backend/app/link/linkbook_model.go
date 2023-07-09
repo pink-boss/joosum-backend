@@ -21,7 +21,7 @@ type LinkBookListRes struct {
 }
 
 type LinkBookRes struct {
-	ID              string    `bson:"_id,omitempty" json:"id" example:"649028fab77fe1a8a3b0815e"`
+	LinkBookId      string    `bson:"_id,omitempty" json:"linkBookId" example:"649028fab77fe1a8a3b0815e"`
 	Title           string    `bson:"title" json:"title"`
 	BackgroundColor string    `bson:"background_color" json:"backgroundColor"`
 	TitleColor      string    `bson:"title_color" json:"titleColor"`
@@ -41,7 +41,7 @@ type LinkBookCreateReq struct {
 }
 
 type LinkBook struct {
-	ID              string    `bson:"_id,omitempty" json:"id" example:"649028fab77fe1a8a3b0815e"`
+	LinkBookId      string    `bson:"_id,omitempty" json:"linkBookId" example:"649028fab77fe1a8a3b0815e"`
 	Title           string    `bson:"title" json:"title"`
 	BackgroundColor string    `bson:"background_color" json:"backgroundColor"`
 	TitleColor      string    `bson:"title_color" json:"titleColor"`
@@ -143,10 +143,28 @@ func (LinkBookModel) UpdateLinkBook(linkBook LinkBook) (*mongo.UpdateResult, err
 		},
 	}
 
-	result, err := db.LinkBookCollection.UpdateByID(ctx, linkBook.ID, update)
+	result, err := db.LinkBookCollection.UpdateByID(ctx, linkBook.LinkBookId, update)
 	if err != nil {
 		return nil, err
 	}
 
 	return result, nil
+}
+
+func (LinkBookModel) UpdateLinkBookLastSavedAt(linkBookId string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	update := bson.M{
+		"$set": bson.M{
+			"last_saved_at": time.Now(),
+		},
+	}
+
+	_, err := db.LinkBookCollection.UpdateByID(ctx, linkBookId, update)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

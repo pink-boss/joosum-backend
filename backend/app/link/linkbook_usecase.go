@@ -8,6 +8,7 @@ import (
 )
 
 type LinkBookUsecase struct {
+	linkModel     LinkModel
 	linkBookModel LinkBookModel
 }
 
@@ -33,31 +34,22 @@ func (u LinkBookUsecase) GetLinkBooks(req LinkBookListReq, userId string) (*Link
 		return nil, err
 	}
 
-	//todo total count 및 no folder count 추가
+	for i, linkBook := range linkBooks {
+		linkCount, err := u.linkModel.GetLinkBookLinkCount(linkBook.LinkBookId)
+		if err != nil {
+			return nil, err
+		}
+		linkBooks[i].LinkCount = linkCount
+	}
 
-	//for _, linkBook := range linkBooks {
-	//	linkCount, err := u.linkModel.GetLinkCount(linkBook.ID)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//	linkBook.LinkCount = *linkCount
-	//}
-
-	type Link struct {
-		LinkId     string    `bson:"link_id" json:"linkId"`
-		URL        string    `bson:"url" json:"url"`
-		UserID     string    `bson:"user_id" json:"userId"`
-		Title      string    `bson:"title" json:"title"`
-		LinkBookId string    `bson:"link_book_id" json:"linkBookId"`
-		ReadCount  int       `bson:"read_count" json:"readCount"`
-		LastReadAt time.Time `bson:"last_read_at" json:"LastReadAt"`
-		CreatedAt  time.Time `bson:"created_at" json:"CreatedAt"`
-		UpdatedAt  time.Time `bson:"updated_at" json:"UpdatedAt"`
+	totalLinkCount, err := u.linkModel.GetUserLinkCount(userId)
+	if err != nil {
+		return nil, err
 	}
 
 	res := &LinkBookListRes{
 		linkBooks,
-		132,
+		totalLinkCount,
 	}
 
 	return res, nil
@@ -66,7 +58,7 @@ func (u LinkBookUsecase) GetLinkBooks(req LinkBookListReq, userId string) (*Link
 func (u LinkBookUsecase) CreateLinkBook(req LinkBookCreateReq, userId string) (interface{}, error) {
 
 	linkBook := LinkBook{
-		ID:              uuid.New().String(),
+		LinkBookId:      "LinkBook-" + uuid.New().String(),
 		Title:           req.Title,
 		BackgroundColor: req.BackgroundColor,
 		TitleColor:      req.TitleColor,
@@ -86,7 +78,7 @@ func (u LinkBookUsecase) CreateLinkBook(req LinkBookCreateReq, userId string) (i
 func (u LinkBookUsecase) CreateDefaultLinkBook(userId string) (interface{}, error) {
 
 	linkBook := LinkBook{
-		ID:              uuid.New().String(),
+		LinkBookId:      "LinkBook-" + uuid.New().String(),
 		Title:           "기본",
 		BackgroundColor: "#6D6D6F",
 		TitleColor:      "#FFFFFF",
@@ -105,7 +97,7 @@ func (u LinkBookUsecase) CreateDefaultLinkBook(userId string) (interface{}, erro
 func (u LinkBookUsecase) UpdateLinkBook(linkBookId string, req LinkBookCreateReq) (*mongo.UpdateResult, error) {
 
 	linkBook := LinkBook{
-		ID:              linkBookId,
+		LinkBookId:      linkBookId,
 		Title:           req.Title,
 		BackgroundColor: req.BackgroundColor,
 		TitleColor:      req.TitleColor,

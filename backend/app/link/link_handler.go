@@ -25,7 +25,7 @@ type UpdateLinkReq struct {
 // CreateLink
 // @Tags 링크
 // @Summary 링크 생성
-// @Description 링크 생성 만약에 링크북이 없다면 root라고 넣어주세요.
+// @Description 링크 생성 만약에 기본 링크북에 저장하고 싶다면, linkBookId 에 빈스트링 혹은 root 라고 넣어주세요.
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth

@@ -1,13 +1,14 @@
 package middleware
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v4"
-	"go.mongodb.org/mongo-driver/mongo"
 	"joosum-backend/app/user"
 	"joosum-backend/pkg/config"
 	"net/http"
 	"strings"
+
+	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var userUsecase user.UserUsecase
@@ -43,7 +44,7 @@ func SetUserData() gin.HandlerFunc {
 			return
 		}
 
-		userId, err := userUsecase.GetUserByEmail(idValue.(string))
+		user, err := userUsecase.GetUserByEmail(idValue.(string))
 		if err != nil {
 			if err == mongo.ErrNoDocuments {
 				c.JSON(http.StatusNotFound, gin.H{"error": "failed to find the email that Signed up"})
@@ -55,7 +56,7 @@ func SetUserData() gin.HandlerFunc {
 			return
 		}
 
-		c.Set("user_id", userId)
+		c.Set("user", user)
 
 		c.Next()
 	}

@@ -28,7 +28,7 @@ func (h LinkBookHandler) GetLinkBooks(c *gin.Context) {
 		return
 	}
 
-	currentUser, exists := c.Get("user_id")
+	currentUser, exists := c.Get("user")
 	if !exists {
 		// 401 Unauthorized
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
@@ -61,7 +61,7 @@ func (h LinkBookHandler) CreateLinkBook(c *gin.Context) {
 		return
 	}
 
-	currentUser, exists := c.Get("user_id")
+	currentUser, exists := c.Get("user")
 	if !exists {
 		// 401 Unauthorized
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})

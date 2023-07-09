@@ -90,7 +90,7 @@ func (h AuthHandler) SignUp(c *gin.Context) {
 // @Failure 401 {object} util.APIError "로그인이 되어있지 않은 경우 Unauthorized를 반환합니다."
 // @Router /auth/me [get]
 func (h AuthHandler) GetMe(c *gin.Context) {
-	currentUser, exists := c.Get("user_id")
+	currentUser, exists := c.Get("user")
 	if !exists {
 		// 401 Unauthorized
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})

@@ -1,6 +1,7 @@
 package link
 
 import (
+	"joosum-backend/app/user"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -36,12 +37,14 @@ type UpdateLinkReq struct {
 // @Security ApiKeyAuth
 // @Router /links [post]
 func (h LinkHandler) CreateLink(c *gin.Context) {
-	userId, exists := c.Get("user_id")
+	currentUser, exists := c.Get("user")
 	if !exists {
 		// 401 Unauthorized
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
 		return
 	}
+
+	userId := currentUser.(*user.User).UserId
 
 	var req CreateLinkReq
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -50,7 +53,7 @@ func (h LinkHandler) CreateLink(c *gin.Context) {
 		return
 	}
 
-	link, err := h.linkUsecase.CreateLink(req.URL, req.Title, userId.(string), req.LinkBookId)
+	link, err := h.linkUsecase.CreateLink(req.URL, req.Title, userId, req.LinkBookId)
 	if err != nil {
 		// 500 Internal Server Error
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -72,14 +75,16 @@ func (h LinkHandler) CreateLink(c *gin.Context) {
 // @Failure 401 {object} util.APIError "Authorization 헤더가 없을 때 반환합니다."
 // @Router /links [get]
 func (h LinkHandler) GetLinks(c *gin.Context) {
-	userId, exists := c.Get("user_id")
+	currentUser, exists := c.Get("user")
 	if !exists {
 		// 401 Unauthorized
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
 		return
 	}
 
-	links, err := h.linkUsecase.FindAllLinksByUserId(userId.(string))
+	userId := currentUser.(*user.User).UserId
+
+	links, err := h.linkUsecase.FindAllLinksByUserId(userId)
 	if err != nil {
 		// 500 Internal Server Error
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -130,16 +135,18 @@ func (h LinkHandler) GetLinkByLinkId(c *gin.Context) {
 // @Router /link-books/{linkBookId}/links [get]
 func (h LinkHandler) GetLinksByLinkBookId(c *gin.Context) {
 
-	userId, exists := c.Get("user_id")
+	currentUser, exists := c.Get("user")
 	if !exists {
 		// 401 Unauthorized
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
 		return
 	}
 
+	userId := currentUser.(*user.User).UserId
+
 	linkBookId := c.Param("linkBookId")
 
-	links, err := h.linkUsecase.FindAllLinksByUserIdAndLinkBookId(userId.(string), linkBookId)
+	links, err := h.linkUsecase.FindAllLinksByUserIdAndLinkBookId(userId, linkBookId)
 	if err != nil {
 		// 404 Not Found
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
@@ -187,14 +194,16 @@ func (h LinkHandler) DeleteLinkByLinkId(c *gin.Context) {
 // @Failure 401 {object} util.APIError "Authorization 헤더가 없을 때 반환합니다."
 // @Router /links [delete]
 func (h LinkHandler) DeleteLinksByUserId(c *gin.Context) {
-	userId, exists := c.Get("user_id")
+	currentUser, exists := c.Get("user")
 	if !exists {
 		// 401 Unauthorized
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
 		return
 	}
 
-	err := h.linkUsecase.DeleteAllLinksByUserId(userId.(string))
+	userId := currentUser.(*user.User).UserId
+
+	err := h.linkUsecase.DeleteAllLinksByUserId(userId)
 	if err != nil {
 		// 500 Internal Server Error
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -218,16 +227,18 @@ func (h LinkHandler) DeleteLinksByUserId(c *gin.Context) {
 // @Failure 404 {object} util.APIError "링크북 아이디에 해당하는 링크북이 없을 때 반환합니다."
 // @Router /link-books/{linkBookId}/links [delete]
 func (h LinkHandler) DeleteLinksByLinkBookId(c *gin.Context) {
-	userId, exists := c.Get("user_id")
+	currentUser, exists := c.Get("user")
 	if !exists {
 		// 401 Unauthorized
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
 		return
 	}
 
+	userId := currentUser.(*user.User).UserId
+
 	linkBookId := c.Param("linkBookId")
 
-	err := h.linkUsecase.DeleteAllLinksByLinkBookId(userId.(string), linkBookId)
+	err := h.linkUsecase.DeleteAllLinksByLinkBookId(userId, linkBookId)
 	if err != nil {
 		// 404 Not Found
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})

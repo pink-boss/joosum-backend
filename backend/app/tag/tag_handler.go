@@ -1,6 +1,7 @@
 package tag
 
 import (
+	"joosum-backend/app/user"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -28,12 +29,14 @@ type CreateTagReq struct {
 // @Security ApiKeyAuth
 // @Router /tags [post]
 func (h TagHandler) CreateTag(c *gin.Context) {
-	userId, exists := c.Get("user_id")
+	currentUser, exists := c.Get("user")
 	if !exists {
 		// 401 Unauthorized
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
 		return
 	}
+
+	userId := currentUser.(*user.User).UserId
 
 	var req CreateTagReq
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -42,7 +45,7 @@ func (h TagHandler) CreateTag(c *gin.Context) {
 		return
 	}
 
-	tags, err := h.tagUsecase.CreateTag(userId.(string), req.Name)
+	tags, err := h.tagUsecase.CreateTag(userId, req.Name)
 	if err != nil {
 		// 500 Internal Server Error
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -65,14 +68,16 @@ func (h TagHandler) CreateTag(c *gin.Context) {
 // @Security ApiKeyAuth
 // @Router /tags [get]
 func (h TagHandler) GetTags(c *gin.Context) {
-	userId, exists := c.Get("user_id")
+	currentUser, exists := c.Get("user")
 	if !exists {
 		// 401 Unauthorized
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
 		return
 	}
 
-	tags, err := h.tagUsecase.FindTagByUserId(userId.(string))
+	userId := currentUser.(*user.User).UserId
+
+	tags, err := h.tagUsecase.FindTagByUserId(userId)
 	if err != nil {
 		// 500 Internal Server Error
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -97,16 +102,18 @@ func (h TagHandler) GetTags(c *gin.Context) {
 // @Security ApiKeyAuth
 // @Router /tags/{id} [delete]
 func (h TagHandler) DeleteTag(c *gin.Context) {
-	userId, exists := c.Get("user_id")
+	currentUser, exists := c.Get("user")
 	if !exists {
 		// 401 Unauthorized
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
 		return
 	}
 
+	userId := currentUser.(*user.User).UserId
+
 	tagId := c.Param("id")
 
-	if err := h.tagUsecase.DeleteTag(userId.(string), tagId); err != nil {
+	if err := h.tagUsecase.DeleteTag(userId, tagId); err != nil {
 		// 500 Internal Server Error
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

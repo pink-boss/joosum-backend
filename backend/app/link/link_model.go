@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Link struct {
@@ -56,6 +57,27 @@ func (LinkModel) CreateLink(url string, title string, userId string, linkBookId 
 	_, err := db.LinkCollection.InsertOne(ctx, link)
 
 	return &link, err
+}
+
+func (LinkModel) Get9LinksByUserId(userId string) ([]*Link, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var links []*Link
+
+	cursor, err := db.LinkCollection.Find(ctx, bson.M{"user_id": userId}, options.Find().SetLimit(9))
+	if err != nil {
+		return nil, err
+	}
+
+	for cursor.Next(ctx) {
+		var link Link
+		cursor.Decode(&link)
+		links = append(links, &link)
+	}
+
+	return links, nil
+
 }
 
 func (LinkModel) GetAllLinkByUserId(userId string) ([]*Link, error) {

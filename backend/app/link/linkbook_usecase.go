@@ -1,14 +1,30 @@
 package link
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/mongo"
-	"time"
 )
 
 type LinkBookUsecase struct {
-	linkModel     LinkModel
 	linkBookModel LinkBookModel
+}
+
+func (u LinkBookUsecase) GetLinkbooksForMainPage(userId string) ([]LinkBookRes, error) {
+
+	linkBooks, err := u.linkBookModel.GetLinkBooks(LinkBookListReq{Sort: "last_saved_at"}, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	// if linkBooks length 0 return []
+	if len(linkBooks) == 0 {
+		return []LinkBookRes{}, nil
+	}
+
+	return linkBooks, nil
+
 }
 
 func (u LinkBookUsecase) GetLinkBooks(req LinkBookListReq, userId string) (*LinkBookListRes, error) {

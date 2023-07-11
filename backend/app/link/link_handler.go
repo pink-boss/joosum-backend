@@ -57,7 +57,7 @@ func (h LinkHandler) CreateLink(c *gin.Context) {
 		return
 	}
 
-	link, err := h.linkUsecase.CreateLink(req.URL, req.Title, userId, req.LinkBookId)
+	link, err := h.linkUsecase.CreateLink(req.URL, req.Title, userId, req.LinkBookId, req.ThumbnailURL, req.Tags)
 	if err != nil {
 		// 500 Internal Server Error
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

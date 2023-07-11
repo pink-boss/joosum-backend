@@ -28,7 +28,7 @@ type Link struct {
 type LinkModel struct {
 }
 
-func (LinkModel) CreateLink(url string, title string, userId string, linkBookId string) (*Link, error) {
+func (LinkModel) CreateLink(url string, title string, userId string, linkBookId string, thumbnailURL string, tags []string) (*Link, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -46,14 +46,16 @@ func (LinkModel) CreateLink(url string, title string, userId string, linkBookId 
 	uid := <-uniqueKey
 
 	link := Link{
-		LinkId:     uid,
-		URL:        url,
-		Title:      title,
-		UserID:     userId,
-		LinkBookId: linkBookId,
-		ReadCount:  0,
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
+		LinkId:       uid,
+		URL:          url,
+		Title:        title,
+		UserID:       userId,
+		LinkBookId:   linkBookId,
+		ThumbnailURL: thumbnailURL,
+		Tags:         tags,
+		ReadCount:    0,
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
 	}
 
 	_, err := db.LinkCollection.InsertOne(ctx, link)

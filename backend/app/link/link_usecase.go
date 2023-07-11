@@ -5,7 +5,7 @@ type LinkUsecase struct {
 	linkBookModel LinkBookModel
 }
 
-func (u LinkUsecase) CreateLink(url string, title string, userId string, linkBookId string) (*Link, error) {
+func (u LinkUsecase) CreateLink(url string, title string, userId string, linkBookId string, thumbnailURL string, tags []string) (*Link, error) {
 
 	// linkBookId 가 root 이거나 빈 스트링이라면 기본 폴더에 저장
 	if linkBookId == "root" || linkBookId == "" {
@@ -17,7 +17,7 @@ func (u LinkUsecase) CreateLink(url string, title string, userId string, linkBoo
 		linkBookId = defaultLinkBook.LinkBookId
 	}
 
-	link, err := u.linkModel.CreateLink(url, title, userId, linkBookId)
+	link, err := u.linkModel.CreateLink(url, title, userId, linkBookId, thumbnailURL, tags)
 	if err != nil {
 		return nil, err
 	}

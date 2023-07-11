@@ -118,8 +118,8 @@ func (u LinkUsecase) UpdateLinkBookIdByLinkId(linkId string, linkBookId string) 
 	return nil
 }
 
-func (u LinkUsecase) UpdateTitleAndUrlByLinkId(linkId string, url string, title string) error {
-	err := u.linkModel.UpdateTitleAndUrlByLinkId(linkId, url, title)
+func (u LinkUsecase) UpdateTitleAndUrlByLinkId(linkId string, url string, title string, thumbnailURL string, tags []string) error {
+	err := u.linkModel.UpdateTitleAndUrlByLinkId(linkId, url, title, thumbnailURL, tags)
 	if err != nil {
 		return err
 	}

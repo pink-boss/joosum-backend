@@ -12,14 +12,18 @@ type LinkHandler struct {
 }
 
 type CreateLinkReq struct {
-	URL        string `json:"url"`
-	Title      string `json:"title"`
-	LinkBookId string `json:"linkBookId"`
+	URL          string   `json:"url"`
+	Title        string   `json:"title"`
+	LinkBookId   string   `json:"linkBookId"`
+	ThumbnailURL string   `json:"thumbnailURL"`
+	Tags         []string `json:"tags"`
 }
 
 type UpdateLinkReq struct {
-	Title string `json:"title"`
-	URL   string `json:"url"`
+	Title        string   `json:"title"`
+	URL          string   `json:"url"`
+	ThumbnailURL string   `json:"thumbnailURL"`
+	Tags         []string `json:"tags"`
 }
 
 // CreateLink
@@ -328,7 +332,7 @@ func (h LinkHandler) UpdateTitleAndUrlByLinkId(c *gin.Context) {
 		return
 	}
 
-	err := h.linkUsecase.UpdateTitleAndUrlByLinkId(linkId, req.URL, req.Title)
+	err := h.linkUsecase.UpdateTitleAndUrlByLinkId(linkId, req.URL, req.Title, req.ThumbnailURL, req.Tags)
 	if err != nil {
 		// 404 Not Found
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})

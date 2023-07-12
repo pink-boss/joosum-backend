@@ -40,6 +40,10 @@ type LinkBookCreateReq struct {
 	Illustration    *string `json:"illustration"`
 }
 
+type LinkBookDeleteRes struct {
+	DeletedLinks int64 `json:"deletedLinks"`
+}
+
 type LinkBook struct {
 	LinkBookId      string    `bson:"_id,omitempty" json:"linkBookId" example:"649028fab77fe1a8a3b0815e"`
 	Title           string    `bson:"title" json:"title"`
@@ -167,4 +171,31 @@ func (LinkBookModel) UpdateLinkBookLastSavedAt(linkBookId string) error {
 	}
 
 	return nil
+}
+
+func (LinkBookModel) DeleteLinkBook(linkBookId string) (*mongo.DeleteResult, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	res, err := db.LinkBookCollection.DeleteOne(ctx, bson.M{"_id": linkBookId})
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (LinkBookModel) IsDefaultLinkBook(linkBookId string) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	count, err := db.LinkBookCollection.CountDocuments(ctx, bson.M{"_id": linkBookId, "is_default": "y"})
+	if err != nil {
+		return false, err
+	}
+
+	if count == 1 {
+		return true, err
+	}
+	return false, nil
 }

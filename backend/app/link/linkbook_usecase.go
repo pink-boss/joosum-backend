@@ -1,10 +1,10 @@
 package link
 
 import (
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 
 	"github.com/google/uuid"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type LinkBookUsecase struct {
@@ -109,4 +109,26 @@ func (u LinkBookUsecase) UpdateLinkBook(linkBookId string, req LinkBookCreateReq
 		return nil, err
 	}
 	return res, nil
+}
+
+func (u LinkBookUsecase) DeleteLinkBookWithLinks(userId, linkBookId string) (*LinkBookDeleteRes, error) {
+	isDefault, err := u.linkBookModel.IsDefaultLinkBook(linkBookId)
+	if err != nil {
+		return nil, err
+	}
+
+	// 기본 링크북 폴더는 삭제하지 않음
+	if !isDefault {
+		_, err := u.linkBookModel.DeleteLinkBook(linkBookId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	result, err := u.linkModel.DeleteAllLinksByLinkBookId(userId, linkBookId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &LinkBookDeleteRes{DeletedLinks: result.DeletedCount}, nil
 }

@@ -3,6 +3,7 @@ package link
 import (
 	"bytes"
 	"context"
+	"go.mongodb.org/mongo-driver/mongo"
 	"joosum-backend/pkg/db"
 	"time"
 
@@ -143,24 +144,24 @@ func (LinkModel) GetLinkBookLinkCount(linkBookId string) (int64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	res, error := db.LinkCollection.CountDocuments(ctx, bson.M{"link_book_id": linkBookId})
+	result, error := db.LinkCollection.CountDocuments(ctx, bson.M{"link_book_id": linkBookId})
 	if error != nil {
 		return 0, error
 	}
 
-	return res, nil
+	return result, nil
 }
 
 func (LinkModel) GetUserLinkCount(userId string) (int64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	res, error := db.LinkCollection.CountDocuments(ctx, bson.M{"user_id": userId})
+	result, error := db.LinkCollection.CountDocuments(ctx, bson.M{"user_id": userId})
 	if error != nil {
 		return 0, error
 	}
 
-	return res, nil
+	return result, nil
 }
 
 func (LinkModel) DeleteOneByLinkId(linkId string) error {
@@ -181,13 +182,16 @@ func (LinkModel) DeleteAllLinksByUserId(userId string) error {
 	return err
 }
 
-func (LinkModel) DeleteAllLinksByLinkBookId(userId string, linkBookId string) error {
+func (LinkModel) DeleteAllLinksByLinkBookId(userId string, linkBookId string) (*mongo.DeleteResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	_, err := db.LinkCollection.DeleteMany(ctx, bson.M{"user_id": userId, "link_book_id": linkBookId})
+	result, err := db.LinkCollection.DeleteMany(ctx, bson.M{"user_id": userId, "link_book_id": linkBookId})
+	if err != nil {
+		return nil, err
+	}
 
-	return err
+	return result, nil
 }
 
 func (LinkModel) UpdateReadCountByLinkId(linkId string) error {

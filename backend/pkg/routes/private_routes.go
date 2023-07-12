@@ -44,6 +44,7 @@ func PrivateRoutes(router *gin.Engine) {
 		linkBookRouter.GET("", linkBookHandler.GetLinkBooks)
 		linkBookRouter.POST("", linkBookHandler.CreateLinkBook)
 		linkBookRouter.PUT("/:linkBookId", linkBookHandler.UpdateLinkBook)
+		linkBookRouter.DELETE("/:linkBookId", linkBookHandler.DeleteLinkBook)
 	}
 
 	linkRouter := router.Group("/links")

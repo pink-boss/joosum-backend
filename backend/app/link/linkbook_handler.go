@@ -106,3 +106,33 @@ func (h LinkBookHandler) UpdateLinkBook(c *gin.Context) {
 
 	c.JSON(http.StatusOK, res)
 }
+
+// DeleteLinkBook
+// @Tags 링크북
+// @Summary 링크북 삭제
+// @Description 링크북과 모든 링크들을 삭제 (기본 링크북이라면 링크들만 삭제)
+// @Param        linkBookId   path      string  true  "LinkBookId"
+// @Success 200 {object} link.LinkBookDeleteRes
+// @Security ApiKeyAuth
+// @Router /link-books/{linkBookId} [delete]
+func (h LinkBookHandler) DeleteLinkBook(c *gin.Context) {
+	linkBookId := c.Param("linkBookId")
+
+	currentUser, exists := c.Get("user")
+	if !exists {
+		// 401 Unauthorized
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
+		return
+	}
+
+	userId := currentUser.(*user.User).UserId
+
+	res, err := h.linkBookUsecase.DeleteLinkBookWithLinks(userId, linkBookId)
+	if err != nil {
+		// 500 Internal Server Error
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
+}

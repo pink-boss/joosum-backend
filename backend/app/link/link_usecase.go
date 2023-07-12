@@ -91,7 +91,7 @@ func (u LinkUsecase) DeleteAllLinksByUserId(userId string) error {
 }
 
 func (u LinkUsecase) DeleteAllLinksByLinkBookId(userId string, linkBookId string) error {
-	err := u.linkModel.DeleteAllLinksByLinkBookId(userId, linkBookId)
+	_, err := u.linkModel.DeleteAllLinksByLinkBookId(userId, linkBookId)
 	if err != nil {
 		return err
 	}

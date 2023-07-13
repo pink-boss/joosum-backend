@@ -61,6 +61,13 @@ func (h LinkBookHandler) CreateLinkBook(c *gin.Context) {
 		return
 	}
 
+	err := util.Validate.Struct(req)
+	if err != nil {
+		fields := util.ValidatorErrors(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ValidatorErrors", "fields": fields})
+		return
+	}
+
 	currentUser, exists := c.Get("user")
 	if !exists {
 		// 401 Unauthorized

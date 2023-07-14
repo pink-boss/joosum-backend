@@ -2,11 +2,12 @@ package link
 
 import (
 	"context"
+	"joosum-backend/pkg/db"
+	"time"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"joosum-backend/pkg/db"
-	"time"
 )
 
 type LinkBookModel struct{}
@@ -115,6 +116,22 @@ func (LinkBookModel) CreateLinkBook(linkBook LinkBook) (*LinkBook, error) {
 	}
 
 	return &linkBook, nil
+}
+
+func (LinkBookModel) GetLinkBookById(linkBookId string) (*LinkBook, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var linkBook *LinkBook
+	error := db.LinkBookCollection.FindOne(ctx, bson.M{
+		"_id": linkBookId,
+	}).Decode(&linkBook)
+
+	if error != nil {
+		return nil, error
+	}
+
+	return linkBook, nil
 }
 
 func (LinkBookModel) GetDefaultLinkBook(userId string) (*LinkBook, error) {

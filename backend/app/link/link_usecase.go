@@ -8,6 +8,7 @@ type LinkUsecase struct {
 func (u LinkUsecase) CreateLink(url string, title string, userId string, linkBookId string, thumbnailURL string, tags []string) (*Link, error) {
 
 	// linkBookId 가 root 이거나 빈 스트링이라면 기본 폴더에 저장
+	var linkBookName string
 	if linkBookId == "root" || linkBookId == "" {
 		defaultLinkBook, err := u.linkBookModel.GetDefaultLinkBook(userId)
 		if err != nil {
@@ -15,9 +16,17 @@ func (u LinkUsecase) CreateLink(url string, title string, userId string, linkBoo
 		}
 
 		linkBookId = defaultLinkBook.LinkBookId
+		linkBookName = defaultLinkBook.Title
+	} else {
+		linkBookData, err := u.linkBookModel.GetLinkBookById(linkBookId)
+		if err != nil {
+			return nil, err
+		}
+
+		linkBookName = linkBookData.Title
 	}
 
-	link, err := u.linkModel.CreateLink(url, title, userId, linkBookId, thumbnailURL, tags)
+	link, err := u.linkModel.CreateLink(url, title, userId, linkBookId, linkBookName, thumbnailURL, tags)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +119,15 @@ func (u LinkUsecase) UpdateReadByLinkId(linkId string) error {
 }
 
 func (u LinkUsecase) UpdateLinkBookIdByLinkId(linkId string, linkBookId string) error {
-	err := u.linkModel.UpdateLinkBookIdByLinkId(linkId, linkBookId)
+	// find LinkBook by linkBookId
+	linkBookData, err := u.linkBookModel.GetLinkBookById(linkBookId)
+	if err != nil {
+		return err
+	}
+
+	linkBookName := linkBookData.Title
+
+	err = u.linkModel.UpdateLinkBookIdAndTitleByLinkId(linkId, linkBookId, linkBookName)
 	if err != nil {
 		return err
 	}

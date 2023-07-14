@@ -3,9 +3,10 @@ package link
 import (
 	"bytes"
 	"context"
-	"go.mongodb.org/mongo-driver/mongo"
 	"joosum-backend/pkg/db"
 	"time"
+
+	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
@@ -18,6 +19,7 @@ type Link struct {
 	UserID       string    `bson:"user_id" json:"userId"`
 	Title        string    `bson:"title" json:"title"`
 	LinkBookId   string    `bson:"link_book_id" json:"linkBookId"`
+	LinkBookName string    `bson:"link_book_name" json:"linkBookName"`
 	ThumbnailURL string    `bson:"thumbnail_url" json:"thumbnailURL"`
 	Tags         []string  `bson:"tags" json:"tags"`
 	ReadCount    int       `bson:"read_count" json:"readCount"`
@@ -29,7 +31,7 @@ type Link struct {
 type LinkModel struct {
 }
 
-func (LinkModel) CreateLink(url string, title string, userId string, linkBookId string, thumbnailURL string, tags []string) (*Link, error) {
+func (LinkModel) CreateLink(url string, title string, userId string, linkBookId string, linkBookName string, thumbnailURL string, tags []string) (*Link, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -52,6 +54,7 @@ func (LinkModel) CreateLink(url string, title string, userId string, linkBookId 
 		Title:        title,
 		UserID:       userId,
 		LinkBookId:   linkBookId,
+		LinkBookName: linkBookName,
 		ThumbnailURL: thumbnailURL,
 		Tags:         tags,
 		ReadCount:    0,
@@ -203,11 +206,11 @@ func (LinkModel) UpdateReadCountByLinkId(linkId string) error {
 	return err
 }
 
-func (LinkModel) UpdateLinkBookIdByLinkId(linkId string, linkBookId string) error {
+func (LinkModel) UpdateLinkBookIdAndTitleByLinkId(linkId string, linkBookId string, linkBookName string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	_, err := db.LinkCollection.UpdateOne(ctx, bson.M{"link_id": linkId}, bson.M{"$set": bson.M{"link_book_id": linkBookId}})
+	_, err := db.LinkCollection.UpdateOne(ctx, bson.M{"link_id": linkId}, bson.M{"$set": bson.M{"link_book_id": linkBookId, "link_book_name": linkBookName}})
 
 	return err
 }

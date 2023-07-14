@@ -35,7 +35,7 @@ type LinkBookRes struct {
 }
 
 type LinkBookCreateReq struct {
-	Title           string  `json:"title" example:"title"`
+	Title           string  `json:"title" example:"title" validate:"required"`
 	BackgroundColor string  `json:"backgroundColor" example:"#6D6D6F"`
 	TitleColor      string  `json:"titleColor" example:"#FFFFFF"`
 	Illustration    *string `json:"illustration"`

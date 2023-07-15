@@ -71,15 +71,17 @@ func (h LinkHandler) CreateLink(c *gin.Context) {
 // GetLinks godoc
 // @Tags 링크
 // @Summary 링크를 조회합니다.
-// @Description 사용자 아이디를 통해 해당 사용자의 모든 링크를 조회합니다.
+// @Description 사용자 아이디를 통해 해당 사용자의 모든 링크를 조회합니다. Sort를 Query Parameter로 받아서 정렬할 수 있습니다.
 // @Accept  json
 // @Produce  json
 // @Security ApiKeyAuth
+// @Param sort query string false "정렬 기준" created_at,updated_at,title
 // @Success 200 {object} Link "나의 유저아이디 기반으로 모든 링크를 반환합니다."
 // @Failure 401 {object} util.APIError "Authorization 헤더가 없을 때 반환합니다."
 // @Router /links [get]
 func (h LinkHandler) GetLinks(c *gin.Context) {
 	currentUser, exists := c.Get("user")
+
 	if !exists {
 		// 401 Unauthorized
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
@@ -88,7 +90,13 @@ func (h LinkHandler) GetLinks(c *gin.Context) {
 
 	userId := currentUser.(*user.User).UserId
 
-	links, err := h.linkUsecase.FindAllLinksByUserId(userId)
+	sort := c.Query("sort")
+
+	if sort == "" {
+		sort = "created_at"
+	}
+
+	links, err := h.linkUsecase.FindAllLinksByUserId(userId, sort)
 	if err != nil {
 		// 500 Internal Server Error
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

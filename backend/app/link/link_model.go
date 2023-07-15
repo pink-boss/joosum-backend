@@ -88,13 +88,18 @@ func (LinkModel) Get9LinksByUserId(userId string) ([]*Link, error) {
 
 }
 
-func (LinkModel) GetAllLinkByUserId(userId string) ([]*Link, error) {
+func (LinkModel) GetAllLinkByUserId(userId string, sort string) ([]*Link, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	var links []*Link
 
-	cursor, err := db.LinkCollection.Find(ctx, bson.M{"user_id": userId})
+	opts := options.Find()
+	opts.SetSort(bson.D{
+		{Key: sort, Value: 1},
+	})
+
+	cursor, err := db.LinkCollection.Find(ctx, bson.M{"user_id": userId}, opts)
 	if err != nil {
 		return nil, err
 	}

@@ -5,6 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"gopkg.in/errgo.v2/errors"
 	"joosum-backend/pkg/db"
 	"time"
 )
@@ -60,7 +61,7 @@ func (LinkBookModel) GetLinkBooks(req LinkBookListReq, userId string) ([]LinkBoo
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	sort := -1
+	sort := db.Desc
 
 	// 정렬 순서 디폴트: 생성 순
 	if req.Sort == "" {
@@ -69,15 +70,23 @@ func (LinkBookModel) GetLinkBooks(req LinkBookListReq, userId string) ([]LinkBoo
 
 	// 폴더명 순일 때는 오름차순
 	if req.Sort == "title" {
-		sort = 1
+		sort = db.Asc
 	}
 
 	// 폴더 정렬
 	opts := options.Find()
-	opts.SetSort(bson.D{
-		{Key: "is_default", Value: 1}, // ""-n-y 정렬 (lmn opqr...vwxyz)
-		{Key: req.Sort, Value: sort},
-	})
+
+	// 생성 순 일 때는 기본폴더가 가장 마지막에 노출
+	if req.Sort == "created_at" {
+		opts.SetSort(bson.D{
+			{Key: "is_default", Value: db.Asc}, // ""-n-y 정렬 (lmn opqr...vwxyz)
+			{Key: req.Sort, Value: sort},
+		})
+	} else {
+		opts.SetSort(bson.D{
+			{Key: req.Sort, Value: sort},
+		})
+	}
 
 	cur, err := db.LinkBookCollection.Find(ctx, map[string]string{"user_id": userId}, opts)
 	if err != nil {
@@ -99,8 +108,6 @@ func (LinkBookModel) GetLinkBooks(req LinkBookListReq, userId string) ([]LinkBoo
 	if err := cur.Err(); err != nil {
 		return nil, err
 	}
-
-	// todo 링크북에 링크 수 카운트 추가
 
 	return linkBooks, nil
 }
@@ -134,7 +141,7 @@ func (LinkBookModel) GetDefaultLinkBook(userId string) (*LinkBook, error) {
 	return linkBook, nil
 }
 
-func (LinkBookModel) UpdateLinkBook(linkBook LinkBook) (*mongo.UpdateResult, error) {
+func (LinkBookModel) UpdateLinkBook(linkBook LinkBook) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -147,12 +154,12 @@ func (LinkBookModel) UpdateLinkBook(linkBook LinkBook) (*mongo.UpdateResult, err
 		},
 	}
 
-	result, err := db.LinkBookCollection.UpdateByID(ctx, linkBook.LinkBookId, update)
-	if err != nil {
-		return nil, err
+	result := db.LinkBookCollection.FindOneAndUpdate(ctx, bson.M{"_id": linkBook.LinkBookId}, update).Decode(&mongo.SingleResult{})
+	if result == mongo.ErrNoDocuments {
+		return errors.New(result.Error())
 	}
 
-	return result, nil
+	return nil
 }
 
 func (LinkBookModel) UpdateLinkBookLastSavedAt(linkBookId string) error {
@@ -165,12 +172,12 @@ func (LinkBookModel) UpdateLinkBookLastSavedAt(linkBookId string) error {
 		},
 	}
 
-	_, err := db.LinkBookCollection.UpdateByID(ctx, linkBookId, update)
-	if err != nil {
-		return err
+	result := db.LinkBookCollection.FindOneAndUpdate(ctx, bson.M{"_id": linkBookId}, update).Decode(&mongo.SingleResult{})
+	if result == mongo.ErrNoDocuments {
+		return errors.New(result.Error())
 	}
 
-	return nil
+	return result
 }
 
 func (LinkBookModel) DeleteLinkBook(linkBookId string) (*mongo.DeleteResult, error) {

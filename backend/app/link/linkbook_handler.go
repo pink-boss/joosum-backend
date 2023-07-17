@@ -2,6 +2,7 @@ package link
 
 import (
 	"fmt"
+	"go.mongodb.org/mongo-driver/mongo"
 	"joosum-backend/app/user"
 	"joosum-backend/pkg/util"
 	"net/http"
@@ -85,7 +86,7 @@ func (h LinkBookHandler) CreateLinkBook(c *gin.Context) {
 // @Summary 링크북 수정
 // @Param        linkBookId   path      string  true  "LinkBookId"
 // @Param request body link.LinkBookCreateReq true "request"
-// @Success 200 {object} db.UpdateResult
+// @Success 200 {object} link.LinkBook
 // @Security ApiKeyAuth
 // @Router /link-books/{linkBookId} [put]
 func (h LinkBookHandler) UpdateLinkBook(c *gin.Context) {
@@ -99,6 +100,12 @@ func (h LinkBookHandler) UpdateLinkBook(c *gin.Context) {
 
 	res, err := h.linkBookUsecase.UpdateLinkBook(linkBookId, req)
 	if err != nil {
+
+		if err.Error() == mongo.ErrNoDocuments.Error() {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+
 		// 500 Internal Server Error
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

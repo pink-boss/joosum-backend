@@ -95,6 +95,20 @@ func (u LinkUsecase) FindAllLinksByUserIdAndLinkBookId(userId string, linkBookId
 	return links, nil
 }
 
+func (u LinkUsecase) FindAllLinksByUserIdAndLinkBookIdAndSearch(userId string, linkBookId string, search string, sort string) ([]*Link, error) {
+	links, err := u.linkModel.GetAllLinkByUserIdAndLinkBookIdAndSearch(userId, linkBookId, search, sort)
+	if err != nil {
+		return nil, err
+	}
+
+	// if links length 0 return []
+	if len(links) == 0 {
+		return []*Link{}, nil
+	}
+
+	return links, nil
+}
+
 func (u LinkUsecase) DeleteOneByLinkId(linkId string) error {
 	err := u.linkModel.DeleteOneByLinkId(linkId)
 	if err != nil {

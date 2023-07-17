@@ -161,6 +161,33 @@ func (LinkModel) GetAllLinkByUserIdAndLinkBookId(userId string, linkBookId strin
 	return links, nil
 }
 
+func (LinkModel) GetAllLinkByUserIdAndLinkBookIdAndSearch(userId string, linkBookId string, search string, sort string) ([]*Link, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var links []*Link
+
+	opts := options.Find()
+	opts.SetSort(bson.D{
+		{Key: sort, Value: 1},
+	})
+
+	escapedSearch := regexp.QuoteMeta(search)
+
+	cursor, err := db.LinkCollection.Find(ctx, bson.M{"user_id": userId, "link_book_id": linkBookId, "title": bson.M{"$regex": escapedSearch}}, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	for cursor.Next(ctx) {
+		var link Link
+		cursor.Decode(&link)
+		links = append(links, &link)
+	}
+
+	return links, nil
+}
+
 func (LinkModel) GetOneLinkByLinkId(linkId string) (*Link, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

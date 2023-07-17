@@ -15,6 +15,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/spf13/viper v1.15.0
 	github.com/swaggo/files v1.0.1
+	gopkg.in/errgo.v2 v2.1.0
 )
 
 require (

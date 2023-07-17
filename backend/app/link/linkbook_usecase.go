@@ -1,7 +1,7 @@
 package link
 
 import (
-	"go.mongodb.org/mongo-driver/mongo"
+	"gopkg.in/errgo.v2/errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -94,7 +94,12 @@ func (u LinkBookUsecase) CreateDefaultLinkBook(userId string) (interface{}, erro
 	return res, nil
 }
 
-func (u LinkBookUsecase) UpdateLinkBook(linkBookId string, req LinkBookCreateReq) (*mongo.UpdateResult, error) {
+func (u LinkBookUsecase) UpdateLinkBook(linkBookId string, req LinkBookCreateReq) (*LinkBook, error) {
+
+	isDefault, err := u.linkBookModel.IsDefaultLinkBook(linkBookId)
+	if isDefault {
+		return nil, errors.New("can't update default link book folder")
+	}
 
 	linkBook := LinkBook{
 		LinkBookId:      linkBookId,
@@ -104,11 +109,11 @@ func (u LinkBookUsecase) UpdateLinkBook(linkBookId string, req LinkBookCreateReq
 		Illustration:    req.Illustration,
 	}
 
-	res, err := u.linkBookModel.UpdateLinkBook(linkBook)
+	err = u.linkBookModel.UpdateLinkBook(linkBook)
 	if err != nil {
 		return nil, err
 	}
-	return res, nil
+	return &linkBook, nil
 }
 
 func (u LinkBookUsecase) DeleteLinkBookWithLinks(userId, linkBookId string) (*LinkBookDeleteRes, error) {

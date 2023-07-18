@@ -114,15 +114,20 @@ func (LinkModel) GetAllLinkByUserId(userId string, sort string) ([]*Link, error)
 	return links, nil
 }
 
-func (LinkModel) GetAllLinkByUserIdAndSearch(userId string, search string, sort string) ([]*Link, error) {
+func (LinkModel) GetAllLinkByUserIdAndSearch(userId string, search string, sort string, order string) ([]*Link, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	var links []*Link
 
+	setOrder := 1
+	if order == "desc" {
+		setOrder = -1
+	}
+
 	opts := options.Find()
 	opts.SetSort(bson.D{
-		{Key: sort, Value: 1},
+		{Key: sort, Value: setOrder},
 	})
 
 	escapedSearch := regexp.QuoteMeta(search)
@@ -161,15 +166,21 @@ func (LinkModel) GetAllLinkByUserIdAndLinkBookId(userId string, linkBookId strin
 	return links, nil
 }
 
-func (LinkModel) GetAllLinkByUserIdAndLinkBookIdAndSearch(userId string, linkBookId string, search string, sort string) ([]*Link, error) {
+func (LinkModel) GetAllLinkByUserIdAndLinkBookIdAndSearch(userId string, linkBookId string, search string, sort string, order string) ([]*Link, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	var links []*Link
 
+	// setOrder 를 만듭니다. asc, desc 에 따라서 정렬을 다르게 합니다.
+	setOrder := 1
+	if order == "desc" {
+		setOrder = -1
+	}
+
 	opts := options.Find()
 	opts.SetSort(bson.D{
-		{Key: sort, Value: 1},
+		{Key: sort, Value: setOrder},
 	})
 
 	escapedSearch := regexp.QuoteMeta(search)

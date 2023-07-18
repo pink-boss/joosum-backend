@@ -76,6 +76,7 @@ func (h LinkHandler) CreateLink(c *gin.Context) {
 // @Produce  json
 // @Security ApiKeyAuth
 // @Param sort query string false "정렬 기준" Enums(created_at,updated_at,title)
+// @Param order query string false "정렬 순서" Enums(asc,desc)
 // @Param search query string false "검색어"
 // @Success 200 {object} Link "나의 유저아이디 기반으로 모든 링크를 반환합니다."
 // @Failure 401 {object} util.APIError "Authorization 헤더가 없을 때 반환합니다."
@@ -92,9 +93,14 @@ func (h LinkHandler) GetLinks(c *gin.Context) {
 	userId := currentUser.(*user.User).UserId
 
 	sort := c.Query("sort")
+	order := c.Query("order")
 
 	if sort == "" {
 		sort = "created_at"
+	}
+
+	if order == "" {
+		order = "asc"
 	}
 
 	search := c.Query("search")
@@ -110,7 +116,7 @@ func (h LinkHandler) GetLinks(c *gin.Context) {
 			return
 		}
 	} else {
-		links, err = h.linkUsecase.FindAllLinksByUserIdAndSearch(userId, search, sort)
+		links, err = h.linkUsecase.FindAllLinksByUserIdAndSearch(userId, search, sort, order)
 		if err != nil {
 			// 500 Internal Server Error
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -157,6 +163,7 @@ func (h LinkHandler) GetLinkByLinkId(c *gin.Context) {
 // @Security ApiKeyAuth
 // @Param linkBookId path string true "링크북 아이디"
 // @Param sort query string false "정렬 기준" Enums(created_at,updated_at,title)
+// @Param order query string false "정렬 순서" Enums(asc,desc)
 // @Success 200 {object} Link "링크북 아이디 기반으로 링크를 반환합니다."
 // @Failure 401 {object} util.APIError "Authorization 헤더가 없을 때 반환합니다."
 // @Failure 404 {object} util.APIError "링크북 아이디에 해당하는 링크북이 없을 때 반환합니다."
@@ -175,9 +182,14 @@ func (h LinkHandler) GetLinksByLinkBookId(c *gin.Context) {
 	linkBookId := c.Param("linkBookId")
 
 	sort := c.Query("sort")
+	order := c.Query("order")
 
 	if sort == "" {
 		sort = "created_at"
+	}
+
+	if order == "" {
+		order = "asc"
 	}
 
 	search := c.Query("search")
@@ -193,7 +205,7 @@ func (h LinkHandler) GetLinksByLinkBookId(c *gin.Context) {
 			return
 		}
 	} else {
-		links, err = h.linkUsecase.FindAllLinksByUserIdAndLinkBookIdAndSearch(userId, linkBookId, search, sort)
+		links, err = h.linkUsecase.FindAllLinksByUserIdAndLinkBookIdAndSearch(userId, linkBookId, search, sort, order)
 		if err != nil {
 			// 500 Internal Server Error
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

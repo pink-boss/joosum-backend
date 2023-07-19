@@ -286,7 +286,7 @@ func (LinkModel) UpdateLinkBookIdAndTitleByLinkId(linkId string, linkBookId stri
 	return err
 }
 
-func (LinkModel) UpdateTitleAndUrlByLinkId(linkId string, url string, title string, thumbnailURL string, tags []string) error {
+func (LinkModel) UpdateTitleAndUrlByLinkId(linkId string, url string, title string, thumbnailURL string, tags []string) (*Link, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -309,10 +309,24 @@ func (LinkModel) UpdateTitleAndUrlByLinkId(linkId string, url string, title stri
 	}
 
 	if len(updateFields) == 0 {
-		return nil
+		return nil, nil
 	}
 
+	/*
+	 MongoDB의 공식 Go 언어 드라이버는 수정된 문서를 반환하는 기능을 제공하지 않습니다. 이는 MongoDB의 몇 가지 다른 드라이버와 달라 UpdateOne 후에 FindOne을 호출하는 것이 흔한 방법입니다.
+	*/
 	_, err := db.LinkCollection.UpdateOne(ctx, bson.M{"link_id": linkId}, bson.M{"$set": updateFields})
 
-	return err
+	if err != nil {
+		return nil, err
+	}
+
+	link := &Link{}
+	err = db.LinkCollection.FindOne(ctx, bson.M{"link_id": linkId}).Decode(link)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return link, nil
 }

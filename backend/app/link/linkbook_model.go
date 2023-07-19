@@ -223,3 +223,14 @@ func (LinkBookModel) IsDefaultLinkBook(linkBookId string) (bool, error) {
 	}
 	return false, nil
 }
+
+func (LinkBookModel) HaveLinkBook(linkBookId string) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	result := db.LinkBookCollection.FindOne(ctx, bson.M{"_id": linkBookId}).Decode(&mongo.SingleResult{})
+	if result == mongo.ErrNoDocuments {
+		return false
+	}
+	return true
+}

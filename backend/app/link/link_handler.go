@@ -373,7 +373,7 @@ func (h LinkHandler) UpdateLinkBookIdByLinkId(c *gin.Context) {
 // @Security ApiKeyAuth
 // @Param linkId path string true "링크 아이디"
 // @Param request body UpdateLinkReq true "태그 생성 요청 본문"
-// @Success 204 "링크 아이디 기반으로 링크의 타이틀과 URL을 업데이트 합니다."
+// @Success 200 {object} Link "링크 업데이트가 성공적으로 이루어졌을 때 새로 생성된 링크 객체 반환"
 // @Failure 400 {object} util.APIError "요청 본문이 유효하지 않을 때 반환합니다."
 // @Failure 401 {object} util.APIError "Authorization 헤더가 없을 때 반환합니다."
 // @Failure 404 {object} util.APIError "링크 아이디에 해당하는 링크가 없을 때 반환합니다."
@@ -388,13 +388,12 @@ func (h LinkHandler) UpdateTitleAndUrlByLinkId(c *gin.Context) {
 		return
 	}
 
-	err := h.linkUsecase.UpdateTitleAndUrlByLinkId(linkId, req.URL, req.Title, req.ThumbnailURL, req.Tags)
+	link, err := h.linkUsecase.UpdateTitleAndUrlByLinkId(linkId, req.URL, req.Title, req.ThumbnailURL, req.Tags)
 	if err != nil {
 		// 404 Not Found
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 
-	// 204 No Content
-	c.Status(http.StatusNoContent)
+	c.JSON(http.StatusOK, link)
 }

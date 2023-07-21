@@ -30,7 +30,7 @@ func PrivateRoutes(router *gin.Engine) {
 
 	authRouter := router.Group("/auth")
 	{
-		authRouter.POST("/me", authHandler.GetMe)
+		authRouter.GET("/me", authHandler.GetMe)
 	}
 	tagRouter := router.Group("/tags")
 	{

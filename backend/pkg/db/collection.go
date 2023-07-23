@@ -71,3 +71,23 @@ var LinkBookCollection *mongo.Collection
 func InitLinkBookCollection(client *mongo.Client, dbName string) {
 	LinkBookCollection = client.Database(dbName).Collection("linkBooks")
 }
+
+var InactiveUserCollection *mongo.Collection
+
+func InactiveUserEnsureIndexes(collection *mongo.Collection) error {
+	indexModel := mongo.IndexModel{
+		Keys:    bson.D{{Key: "email", Value: 1}},
+		Options: options.Index().SetUnique(true),
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	_, err := collection.Indexes().CreateOne(ctx, indexModel)
+	return err
+}
+
+func InitInactiveUserCollection(client *mongo.Client, dbName string) {
+	InactiveUserCollection = client.Database(dbName).Collection("inactiveUsers")
+	InactiveUserEnsureIndexes(InactiveUserCollection)
+}

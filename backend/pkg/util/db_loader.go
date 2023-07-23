@@ -24,5 +24,6 @@ func StartMongoDB() {
 	db.InitUserCollection(client, dbName)
 	db.InitLinkCollection(client, dbName)
 	db.InitLinkBookCollection(client, dbName)
+	db.InitInactiveUserCollection(client, dbName)
 
 }

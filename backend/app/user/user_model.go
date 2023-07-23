@@ -26,6 +26,18 @@ type User struct {
 	UpdatedAt time.Time          `json:"updatedAt" bson:"updated_at"`
 }
 
+type InactiveUser struct {
+	ID        primitive.ObjectID `bson:"_id,omitempty"`
+	UserId    string             `bson:"user_id"`
+	Name      string             `bson:"name"`
+	Email     string             `bson:"email"`
+	Social    string             `bson:"social"`
+	Gender    string             `bson:"gender"`
+	Age       uint8              `bson:"age"`
+	CreatedAt time.Time          `bson:"created_at"`
+	UpdatedAt time.Time          `bson:"updated_at"`
+}
+
 // FindUserByEmail은 주어진 이메일을 가진 사용자를 찾아 반환합니다.
 func (*UserModel) FindUserByEmail(email string) (*User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -112,4 +124,58 @@ func (*UserModel) FindUsers() ([]*User, error) {
 	}
 
 	return users, nil
+}
+
+func (*UserModel) FindInactiveUser(email string) (*InactiveUser, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.M{"email": email}
+	inactiveUser := &InactiveUser{}
+
+	err := db.InactiveUserCollection.FindOne(ctx, filter).Decode(inactiveUser)
+	if err != nil {
+		return nil, err
+	}
+
+	return inactiveUser, nil
+}
+
+func (*UserModel) DeleteUserByEmail(email string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.M{"email": email}
+
+	_, err := db.UserCollection.DeleteOne(ctx, filter)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (*UserModel) CreateInactiveUserByUser(user *User) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	inactiveUser := &InactiveUser{
+		UserId:    user.UserId,
+		Name:      user.Name,
+		Email:     user.Email,
+		Social:    user.Social,
+		Age:       user.Age,
+		Gender:    user.Gender,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: time.Now(),
+	}
+
+	_, err := db.InactiveUserCollection.InsertOne(ctx, inactiveUser)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+
 }

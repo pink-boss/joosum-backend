@@ -19,3 +19,31 @@ func (u UserUsecase) GetUserById(id string) (*User, error) {
 	}
 	return user, err
 }
+
+func (u UserUsecase) UpdateUserToInactiveUserByEmail(email string) error {
+
+	user, err := u.userModel.FindUserByEmail(email)
+	if err != nil {
+		return err
+	}
+
+	err = u.userModel.DeleteUserByEmail(email)
+	if err != nil {
+		return err
+	}
+
+	err = u.userModel.CreateInactiveUserByUser(user)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u UserUsecase) GetInactiveUserByEmail(email string) (*InactiveUser, error) {
+	inactiveUser, err := u.userModel.FindInactiveUser(email)
+	if err != nil {
+		return nil, err
+	}
+	return inactiveUser, err
+}

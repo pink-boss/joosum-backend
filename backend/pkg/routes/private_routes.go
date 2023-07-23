@@ -5,6 +5,7 @@ import (
 	"joosum-backend/app/link"
 	"joosum-backend/app/page"
 	"joosum-backend/app/tag"
+	"joosum-backend/app/user"
 	"joosum-backend/pkg/middleware"
 
 	"github.com/gin-gonic/gin"
@@ -13,6 +14,7 @@ import (
 // PrivateRoutes func for describe group of private routes.
 func PrivateRoutes(router *gin.Engine) {
 
+	UserHandler := user.UserHandler{}
 	tagHandler := tag.TagHandler{}
 	authHandler := auth.AuthHandler{}
 	linkBookHandler := link.LinkBookHandler{}
@@ -31,6 +33,8 @@ func PrivateRoutes(router *gin.Engine) {
 	authRouter := router.Group("/auth")
 	{
 		authRouter.POST("/me", authHandler.GetMe)
+		authRouter.DELETE("/me", UserHandler.DeleteUser)
+
 	}
 	tagRouter := router.Group("/tags")
 	{

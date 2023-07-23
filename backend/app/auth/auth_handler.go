@@ -47,6 +47,12 @@ func (h AuthHandler) SignUp(c *gin.Context) {
 		return
 	}
 
+	inactiveUser, _ := h.userUsecase.GetInactiveUserByEmail(email)
+	if inactiveUser != nil {
+		c.JSON(http.StatusConflict, util.APIError{Error: "It hasn't been 30 days since you left"})
+		return
+	}
+
 	temp_nickname := req.Nickname
 	if temp_nickname == "" {
 		temp_nickname = "user_" + util.RandomString(10)

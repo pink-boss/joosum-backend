@@ -26,7 +26,7 @@ func GetMainPage(c *gin.Context) {
 // @Description
 // @Accept json
 // @Produce json
-// @Success 200 {string} string "유저 삭제 성공"
+// @Success 200 {object} util.APIResponse "유저 삭제 성공"
 // @Failure 401 {object} util.APIError "Authorization 헤더가 없을 때 반환합니다."
 // @Failure 404 {object} util.APIError "유저를 찾을 수 없음"
 // @Failure 500 {object} util.APIError "서버에서 유저 삭제 실패"
@@ -42,7 +42,7 @@ func (h UserHandler) DeleteUser(c *gin.Context) {
 
 	err := h.userUsecase.UpdateUserToInactiveUserByEmail(email)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "서버에서 유저 삭제 실패"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "서버에서 유저 삭제 실패"})
 		return
 	}
 

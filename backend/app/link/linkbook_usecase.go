@@ -39,7 +39,7 @@ func (u LinkBookUsecase) GetLinkBooks(req LinkBookListReq, userId string) (*Link
 		if err != nil {
 			return nil, err
 		}
-		linkBooks[i].LinkCount = linkCount
+		linkBooks[i].LinkCount = *linkCount
 	}
 
 	totalLinkCount, err := u.linkModel.GetUserLinkCount(userId)
@@ -80,7 +80,7 @@ func (u LinkBookUsecase) CreateDefaultLinkBook(userId string) (interface{}, erro
 	linkBook := LinkBook{
 		LinkBookId:      "LinkBook-" + uuid.New().String(),
 		Title:           "기본",
-		BackgroundColor: "#6D6D6F",
+		BackgroundColor: "#8A8A9A",
 		TitleColor:      "#FFFFFF",
 		CreatedAt:       time.Now(),
 		UserId:          userId,

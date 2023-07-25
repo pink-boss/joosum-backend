@@ -19,7 +19,7 @@ type LinkBookListReq struct {
 
 type LinkBookListRes struct {
 	LinkBooks      []LinkBookRes `json:"linkBooks,omitempty"`
-	TotalLinkCount int64         `json:"totalLinkCount,omitempty" example:"324"`
+	TotalLinkCount *int64        `json:"totalLinkCount,omitempty" example:"324"`
 }
 
 type LinkBookRes struct {
@@ -78,16 +78,10 @@ func (LinkBookModel) GetLinkBooks(req LinkBookListReq, userId string) ([]LinkBoo
 	opts := options.Find()
 
 	// 생성 순 일 때는 기본폴더가 가장 마지막에 노출
-	if req.Sort == "created_at" {
-		opts.SetSort(bson.D{
-			{Key: "is_default", Value: db.Asc}, // ""-n-y 정렬 (lmn opqr...vwxyz)
-			{Key: req.Sort, Value: sort},
-		})
-	} else {
-		opts.SetSort(bson.D{
-			{Key: req.Sort, Value: sort},
-		})
-	}
+	opts.SetSort(bson.D{
+		{Key: "is_default", Value: db.Desc}, // ""-n-y 정렬 (lmn opqr...vwxyz)
+		{Key: req.Sort, Value: sort},
+	})
 
 	cur, err := db.LinkBookCollection.Find(ctx, map[string]string{"user_id": userId}, opts)
 	if err != nil {

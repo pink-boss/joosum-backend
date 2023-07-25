@@ -18,12 +18,12 @@ type LinkBookListReq struct {
 }
 
 type LinkBookListRes struct {
-	LinkBooks      []LinkBookRes `json:"linkBooks,omitempty"`
-	TotalLinkCount int64         `json:"totalLinkCount,omitempty" example:"324"`
+	LinkBooks      []LinkBookRes `json:"linkBooks"`
+	TotalLinkCount int64         `json:"totalLinkCount" example:"324"`
 }
 
 type LinkBookRes struct {
-	LinkBookId      string    `bson:"_id,omitempty" json:"linkBookId" example:"649028fab77fe1a8a3b0815e"`
+	LinkBookId      string    `bson:"_id" json:"linkBookId" example:"649028fab77fe1a8a3b0815e"`
 	Title           string    `bson:"title" json:"title"`
 	BackgroundColor string    `bson:"background_color" json:"backgroundColor"`
 	TitleColor      string    `bson:"title_color" json:"titleColor"`
@@ -47,7 +47,7 @@ type LinkBookDeleteRes struct {
 }
 
 type LinkBook struct {
-	LinkBookId      string    `bson:"_id,omitempty" json:"linkBookId" example:"649028fab77fe1a8a3b0815e"`
+	LinkBookId      string    `bson:"_id" json:"linkBookId" example:"649028fab77fe1a8a3b0815e"`
 	Title           string    `bson:"title" json:"title"`
 	BackgroundColor string    `bson:"background_color" json:"backgroundColor"`
 	TitleColor      string    `bson:"title_color" json:"titleColor"`
@@ -78,16 +78,10 @@ func (LinkBookModel) GetLinkBooks(req LinkBookListReq, userId string) ([]LinkBoo
 	opts := options.Find()
 
 	// 생성 순 일 때는 기본폴더가 가장 마지막에 노출
-	if req.Sort == "created_at" {
-		opts.SetSort(bson.D{
-			{Key: "is_default", Value: db.Asc}, // ""-n-y 정렬 (lmn opqr...vwxyz)
-			{Key: req.Sort, Value: sort},
-		})
-	} else {
-		opts.SetSort(bson.D{
-			{Key: req.Sort, Value: sort},
-		})
-	}
+	opts.SetSort(bson.D{
+		{Key: "is_default", Value: db.Desc}, // ""-n-y 정렬 (lmn opqr...vwxyz)
+		{Key: req.Sort, Value: sort},
+	})
 
 	cur, err := db.LinkBookCollection.Find(ctx, map[string]string{"user_id": userId}, opts)
 	if err != nil {

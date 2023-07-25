@@ -2,6 +2,7 @@ package link
 
 import (
 	"gopkg.in/errgo.v2/errors"
+	"joosum-backend/pkg/util"
 	"time"
 
 	"github.com/google/uuid"
@@ -56,6 +57,15 @@ func (u LinkBookUsecase) GetLinkBooks(req LinkBookListReq, userId string) (*Link
 }
 
 func (u LinkBookUsecase) CreateLinkBook(req LinkBookCreateReq, userId string) (interface{}, error) {
+
+	// 기존에 있는 링크북 이름 또 만들지 못하도록
+	isDuplicatedTitle, err := u.linkBookModel.IsDuplicatedTitle(req.Title, userId)
+	if err != nil {
+		return nil, err
+	}
+	if isDuplicatedTitle == true {
+		return nil, util.ErrDuplicatedTitle
+	}
 
 	linkBook := LinkBook{
 		LinkBookId:      "LinkBook-" + uuid.New().String(),

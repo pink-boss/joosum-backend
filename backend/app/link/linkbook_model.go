@@ -217,3 +217,18 @@ func (LinkBookModel) IsDefaultLinkBook(linkBookId string) (bool, error) {
 	}
 	return false, nil
 }
+
+func (LinkBookModel) IsDuplicatedTitle(title, userId string) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	count, err := db.LinkBookCollection.CountDocuments(ctx, bson.M{"title": title, "user_id": userId})
+	if err != nil {
+		return false, err
+	}
+
+	if count >= 1 {
+		return true, err
+	}
+	return false, nil
+}

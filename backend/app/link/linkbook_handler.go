@@ -80,6 +80,12 @@ func (h LinkBookHandler) CreateLinkBook(c *gin.Context) {
 
 	res, err := h.linkBookUsecase.CreateLinkBook(req, userId)
 	if err != nil {
+
+		if err == util.ErrDuplicatedTitle {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
 		// 500 Internal Server Error
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

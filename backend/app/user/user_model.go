@@ -21,7 +21,7 @@ type User struct {
 	Email     string             `json:"email" bson:"email"`
 	Social    string             `json:"social" bson:"social"`
 	Gender    string             `json:"gender" bson:"gender"`
-	Age       uint8              `json:"age" bson:"age"`
+	Age       uint32             `json:"age" bson:"age"`
 	CreatedAt time.Time          `json:"createdAt" bson:"created_at"`
 	UpdatedAt time.Time          `json:"updatedAt" bson:"updated_at"`
 }
@@ -33,7 +33,7 @@ type InactiveUser struct {
 	Email     string             `bson:"email"`
 	Social    string             `bson:"social"`
 	Gender    string             `bson:"gender"`
-	Age       uint8              `bson:"age"`
+	Age       uint32             `bson:"age"`
 	CreatedAt time.Time          `bson:"created_at"`
 	UpdatedAt time.Time          `bson:"updated_at"`
 }

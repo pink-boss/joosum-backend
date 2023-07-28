@@ -91,3 +91,9 @@ func InitInactiveUserCollection(client *mongo.Client, dbName string) {
 	InactiveUserCollection = client.Database(dbName).Collection("inactiveUsers")
 	InactiveUserEnsureIndexes(InactiveUserCollection)
 }
+
+var CommonCollection *mongo.Collection
+
+func InitCommonCollection(client *mongo.Client, dbName string) {
+	CommonCollection = client.Database(dbName).Collection("common")
+}

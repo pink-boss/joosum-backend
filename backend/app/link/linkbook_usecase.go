@@ -88,13 +88,10 @@ func (u LinkBookUsecase) CreateLinkBook(req LinkBookCreateReq, userId string) (i
 func (u LinkBookUsecase) CreateDefaultLinkBook(userId string) (interface{}, error) {
 
 	linkBook := LinkBook{
-		LinkBookId:      "LinkBook-" + uuid.New().String(),
-		Title:           "기본",
-		BackgroundColor: "#8A8A9A",
-		TitleColor:      "#FFFFFF",
-		CreatedAt:       time.Now(),
-		UserId:          userId,
-		IsDefault:       "y",
+		LinkBookId: "LinkBook-" + uuid.New().String(),
+		CreatedAt:  time.Now(),
+		UserId:     userId,
+		IsDefault:  "y",
 	}
 
 	res, err := u.linkBookModel.CreateLinkBook(linkBook)

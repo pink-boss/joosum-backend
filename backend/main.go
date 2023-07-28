@@ -24,6 +24,7 @@ func main() {
 	config.EnvConfig()
 
 	util.StartMongoDB()
+	util.LoadCommonData()
 	util.LoadApplePublicKeys()
 
 	util.Validate = validator.New()

@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"joosum-backend/app/admin"
 	"joosum-backend/app/auth"
 	"joosum-backend/app/link"
 	"joosum-backend/app/page"
@@ -20,6 +21,7 @@ func PrivateRoutes(router *gin.Engine) {
 	linkBookHandler := link.LinkBookHandler{}
 	linkHandler := link.LinkHandler{}
 	pageHandler := page.PageHandler{}
+	adminHandler := admin.AdminHandler{}
 
 	router.Use(middleware.SetUserData())
 
@@ -64,4 +66,8 @@ func PrivateRoutes(router *gin.Engine) {
 		linkRouter.PUT("/:linkId", linkHandler.UpdateTitleAndUrlByLinkId)
 	}
 
+	adminRouter := router.Group("/admin")
+	{
+		adminRouter.PUT("/link-books", adminHandler.UpdateDefaultFolder)
+	}
 }

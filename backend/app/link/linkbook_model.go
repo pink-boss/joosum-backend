@@ -27,7 +27,7 @@ type LinkBookRes struct {
 	Title           string    `bson:"title" json:"title"`
 	BackgroundColor string    `bson:"background_color" json:"backgroundColor"`
 	TitleColor      string    `bson:"title_color" json:"titleColor"`
-	Illustration    *string   `bson:"illustration" json:"illustration"`
+	Illustration    *string   `bson:"illustration" json:"illustration" example:"illust11"`
 	CreatedAt       time.Time `bson:"created_at" json:"createdAt"`
 	LastSavedAt     time.Time `bson:"last_saved_at" json:"lastSavedAt"`
 	UserId          string    `bson:"user_id" example:"User-0767d6af-a802-469c-9505-5ca91e03b354" json:"userId"`
@@ -39,7 +39,7 @@ type LinkBookCreateReq struct {
 	Title           string  `json:"title" example:"title" validate:"required"`
 	BackgroundColor string  `json:"backgroundColor" example:"#6D6D6F"`
 	TitleColor      string  `json:"titleColor" example:"#FFFFFF"`
-	Illustration    *string `json:"illustration"`
+	Illustration    *string `json:"illustration" example:"illust11"`
 }
 
 type LinkBookDeleteRes struct {
@@ -79,7 +79,7 @@ func (LinkBookModel) GetLinkBooks(req LinkBookListReq, userId string) ([]LinkBoo
 
 	// 생성 순 일 때는 기본폴더가 가장 마지막에 노출
 	opts.SetSort(bson.D{
-		{Key: "is_default", Value: db.Desc}, // ""-n-y 정렬 (lmn opqr...vwxyz)
+		{Key: "is_default", Value: db.Desc}, // y-n 정렬 (lmn opqr...vwxyz)
 		{Key: req.Sort, Value: sort},
 	})
 
@@ -103,6 +103,12 @@ func (LinkBookModel) GetLinkBooks(req LinkBookListReq, userId string) ([]LinkBoo
 	if err := cur.Err(); err != nil {
 		return nil, err
 	}
+
+	// 기본폴더 이름, 색상, 일러스트 세팅
+	linkBooks[0].Title = db.DefaultFolder.Title
+	linkBooks[0].TitleColor = db.DefaultFolder.TitleColor
+	linkBooks[0].BackgroundColor = db.DefaultFolder.BackgroundColor
+	linkBooks[0].Illustration = db.DefaultFolder.Illustration
 
 	return linkBooks, nil
 }

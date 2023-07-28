@@ -1,5 +1,7 @@
 package link
 
+import "joosum-backend/pkg/db"
+
 type LinkUsecase struct {
 	linkModel     LinkModel
 	linkBookModel LinkBookModel
@@ -16,7 +18,7 @@ func (u LinkUsecase) CreateLink(url string, title string, userId string, linkBoo
 		}
 
 		linkBookId = defaultLinkBook.LinkBookId
-		linkBookName = defaultLinkBook.Title
+		linkBookName = db.DefaultFolder.Title
 	} else {
 		linkBookData, err := u.linkBookModel.GetLinkBookById(linkBookId)
 		if err != nil {

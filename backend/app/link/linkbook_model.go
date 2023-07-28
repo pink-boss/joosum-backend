@@ -58,6 +58,14 @@ type LinkBook struct {
 	IsDefault       string    `bson:"is_default" json:"isDefault"`
 }
 
+type DefaultLinkBook struct {
+	LinkBookId  string    `bson:"_id" json:"linkBookId" example:"649028fab77fe1a8a3b0815e"`
+	CreatedAt   time.Time `bson:"created_at" json:"createdAt"`
+	LastSavedAt time.Time `bson:"last_saved_at" json:"lastSavedAt"`
+	UserId      string    `bson:"user_id" example:"User-0767d6af-a802-469c-9505-5ca91e03b354" json:"userId"`
+	IsDefault   string    `bson:"is_default" json:"isDefault"`
+}
+
 func (LinkBookModel) GetLinkBooks(req LinkBookListReq, userId string) ([]LinkBookRes, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
@@ -114,6 +122,18 @@ func (LinkBookModel) GetLinkBooks(req LinkBookListReq, userId string) ([]LinkBoo
 }
 
 func (LinkBookModel) CreateLinkBook(linkBook LinkBook) (*LinkBook, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err := db.LinkBookCollection.InsertOne(ctx, linkBook)
+	if err != nil {
+		return nil, err
+	}
+
+	return &linkBook, nil
+}
+
+func (LinkBookModel) CreateDefaultLinkBook(linkBook DefaultLinkBook) (*DefaultLinkBook, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 

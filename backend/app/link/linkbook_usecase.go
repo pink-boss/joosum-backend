@@ -85,16 +85,16 @@ func (u LinkBookUsecase) CreateLinkBook(req LinkBookCreateReq, userId string) (i
 	return res, nil
 }
 
-func (u LinkBookUsecase) CreateDefaultLinkBook(userId string) (interface{}, error) {
+func (u LinkBookUsecase) CreateDefaultLinkBook(userId string) (*DefaultLinkBook, error) {
 
-	linkBook := LinkBook{
+	linkBook := DefaultLinkBook{
 		LinkBookId: "LinkBook-" + uuid.New().String(),
 		CreatedAt:  time.Now(),
 		UserId:     userId,
 		IsDefault:  "y",
 	}
 
-	res, err := u.linkBookModel.CreateLinkBook(linkBook)
+	res, err := u.linkBookModel.CreateDefaultLinkBook(linkBook)
 	if err != nil {
 		return nil, err
 	}

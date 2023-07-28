@@ -45,8 +45,8 @@ func (h AdminHandler) UpdateDefaultFolder(c *gin.Context) {
 		return
 	}
 
-	Name := currentUser.(*user.User).Name
-	res, err := h.adminUsecase.UpdateDefaultFolder(req, Name)
+	name := currentUser.(*user.User).Name
+	res, err := h.adminUsecase.UpdateDefaultFolder(req, name)
 	if err != nil {
 		// 500 Internal Server Error
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

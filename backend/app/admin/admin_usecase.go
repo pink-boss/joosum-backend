@@ -8,7 +8,7 @@ type AdminUsecase struct {
 	adminModel AdminModel
 }
 
-func (u AdminUsecase) UpdateDefaultFolder(req LinkBookUpdateReq, Name string) (*db.LinkBook, error) {
+func (u AdminUsecase) UpdateDefaultFolder(req LinkBookUpdateReq, name string) (*db.LinkBook, error) {
 	db.DefaultFolder.Title = req.Title
 	db.DefaultFolder.TitleColor = req.TitleColor
 	db.DefaultFolder.BackgroundColor = req.BackgroundColor
@@ -19,7 +19,7 @@ func (u AdminUsecase) UpdateDefaultFolder(req LinkBookUpdateReq, Name string) (*
 		TitleColor:      req.TitleColor,
 		BackgroundColor: req.BackgroundColor,
 		Illustration:    req.Illustration,
-		UpdatedBy:       Name,
+		UpdatedBy:       name,
 	}
 
 	err := u.adminModel.UpdateDefaultFolder(linkBook)

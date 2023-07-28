@@ -57,6 +57,14 @@ func (u LinkUsecase) FindOneLinkByLinkId(linkId string) (*Link, error) {
 		return nil, err
 	}
 
+	isDefault, err := u.linkBookModel.IsDefaultLinkBook(link.LinkBookId)
+	if err != nil {
+		return nil, err
+	}
+	if isDefault {
+		link.LinkBookName = db.DefaultFolder.Title
+	}
+
 	return link, nil
 }
 
@@ -69,6 +77,16 @@ func (u LinkUsecase) FindAllLinksByUserId(userId string, sort string) ([]*Link, 
 	// if links length 0 return []
 	if len(links) == 0 {
 		return []*Link{}, nil
+	}
+
+	for _, link := range links {
+		isDefault, err := u.linkBookModel.IsDefaultLinkBook(link.LinkBookId)
+		if err != nil {
+			return nil, err
+		}
+		if isDefault {
+			link.LinkBookName = db.DefaultFolder.Title
+		}
 	}
 
 	return links, nil
@@ -85,6 +103,16 @@ func (u LinkUsecase) FindAllLinksByUserIdAndSearch(userId string, search string,
 		return []*Link{}, nil
 	}
 
+	for _, link := range links {
+		isDefault, err := u.linkBookModel.IsDefaultLinkBook(link.LinkBookId)
+		if err != nil {
+			return nil, err
+		}
+		if isDefault {
+			link.LinkBookName = db.DefaultFolder.Title
+		}
+	}
+
 	return links, nil
 }
 
@@ -92,6 +120,13 @@ func (u LinkUsecase) FindAllLinksByUserIdAndLinkBookId(userId string, linkBookId
 	links, err := u.linkModel.GetAllLinkByUserIdAndLinkBookId(userId, linkBookId)
 	if err != nil {
 		return nil, err
+	}
+
+	isDefault, err := u.linkBookModel.IsDefaultLinkBook(linkBookId)
+	if isDefault {
+		for _, link := range links {
+			link.LinkBookName = db.DefaultFolder.Title
+		}
 	}
 
 	return links, nil
@@ -106,6 +141,13 @@ func (u LinkUsecase) FindAllLinksByUserIdAndLinkBookIdAndSearch(userId string, l
 	// if links length 0 return []
 	if len(links) == 0 {
 		return []*Link{}, nil
+	}
+
+	isDefault, err := u.linkBookModel.IsDefaultLinkBook(linkBookId)
+	if isDefault {
+		for _, link := range links {
+			link.LinkBookName = db.DefaultFolder.Title
+		}
 	}
 
 	return links, nil

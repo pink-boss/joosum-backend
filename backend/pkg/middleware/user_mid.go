@@ -33,14 +33,14 @@ func SetUserData() gin.HandlerFunc {
 		})
 
 		if err != nil || !token.Valid {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("unauthorized : %v", err.Error())})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 			c.Abort()
 			return
 		}
 
 		idValue, exists := claims["email"]
 		if !exists {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("unauthorized : %v", err.Error())})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 			c.Abort()
 			return
 		}

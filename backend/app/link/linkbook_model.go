@@ -62,27 +62,32 @@ func (LinkBookModel) GetLinkBooks(req LinkBookListReq, userId string) ([]LinkBoo
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	sort := db.Desc
-
 	// 정렬 순서 디폴트: 생성 순
 	if req.Sort == "" {
 		req.Sort = "created_at"
 	}
 
-	// 폴더명 순일 때는 오름차순
-	if req.Sort == "title" {
-		sort = db.Asc
+	var order int
+	switch req.Sort {
+	case "created_at":
+		order = db.Desc
+	case "title": // 폴더명 순일 때는 오름차순
+		order = db.Asc
+	case "last_saved_at":
+		order = db.Desc
 	}
 
+	sort := bson.D{
+		{"is_default", db.Desc}, // 기본 폴더북은 정렬에 관계없이 첫번째. y-n 정렬 (lmn opqr...vwxyz)}
+		{req.Sort, order},
+	}
+
+	if req.Sort == "last_saved_at" {
+		sort = append(sort, bson.E{"created_at", db.Desc}) // 업데이트 순이 같다면 생성 순으로 정렬
+	}
 	// 폴더 정렬
 	opts := options.Find()
-
-	// 생성 순 일 때는 기본폴더가 가장 마지막에 노출
-	opts.SetSort(bson.D{
-		{Key: "is_default", Value: db.Desc}, // ""-n-y 정렬 (lmn opqr...vwxyz)
-		{Key: req.Sort, Value: sort},
-	})
-
+	opts.SetSort(sort)
 	cur, err := db.LinkBookCollection.Find(ctx, map[string]string{"user_id": userId}, opts)
 	if err != nil {
 		return nil, err
@@ -156,7 +161,7 @@ func (LinkBookModel) UpdateLinkBook(linkBook LinkBook) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	update := bson.M{
+	linkBookUpdate := bson.M{
 		"$set": bson.M{
 			"title":            linkBook.Title,
 			"background_color": linkBook.BackgroundColor,
@@ -165,9 +170,20 @@ func (LinkBookModel) UpdateLinkBook(linkBook LinkBook) error {
 		},
 	}
 
-	result := db.LinkBookCollection.FindOneAndUpdate(ctx, bson.M{"_id": linkBook.LinkBookId}, update).Decode(&mongo.SingleResult{})
-	if result == mongo.ErrNoDocuments {
-		return errors.New(result.Error())
+	linkUpdate := bson.M{
+		"$set": bson.M{
+			"link_book_name": linkBook.Title,
+		},
+	}
+
+	err := db.LinkBookCollection.FindOneAndUpdate(ctx, bson.M{"_id": linkBook.LinkBookId}, linkBookUpdate).Decode(&mongo.SingleResult{})
+	if err == mongo.ErrNoDocuments {
+		return errors.New(err.Error())
+	}
+
+	_, err = db.LinkCollection.UpdateMany(ctx, bson.M{"link_book_id": linkBook.LinkBookId}, linkUpdate)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -218,11 +234,11 @@ func (LinkBookModel) IsDefaultLinkBook(linkBookId string) (bool, error) {
 	return false, nil
 }
 
-func (LinkBookModel) IsDuplicatedTitle(title, userId string) (bool, error) {
+func (LinkBookModel) IsDuplicatedTitle(title, userId string, linkBookId *string) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	count, err := db.LinkBookCollection.CountDocuments(ctx, bson.M{"title": title, "user_id": userId})
+	count, err := db.LinkBookCollection.CountDocuments(ctx, bson.M{"title": title, "user_id": userId, "_id": bson.M{"$ne": linkBookId}})
 	if err != nil {
 		return false, err
 	}
@@ -231,4 +247,15 @@ func (LinkBookModel) IsDuplicatedTitle(title, userId string) (bool, error) {
 		return true, err
 	}
 	return false, nil
+}
+
+func (LinkBookModel) HaveLinkBook(linkBookId string) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	result := db.LinkBookCollection.FindOne(ctx, bson.M{"_id": linkBookId}).Decode(&mongo.SingleResult{})
+	if result == mongo.ErrNoDocuments {
+		return false
+	}
+	return true
 }

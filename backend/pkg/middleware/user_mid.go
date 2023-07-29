@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"joosum-backend/app/user"
 	"joosum-backend/pkg/config"
 	"net/http"
@@ -32,14 +33,14 @@ func SetUserData() gin.HandlerFunc {
 		})
 
 		if err != nil || !token.Valid {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("unauthorized : %v", err.Error())})
 			c.Abort()
 			return
 		}
 
 		idValue, exists := claims["email"]
 		if !exists {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("unauthorized : %v", err.Error())})
 			c.Abort()
 			return
 		}
@@ -51,7 +52,7 @@ func SetUserData() gin.HandlerFunc {
 				c.Abort()
 				return
 			}
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("unauthorized : %v", err.Error())})
 			c.Abort()
 			return
 		}

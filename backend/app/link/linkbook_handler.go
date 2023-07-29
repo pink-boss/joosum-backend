@@ -109,9 +109,18 @@ func (h LinkBookHandler) UpdateLinkBook(c *gin.Context) {
 		return
 	}
 
+	currentUser, exists := c.Get("user")
+	if !exists {
+		// 401 Unauthorized
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
+		return
+	}
+
+	userId := currentUser.(*user.User).UserId
+
 	linkBookId := c.Param("linkBookId")
 
-	res, err := h.linkBookUsecase.UpdateLinkBook(linkBookId, req)
+	res, err := h.linkBookUsecase.UpdateLinkBook(linkBookId, req, userId)
 	if err != nil {
 
 		if err.Error() == mongo.ErrNoDocuments.Error() {

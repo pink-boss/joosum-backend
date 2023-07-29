@@ -59,7 +59,7 @@ func (u LinkBookUsecase) GetLinkBooks(req LinkBookListReq, userId string) (*Link
 func (u LinkBookUsecase) CreateLinkBook(req LinkBookCreateReq, userId string) (interface{}, error) {
 
 	// 기존에 있는 링크북 이름 또 만들지 못하도록
-	isDuplicatedTitle, err := u.linkBookModel.IsDuplicatedTitle(req.Title, userId)
+	isDuplicatedTitle, err := u.linkBookModel.IsDuplicatedTitle(req.Title, userId, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,16 @@ func (u LinkBookUsecase) CreateDefaultLinkBook(userId string) (interface{}, erro
 	return res, nil
 }
 
-func (u LinkBookUsecase) UpdateLinkBook(linkBookId string, req LinkBookCreateReq) (*LinkBook, error) {
+func (u LinkBookUsecase) UpdateLinkBook(linkBookId string, req LinkBookCreateReq, userId string) (*LinkBook, error) {
+
+	// 기존에 있는 링크북 이름 또 만들지 못하도록
+	isDuplicatedTitle, err := u.linkBookModel.IsDuplicatedTitle(req.Title, userId, &linkBookId)
+	if err != nil {
+		return nil, err
+	}
+	if isDuplicatedTitle == true {
+		return nil, util.ErrDuplicatedTitle
+	}
 
 	isDefault, err := u.linkBookModel.IsDefaultLinkBook(linkBookId)
 	if isDefault {

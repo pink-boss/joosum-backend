@@ -218,11 +218,11 @@ func (LinkBookModel) IsDefaultLinkBook(linkBookId string) (bool, error) {
 	return false, nil
 }
 
-func (LinkBookModel) IsDuplicatedTitle(title, userId string) (bool, error) {
+func (LinkBookModel) IsDuplicatedTitle(title, userId string, linkBookId *string) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	count, err := db.LinkBookCollection.CountDocuments(ctx, bson.M{"title": title, "user_id": userId})
+	count, err := db.LinkBookCollection.CountDocuments(ctx, bson.M{"title": title, "user_id": userId, "_id": bson.M{"$ne": linkBookId}})
 	if err != nil {
 		return false, err
 	}

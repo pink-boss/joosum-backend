@@ -63,7 +63,7 @@ func (LinkBookModel) GetLinkBooks(req LinkBookListReq, userId string) ([]LinkBoo
 	defer cancel()
 
 	// 정렬 순서 디폴트: 생성 순
-	if req.Sort == "" {
+	if req.Sort == "" || req.Sort == "create_at" {
 		req.Sort = "created_at"
 	}
 

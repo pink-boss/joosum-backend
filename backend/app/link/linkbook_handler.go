@@ -2,12 +2,12 @@ package link
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
 	"joosum-backend/app/user"
 	"joosum-backend/pkg/util"
 	"net/http"
-
-	"github.com/gin-gonic/gin"
+	"strings"
 )
 
 type LinkBookHandler struct {
@@ -69,6 +69,8 @@ func (h LinkBookHandler) CreateLinkBook(c *gin.Context) {
 		return
 	}
 
+	req.Title = strings.Trim(req.Title, " ")
+
 	currentUser, exists := c.Get("user")
 	if !exists {
 		// 401 Unauthorized
@@ -108,6 +110,8 @@ func (h LinkBookHandler) UpdateLinkBook(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, util.APIError{Error: "Invalid request body"})
 		return
 	}
+
+	req.Title = strings.Trim(req.Title, " ")
 
 	currentUser, exists := c.Get("user")
 	if !exists {

@@ -3,57 +3,26 @@ package tag
 import (
 	"bytes"
 	"context"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"joosum-backend/pkg/db"
 	"time"
 
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type TagModel struct {}
+type TagModel struct{}
 
-type Tag struct{
-	ID string `json:"tag_id"`
-	Name string `json:"name"`
-	UserId string `json:"user_id"`
+type Tag struct {
+	ID     string   `json:"-"`
+	Names  []string `json:"names"`
+	UserId string   `json:"user_id" bson:"user_id"`
 }
 
-var tagCollection *mongo.Collection
-
-// InitUserCollection은 전달된 클라이언트 인스턴스를 사용하여 userCollection 변수를 설정합니다.
-func InitUserCollection(client *mongo.Client, dbName string) {
-	tagCollection = client.Database(dbName).Collection("tags")
-	EnsureIndexes(tagCollection)
-}
-
-// TO DO
-// Index 생성, 본인의 Collection 인스턴스 변수, 해당 collection을 init 하는 함수는
-// 공통으로 쓰일 것 같으니 패턴화 해서 분리해두는 것이 좋을 것 같습니다.
-
-// email에 대한 인덱스 생성
-func EnsureIndexes(collection *mongo.Collection) error {
-	indexModel := mongo.IndexModel{
-		Keys: bson.D{
-			{Key: "user_id", Value: 1},
-			{Key: "tag_id", Value: 1},
-		},
-		Options: options.Index().SetUnique(true),
-	}
-
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	_, err := collection.Indexes().CreateOne(ctx, indexModel)
-	return err
-}
-
-func (TagModel)CreateTag(name string, user_id string) (*Tag, error){
+func (TagModel) UpsertTags(userId string, names []string) (*Tag, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	
 	uniqueKey := make(chan string)
 
 	// TO DO : uid generater 만들기
@@ -67,49 +36,52 @@ func (TagModel)CreateTag(name string, user_id string) (*Tag, error){
 
 	uid := <-uniqueKey
 
-	tag := &Tag{
-		ID: uid,
-		Name: name,
-		UserId: user_id,
+	tags := Tag{
+		ID:     uid,
+		Names:  names,
+		UserId: userId,
 	}
 
-	_, err := tagCollection.InsertOne(ctx, tag)
+	opts := options.Update().SetUpsert(true)
+	filter := bson.M{"user_id": userId}
+	update := bson.M{
+		"$setOnInsert": bson.M{"_id": uid}, // update 할 때 id 가 바뀌지 않도록 함
+		"$set":         bson.M{"names": names},
+	}
+
+	_, err := db.TagCollection.UpdateOne(ctx, filter, update, opts)
 	if err != nil {
 		return nil, err
 	}
 
-	return tag, nil
+	return &tags, nil
 }
 
-func (TagModel)FindTagByUserId(user_id string) ([]*Tag, error) {
+func (TagModel) FindTagsByUserId(userId string) ([]string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	filter := bson.M{"user_id": user_id}
-	tags := []*Tag{}
+	filter := bson.M{"user_id": userId}
+	var tags = &Tag{}
 
-	cursor, err := tagCollection.Find(ctx, filter)
+	err := db.TagCollection.FindOne(ctx, filter).Decode(tags)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = cursor.All(ctx, &tags); err != nil {
-		return nil, err
-	}
-
-	return tags, nil
+	return tags.Names, nil
 }
 
-func (TagModel)DeleteTag(user_id string, tag_id string) error{
+func (TagModel) DeleteTag(user_id string, tag_id string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	filter := bson.M{
 		"user_id": user_id,
-		"tag_id": tag_id,
+		"tag_id":  tag_id,
 	}
 
-	_, err := tagCollection.DeleteOne(ctx, filter)
+	_, err := db.TagCollection.DeleteOne(ctx, filter)
 	if err != nil {
 		return err
 	}

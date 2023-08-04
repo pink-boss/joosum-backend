@@ -91,3 +91,32 @@ func InitInactiveUserCollection(client *mongo.Client, dbName string) {
 	InactiveUserCollection = client.Database(dbName).Collection("inactiveUsers")
 	InactiveUserEnsureIndexes(InactiveUserCollection)
 }
+
+var TagCollection *mongo.Collection
+
+// InitUserCollection은 전달된 클라이언트 인스턴스를 사용하여 userCollection 변수를 설정합니다.
+func InitTagCollection(client *mongo.Client, dbName string) {
+	TagCollection = client.Database(dbName).Collection("tags")
+	EnsureIndexes(TagCollection)
+}
+
+// TO DO
+// Index 생성, 본인의 Collection 인스턴스 변수, 해당 collection을 init 하는 함수는
+// 공통으로 쓰일 것 같으니 패턴화 해서 분리해두는 것이 좋을 것 같습니다.
+
+// email에 대한 인덱스 생성
+func EnsureIndexes(collection *mongo.Collection) error {
+	indexModel := mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "user_id", Value: 1},
+			{Key: "tag_id", Value: 1},
+		},
+		Options: options.Index().SetUnique(true),
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	_, err := collection.Indexes().CreateOne(ctx, indexModel)
+	return err
+}

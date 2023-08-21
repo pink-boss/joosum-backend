@@ -5,6 +5,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	_ "github.com/joho/godotenv/autoload" // load .env file automatically
 	"joosum-backend/pkg/config"
+	"joosum-backend/pkg/middleware"
 	"joosum-backend/pkg/routes"
 	"joosum-backend/pkg/util"
 )
@@ -12,7 +13,7 @@ import (
 // @title Joosum App
 // @description This is API Docs for Joosum App.
 // @termsOfService http://swagger.io/terms/
-// @contact.name Pinkboss
+// @contact.name Pink boss
 // @contact.email pinkjoosum@gmail.com
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
@@ -29,6 +30,10 @@ func main() {
 	util.Validate = validator.New()
 
 	router := gin.Default()
+
+	// 커스텀 로깅 미들웨어 적용
+	router.Use(middleware.LoggingMiddleware())
+
 	routes.PublicRoutes(router)
 	routes.SwaggerRoutes(router)
 

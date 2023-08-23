@@ -12,6 +12,7 @@ require (
 )
 
 require (
+	github.com/google/martian/v3 v3.1.0
 	github.com/google/uuid v1.3.0
 	github.com/spf13/viper v1.13.0
 	github.com/swaggo/files v1.0.1

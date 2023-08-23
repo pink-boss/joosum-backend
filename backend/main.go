@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	_ "github.com/joho/godotenv/autoload" // load .env file automatically
 	"joosum-backend/pkg/config"
@@ -26,13 +25,12 @@ func main() {
 
 	util.StartMongoDB()
 	util.LoadApplePublicKeys()
-
 	util.Validate = validator.New()
 
-	router := gin.Default()
-
-	// 커스텀 로깅 미들웨어 적용
-	router.Use(middleware.LoggingMiddleware())
+	router := config.GetRouter()
+	if *config.Env == "prod" {
+		router.Use(middleware.LoggingMiddleware()) // 커스텀 로깅 미들웨어 적용
+	}
 
 	routes.PublicRoutes(router)
 	routes.SwaggerRoutes(router)

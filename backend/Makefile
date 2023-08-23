@@ -13,7 +13,7 @@ docker.prod:
 	swag init
 	docker build -t ${IMAGE_NAME} .
 	docker run --rm -d -v /etc/ssl/certs:/etc/ssl/certs -p 5001:5001 \
-		--log-opt max-size=3k --log-opt max-file=1 \
+		--log-opt max-size=10k --log-opt max-file=3 \
  		--name ${CONTAINER_NAME}_prod ${IMAGE_NAME} -env=prod
 
 docker.stop:

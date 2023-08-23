@@ -75,5 +75,5 @@ jobs:
           docker pull joosum.kr.ncr.ntruss.com/joosum-backend:${{ steps.date.outputs.date }}
           docker stop $(docker ps -q -f 'expose=5001')
           docker run --rm -d -v /etc/ssl/certs:/etc/ssl/certs -p 5001:5001 \
-            --log-opt max-size=3k --log-opt max-file=1 \
+            --log-opt max-size=10k --log-opt max-file=3 \
             --name server joosum.kr.ncr.ntruss.com/joosum-backend:${{ steps.date.outputs.date }} -env=prod

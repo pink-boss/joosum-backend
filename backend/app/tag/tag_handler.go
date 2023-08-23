@@ -81,7 +81,7 @@ func (h TagHandler) GetTags(c *gin.Context) {
 	tags, err := h.tagUsecase.FindTagsByUserId(userId)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			c.JSON(http.StatusOK, []string{})
 			return
 		}
 

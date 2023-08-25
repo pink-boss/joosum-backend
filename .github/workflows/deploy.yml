@@ -21,16 +21,16 @@ jobs:
     - name: Create config.yml
       run: |
         echo "${{ secrets.CONFIG_YML }}" > ./backend/config.yml
-        
+
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
-        go-version: 1.17
-        
+        go-version: 1.19
+
     - name: Generate Swagger documentation
       run: |
         cd backend
-        go run github.com/swaggo/swag/cmd/swag@latest init 
+        go run github.com/swaggo/swag/cmd/swag@latest init
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1
@@ -59,12 +59,12 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
-      
+
     - name: Generate date
       id: date
       run: |
         echo "::set-output name=date::$(date +'%y%m%d')"
-        
+
     - name: Deploy
       uses: appleboy/ssh-action@master
       with:
@@ -74,5 +74,6 @@ jobs:
         script: |
           docker pull joosum.kr.ncr.ntruss.com/joosum-backend:${{ steps.date.outputs.date }}
           docker stop $(docker ps -q -f 'expose=5001')
-          docker rm $(docker ps -aq -f 'expose=5001')
-          docker run -d -v /etc/ssl/certs:/etc/ssl/certs -p 5001:5001 joosum.kr.ncr.ntruss.com/joosum-backend:${{ steps.date.outputs.date }}
+          docker run --rm -d -v /etc/ssl/certs:/etc/ssl/certs -p 5001:5001 \
+            --log-opt max-size=10k --log-opt max-file=3 \
+            --name server joosum.kr.ncr.ntruss.com/joosum-backend:${{ steps.date.outputs.date }} -env=prod

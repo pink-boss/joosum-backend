@@ -28,3 +28,13 @@ func StartMongoDB() {
 	db.InitTagCollection(client, dbName)
 
 }
+
+func CloseMongoDB() {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	err := db.DisconnectMongoClient(ctx)
+	if err != nil {
+		log.Fatalf("Failed to disconnect to MongoDB: %v", err)
+	}
+}

@@ -2,12 +2,13 @@ package link
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/mongo"
 	"joosum-backend/app/user"
 	"joosum-backend/pkg/util"
 	"net/http"
 	"strings"
+
+	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type LinkBookHandler struct {

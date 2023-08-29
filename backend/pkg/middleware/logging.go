@@ -3,11 +3,12 @@ package middleware
 import (
 	"bytes"
 	"encoding/json"
+	"io/ioutil"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"io/ioutil"
-	"time"
 )
 
 var logger *zap.Logger
@@ -39,6 +40,9 @@ func LoggingMiddleware() gin.HandlerFunc {
 
 		// Log the request
 		requestBody, _ := ioutil.ReadAll(c.Request.Body)
+
+		c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
+
 		var jsonReq interface{}
 		json.Unmarshal(requestBody, &jsonReq)
 

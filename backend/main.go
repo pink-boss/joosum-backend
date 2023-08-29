@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"github.com/go-playground/validator/v10"
-	_ "github.com/joho/godotenv/autoload" // load .env file automatically
 	"joosum-backend/pkg/config"
 	"joosum-backend/pkg/middleware"
 	"joosum-backend/pkg/routes"
@@ -14,7 +12,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	_ "github.com/joho/godotenv/autoload" // load .env file automatically
 )

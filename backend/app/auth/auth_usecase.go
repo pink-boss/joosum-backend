@@ -22,8 +22,8 @@ type AuthUsecase struct {
 	userModel user.UserModel
 }
 
-func (u *AuthUsecase) GenerateNewJWTToken(roles []string, email string) (string, string, error) {
-	accessToken, err := util.GenerateNewJWTAccessToken([]string{"USER", "ADMIN"}, email)
+func (u *AuthUsecase) GenerateNewJWTToken(email string) (string, string, error) {
+	accessToken, err := util.GenerateNewJWTAccessToken([]util.Role{util.User}, email)
 	if err != nil {
 		return "", "", err
 	}
@@ -91,25 +91,25 @@ func (u *AuthUsecase) GetEmailFromJWT(social, idToken string) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("unable to create OAuth2 service: %v", err)
 		}
-	
+
 		tokenInfoCall := oauth2Service.Tokeninfo()
 		tokenInfoCall.IdToken(idToken)
-	
+
 		tokenInfo, err := tokenInfoCall.Do()
 		if err != nil {
 			return "", fmt.Errorf("unable to verify IdToken: %v", err)
 		}
-	
+
 		// Check if the token's audience matches your app's client ID.
 		if tokenInfo.Audience != localConfig.GetEnvConfig("googleClientID") {
 			return "", fmt.Errorf("IdToken is not issued by this app")
 		}
-	
+
 		// Return the user's email address.
 		if tokenInfo.Email != "" {
 			return tokenInfo.Email, nil
 		}
-	
+
 		return "", fmt.Errorf("unable to retrieve user's email")
 	} else {
 		return "", fmt.Errorf("invalid social name")

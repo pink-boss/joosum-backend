@@ -9,7 +9,7 @@ import (
 func main() {
 	config.EnvConfig()
 
-	token, err := util.GenerateNewJWTAccessToken([]string{"USER", "ADMIN"}, "admin@gmail.com")
+	token, err := util.GenerateNewJWTAccessToken([]util.Role{util.User}, "admin@gmail.com")
 	if err != nil {
 		println(err)
 	}

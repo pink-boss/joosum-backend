@@ -67,7 +67,7 @@ func (h *GoogleHandler) VerifyGoogleAccessToken(c *gin.Context) {
 		return
 	}
 
-	accessToken, refreshToken, err := h.authUsecase.GenerateNewJWTToken([]string{"USER", "ADMIN"}, email)
+	accessToken, refreshToken, err := h.authUsecase.GenerateNewJWTToken(email)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, util.APIError{Error: err.Error()})

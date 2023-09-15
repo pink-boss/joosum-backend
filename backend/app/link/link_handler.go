@@ -1,10 +1,10 @@
 package link
 
 import (
+	"github.com/gin-gonic/gin"
 	"joosum-backend/app/user"
 	"net/http"
-
-	"github.com/gin-gonic/gin"
+	"strings"
 )
 
 type LinkHandler struct {
@@ -246,11 +246,12 @@ func (h LinkHandler) DeleteLinkByLinkId(c *gin.Context) {
 // DeleteLinksByUserId godoc
 // @Tags 링크
 // @Summary 링크를 삭제합니다.
-// @Description 사용자 아이디를 통해 해당 사용자의 모든 링크를 삭제합니다.
+// @Description 사용자 아이디를 통해 해당 사용자의 모든 링크를 삭제. /links?linkIds=all 일 때 유저의 모든 링크를 삭제
 // @Accept  json
 // @Produce  json
 // @Security ApiKeyAuth
-// @Success 204 "나의 유저아이디 기반으로 모든 링크를 삭제합니다."
+// @Param linkIds query []string false "링크 아이디"
+// @Success 200 {object} map[string]int64 "나의 유저아이디 기반으로 모든 링크를 삭제합니다."
 // @Failure 401 {object} util.APIError "Authorization 헤더가 없을 때 반환합니다."
 // @Router /links [delete]
 func (h LinkHandler) DeleteLinksByUserId(c *gin.Context) {
@@ -263,7 +264,8 @@ func (h LinkHandler) DeleteLinksByUserId(c *gin.Context) {
 
 	userId := currentUser.(*user.User).UserId
 
-	err := h.linkUsecase.DeleteAllLinksByUserId(userId)
+	linkIds := strings.Split(c.Query("linkIds"), ",")
+	deletedCount, err := h.linkUsecase.DeleteAllLinks(userId, linkIds)
 	if err != nil {
 		// 500 Internal Server Error
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -271,7 +273,7 @@ func (h LinkHandler) DeleteLinksByUserId(c *gin.Context) {
 	}
 
 	// 204 No Content
-	c.Status(http.StatusNoContent)
+	c.JSON(http.StatusOK, map[string]int64{"deletedCount": deletedCount})
 }
 
 // DeleteLinksByLinkBookId godoc

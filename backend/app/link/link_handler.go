@@ -246,7 +246,7 @@ func (h LinkHandler) DeleteLinkByLinkId(c *gin.Context) {
 // DeleteLinksByUserId godoc
 // @Tags 링크
 // @Summary 링크를 삭제합니다.
-// @Description 사용자 아이디를 통해 해당 사용자의 모든 링크를 삭제. /links?linkIds=all 일 때 유저의 모든 링크를 삭제
+// @Description 사용자 아이디를 통해 해당 사용자의 모든 링크를 삭제. 쿼리 파라미터가 없을 때 사용자의 모든링크 삭제
 // @Accept  json
 // @Produce  json
 // @Security ApiKeyAuth
@@ -272,7 +272,6 @@ func (h LinkHandler) DeleteLinksByUserId(c *gin.Context) {
 		return
 	}
 
-	// 204 No Content
 	c.JSON(http.StatusOK, map[string]int64{"deletedCount": deletedCount})
 }
 

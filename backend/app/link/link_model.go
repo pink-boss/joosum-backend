@@ -29,6 +29,16 @@ type Link struct {
 	UpdatedAt    time.Time `bson:"updated_at" json:"updatedAt"`
 }
 
+type LinkThumbnailRes struct {
+	URL          string  `bson:"url" json:"url" example:"https://www.naver.com"`
+	ThumbnailURL *string `bson:"thumbnailURL" json:"thumbnailURL" example:"https://s.pstatic.net/static/www/mobile/edit/2016/0705/mobile_212852414260.png"`
+	Title        *string `bson:"title" json:"title" example:"네이버"`
+}
+
+type LinkThumbnailReq struct {
+	URL string `bson:"url" json:"url" example:"https://www.naver.com"`
+}
+
 type LinkModel struct {
 }
 
@@ -267,13 +277,26 @@ func (LinkModel) DeleteOneByLinkId(linkId string) error {
 	return err
 }
 
-func (LinkModel) DeleteAllLinksByUserId(userId string) error {
+func (LinkModel) DeleteAllLinksByUserId(userId string) (int64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	_, err := db.LinkCollection.DeleteMany(ctx, bson.M{"user_id": userId})
+	result, err := db.LinkCollection.DeleteMany(ctx, bson.M{"user_id": userId})
 
-	return err
+	return result.DeletedCount, err
+}
+
+func (LinkModel) DeleteAllLinksByLinkIds(userId string, linkIds []string) (int64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{
+		{"link_id", bson.D{{"$in", linkIds}}},
+		{"user_id", userId},
+	}
+	result, err := db.LinkCollection.DeleteMany(ctx, filter)
+
+	return result.DeletedCount, err
 }
 
 func (LinkModel) DeleteAllLinksByLinkBookId(userId string, linkBookId string) (*mongo.DeleteResult, error) {

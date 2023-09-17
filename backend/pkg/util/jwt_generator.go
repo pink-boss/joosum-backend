@@ -9,9 +9,16 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
+type Role string
+
+const (
+	User  Role = "USER"
+	Admin      = "ADMIN"
+)
+
 // GenerateNewJWTAccessToken func for generate a new JWT access (private) token
 // with user ID and permissions.
-func GenerateNewJWTAccessToken(credentials []string, email string) (string, error) {
+func GenerateNewJWTAccessToken(roles []Role, email string) (string, error) {
 	// Catch JWT secret key from .env file.
 	secret := config.GetEnvConfig("jwt_secret")
 
@@ -21,11 +28,7 @@ func GenerateNewJWTAccessToken(credentials []string, email string) (string, erro
 
 	// Set public claims:
 	claims["email"] = email
-
-	// Set private token credentials:
-	for _, credential := range credentials {
-		claims[credential] = true
-	}
+	claims["roles"] = roles
 
 	// Generate token.
 	t, err := token.SignedString([]byte(secret))

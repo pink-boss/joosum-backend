@@ -1,0 +1,29 @@
+name: Send FCM Notification about unclassified link
+
+on:
+  schedule:
+    # UTC 로 실행됨. UTC + 9 = KST
+    # 매주 목요일 19:00
+    - cron: '0 10 * * 4'
+
+jobs:
+  send-notification:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Create config.yml
+        run: |
+          echo "${{ secrets.CONFIG_YML }}" > config.yml
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.19
+
+      - name: Build and run Go application for Notification
+        run: |
+          go build ./backend/cmd/scheduler -o scheduler
+          ./scheduler unclassified

@@ -120,3 +120,9 @@ func EnsureIndexes(collection *mongo.Collection) error {
 	_, err := collection.Indexes().CreateOne(ctx, indexModel)
 	return err
 }
+
+var NotificationCollection *mongo.Collection
+
+func InitNotificationCollection(client *mongo.Client, dbName string) {
+	NotificationCollection = client.Database(dbName).Collection("notifications")
+}

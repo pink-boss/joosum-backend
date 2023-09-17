@@ -1,10 +1,10 @@
 package link
 
 import (
+	"github.com/gin-gonic/gin"
 	"joosum-backend/app/user"
 	"net/http"
-
-	"github.com/gin-gonic/gin"
+	"strings"
 )
 
 type LinkHandler struct {
@@ -246,11 +246,12 @@ func (h LinkHandler) DeleteLinkByLinkId(c *gin.Context) {
 // DeleteLinksByUserId godoc
 // @Tags 링크
 // @Summary 링크를 삭제합니다.
-// @Description 사용자 아이디를 통해 해당 사용자의 모든 링크를 삭제합니다.
+// @Description 사용자 아이디를 통해 해당 사용자의 모든 링크를 삭제. 쿼리 파라미터가 없을 때 사용자의 모든링크 삭제
 // @Accept  json
 // @Produce  json
 // @Security ApiKeyAuth
-// @Success 204 "나의 유저아이디 기반으로 모든 링크를 삭제합니다."
+// @Param linkIds query []string false "링크 아이디"
+// @Success 200 {object} map[string]int64 "나의 유저아이디 기반으로 모든 링크를 삭제합니다."
 // @Failure 401 {object} util.APIError "Authorization 헤더가 없을 때 반환합니다."
 // @Router /links [delete]
 func (h LinkHandler) DeleteLinksByUserId(c *gin.Context) {
@@ -263,15 +264,15 @@ func (h LinkHandler) DeleteLinksByUserId(c *gin.Context) {
 
 	userId := currentUser.(*user.User).UserId
 
-	err := h.linkUsecase.DeleteAllLinksByUserId(userId)
+	linkIds := strings.Split(c.Query("linkIds"), ",")
+	deletedCount, err := h.linkUsecase.DeleteAllLinks(userId, linkIds)
 	if err != nil {
 		// 500 Internal Server Error
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	// 204 No Content
-	c.Status(http.StatusNoContent)
+	c.JSON(http.StatusOK, map[string]int64{"deletedCount": deletedCount})
 }
 
 // DeleteLinksByLinkBookId godoc
@@ -396,4 +397,32 @@ func (h LinkHandler) UpdateTitleAndUrlByLinkId(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, link)
+}
+
+// GetThumnailURL godoc
+// @Tags 링크
+// @Summary 링크의 썸네일 URL과 Title을 가져옵니다.
+// @Description 링크의 URL을 통해 해당 링크의 썸네일 URL과 Title을 가져옵니다.
+// @Accept  json
+// @Produce  json
+// @Security ApiKeyAuth
+// @Param request body LinkThumbnailReq true "링크 썸네일 요청 본문"
+// @Success 200 {object} LinkThumbnailRes "링크 썸네일 URL과 Title을 반환합니다."
+// @Failure 400 {object} util.APIError "요청 본문이 유효하지 않을 때 반환합니다."
+func (h LinkHandler) GetThumnailURL(c *gin.Context) {
+	var req LinkThumbnailReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		// 400 Bad Request
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	linkThumbnailRes, err := h.linkUsecase.GetThumnailURL(req.URL)
+	if err != nil {
+		// 500 Internal Server Error
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, linkThumbnailRes)
 }

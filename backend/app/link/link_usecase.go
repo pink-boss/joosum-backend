@@ -1,5 +1,14 @@
 package link
 
+import (
+	"fmt"
+	"net/http"
+
+	"github.com/PuerkitoBio/goquery"
+	"gopkg.in/errgo.v2/errors"
+	"strings"
+)
+
 type LinkUsecase struct {
 	linkModel     LinkModel
 	linkBookModel LinkBookModel
@@ -118,13 +127,25 @@ func (u LinkUsecase) DeleteOneByLinkId(linkId string) error {
 	return nil
 }
 
-func (u LinkUsecase) DeleteAllLinksByUserId(userId string) error {
-	err := u.linkModel.DeleteAllLinksByUserId(userId)
-	if err != nil {
-		return err
-	}
+func (u LinkUsecase) DeleteAllLinks(userId string, linkIds []string) (int64, error) {
+	if linkIds[0] == "" {
+		deletedCount, err := u.linkModel.DeleteAllLinksByUserId(userId)
+		if err != nil {
+			return 0, err
+		}
 
-	return nil
+		return deletedCount, nil
+
+	} else if strings.HasPrefix(linkIds[0], "Link-") {
+		deletedCount, err := u.linkModel.DeleteAllLinksByLinkIds(userId, linkIds)
+		if err != nil {
+			return 0, err
+		}
+
+		return deletedCount, nil
+	} else {
+		return 0, errors.New("Invalid query parameter")
+	}
 }
 
 func (u LinkUsecase) DeleteAllLinksByLinkBookId(userId string, linkBookId string) error {
@@ -170,4 +191,43 @@ func (u LinkUsecase) UpdateTitleAndUrlByLinkId(linkId string, url string, title 
 	}
 
 	return link, nil
+}
+
+func (LinkUsecase) GetThumnailURL(url string) (*LinkThumbnailRes, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("status code error: %d %s", resp.StatusCode, resp.Status)
+	}
+
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var ogTitle, ogImage *string
+
+	doc.Find("meta").Each(func(index int, item *goquery.Selection) {
+		if property, exists := item.Attr("property"); exists {
+			if property == "og:title" {
+				content, _ := item.Attr("content")
+				ogTitle = &content
+			}
+			if property == "og:image" {
+				content, _ := item.Attr("content")
+				ogImage = &content
+			}
+		}
+	})
+
+	return &LinkThumbnailRes{
+		URL:          url,
+		ThumbnailURL: ogImage,
+		Title:        ogTitle,
+	}, nil
+
 }

@@ -1,6 +1,9 @@
 package util
 
-import "math/rand"
+import (
+	"github.com/google/uuid"
+	"math/rand"
+)
 
 // generate random string
 func RandomString(n int) string {
@@ -12,4 +15,8 @@ func RandomString(n int) string {
 	}
 
 	return string(b)
+}
+
+func CreateId(domain string) string {
+	return domain + "-" + uuid.New().String()
 }

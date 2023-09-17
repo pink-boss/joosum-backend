@@ -398,3 +398,31 @@ func (h LinkHandler) UpdateTitleAndUrlByLinkId(c *gin.Context) {
 
 	c.JSON(http.StatusOK, link)
 }
+
+// GetThumnailURL godoc
+// @Tags 링크
+// @Summary 링크의 썸네일 URL과 Title을 가져옵니다.
+// @Description 링크의 URL을 통해 해당 링크의 썸네일 URL과 Title을 가져옵니다.
+// @Accept  json
+// @Produce  json
+// @Security ApiKeyAuth
+// @Param request body LinkThumbnailReq true "링크 썸네일 요청 본문"
+// @Success 200 {object} LinkThumbnailRes "링크 썸네일 URL과 Title을 반환합니다."
+// @Failure 400 {object} util.APIError "요청 본문이 유효하지 않을 때 반환합니다."
+func (h LinkHandler) GetThumnailURL(c *gin.Context) {
+	var req LinkThumbnailReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		// 400 Bad Request
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	linkThumbnailRes, err := h.linkUsecase.GetThumnailURL(req.URL)
+	if err != nil {
+		// 500 Internal Server Error
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, linkThumbnailRes)
+}

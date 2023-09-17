@@ -62,6 +62,7 @@ func PrivateRoutes(router *gin.Engine) {
 		linkRouter.PUT("/:linkId/read-count", linkHandler.UpdateReadCount)
 		linkRouter.PUT("/:linkId/link-book-id/:linkBookId", linkHandler.UpdateLinkBookIdByLinkId)
 		linkRouter.PUT("/:linkId", linkHandler.UpdateTitleAndUrlByLinkId)
+		linkRouter.POST("/thumbnail", linkHandler.GetThumnailURL)
 	}
 
 }

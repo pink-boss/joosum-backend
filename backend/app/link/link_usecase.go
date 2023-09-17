@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	"github.com/PuerkitoBio/goquery"
+	"gopkg.in/errgo.v2/errors"
+	"strings"
 )
 
 type LinkUsecase struct {
@@ -125,13 +127,25 @@ func (u LinkUsecase) DeleteOneByLinkId(linkId string) error {
 	return nil
 }
 
-func (u LinkUsecase) DeleteAllLinksByUserId(userId string) error {
-	err := u.linkModel.DeleteAllLinksByUserId(userId)
-	if err != nil {
-		return err
-	}
+func (u LinkUsecase) DeleteAllLinks(userId string, linkIds []string) (int64, error) {
+	if linkIds[0] == "" {
+		deletedCount, err := u.linkModel.DeleteAllLinksByUserId(userId)
+		if err != nil {
+			return 0, err
+		}
 
-	return nil
+		return deletedCount, nil
+
+	} else if strings.HasPrefix(linkIds[0], "Link-") {
+		deletedCount, err := u.linkModel.DeleteAllLinksByLinkIds(userId, linkIds)
+		if err != nil {
+			return 0, err
+		}
+
+		return deletedCount, nil
+	} else {
+		return 0, errors.New("Invalid query parameter")
+	}
 }
 
 func (u LinkUsecase) DeleteAllLinksByLinkBookId(userId string, linkBookId string) error {

@@ -409,6 +409,7 @@ func (h LinkHandler) UpdateTitleAndUrlByLinkId(c *gin.Context) {
 // @Param request body LinkThumbnailReq true "링크 썸네일 요청 본문"
 // @Success 200 {object} LinkThumbnailRes "링크 썸네일 URL과 Title을 반환합니다."
 // @Failure 400 {object} util.APIError "요청 본문이 유효하지 않을 때 반환합니다."
+// @Router /links/thumbnail [post]
 func (h LinkHandler) GetThumnailURL(c *gin.Context) {
 	var req LinkThumbnailReq
 	if err := c.ShouldBindJSON(&req); err != nil {

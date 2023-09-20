@@ -25,5 +25,6 @@ jobs:
 
       - name: Build and run Go application for Notification
         run: |
-          go build ./backend/cmd/scheduler -o scheduler
+          cd backend/cmd/scheduler
+          go build
           ./scheduler unread

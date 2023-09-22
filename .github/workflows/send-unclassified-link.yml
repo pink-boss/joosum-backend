@@ -16,7 +16,7 @@ jobs:
 
       - name: Create config.yml
         run: |
-          echo "${{ secrets.CONFIG_YML }}" > config.yml
+          echo "${{ secrets.CONFIG_YML }}" > cmd/scheduler/config.yml
 
       - name: Set up Go
         uses: actions/setup-go@v2

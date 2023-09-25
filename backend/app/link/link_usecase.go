@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"strings"
+
 	"github.com/PuerkitoBio/goquery"
 	"gopkg.in/errgo.v2/errors"
-	"strings"
 )
 
 type LinkUsecase struct {
@@ -220,6 +221,10 @@ func (LinkUsecase) GetThumnailURL(url string) (*LinkThumbnailRes, error) {
 			if property == "og:image" {
 				content, _ := item.Attr("content")
 				ogImage = &content
+
+				if strings.HasPrefix(*ogImage, "//") {
+					*ogImage = "https:" + *ogImage
+				}
 			}
 		}
 	})

@@ -124,7 +124,7 @@ func (u LinkUsecase) DeleteOneByLinkId(linkId string) error {
 }
 
 func (u LinkUsecase) DeleteAllLinks(userId string, linkIds []string) (int64, error) {
-	if linkIds[0] == "" {
+	if linkIds[0] == "all" {
 		deletedCount, err := u.linkModel.DeleteAllLinksByUserId(userId)
 		if err != nil {
 			return 0, err

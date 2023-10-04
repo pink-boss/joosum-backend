@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"joosum-backend/app/user"
 	"net/http"
-	"strings"
 )
 
 type LinkHandler struct {
@@ -24,6 +23,10 @@ type UpdateLinkReq struct {
 	URL          string   `json:"url"`
 	ThumbnailURL string   `json:"thumbnailURL"`
 	Tags         []string `json:"tags"`
+}
+
+type DeleteLinkReq struct {
+	LinkIds []string `json:"linkIds"`
 }
 
 // CreateLink
@@ -246,11 +249,11 @@ func (h LinkHandler) DeleteLinkByLinkId(c *gin.Context) {
 // DeleteLinksByUserId godoc
 // @Tags 링크
 // @Summary 링크를 삭제합니다.
-// @Description 사용자 아이디를 통해 해당 사용자의 모든 링크를 삭제. 쿼리 파라미터가 없을 때 사용자의 모든링크 삭제
+// @Description 사용자 아이디를 통해 해당 사용자의 모든 링크를 삭제. 리스트에 "all" 만 담아 보내면 사용자의 모든링크 삭제
 // @Accept  json
 // @Produce  json
 // @Security ApiKeyAuth
-// @Param linkIds query []string false "링크 아이디"
+// @Param request body DeleteLinkReq true "링크 아이디"
 // @Success 200 {object} map[string]int64 "나의 유저아이디 기반으로 모든 링크를 삭제합니다."
 // @Failure 401 {object} util.APIError "Authorization 헤더가 없을 때 반환합니다."
 // @Router /links [delete]
@@ -264,8 +267,14 @@ func (h LinkHandler) DeleteLinksByUserId(c *gin.Context) {
 
 	userId := currentUser.(*user.User).UserId
 
-	linkIds := strings.Split(c.Query("linkIds"), ",")
-	deletedCount, err := h.linkUsecase.DeleteAllLinks(userId, linkIds)
+	var req DeleteLinkReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		// 400 Bad Request
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	deletedCount, err := h.linkUsecase.DeleteAllLinks(userId, req.LinkIds)
 	if err != nil {
 		// 500 Internal Server Error
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

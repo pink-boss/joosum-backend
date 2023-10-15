@@ -37,3 +37,44 @@ func (h NotificationHandler) SaveDeviceId(c *gin.Context) {
 	// 200 OK
 	c.JSON(http.StatusOK, result)
 }
+
+func (h NotificationHandler) GetNotificationAgree(c *gin.Context) {
+	userId := util.GetUserId(c)
+	result, err := h.notificationUsecase.GetNotificationAgree(userId)
+	if err != nil {
+		// 500 Internal Server Error
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// 200 OK
+	c.JSON(http.StatusOK, result)
+}
+
+// UpdatePushNotification
+// @Tags 알림
+// @Summary 푸시알림 여부 수정
+// @Param request body PushNotificationReq true "request"
+// @Success 200 {object} db.UpdateResult
+// @Security ApiKeyAuth
+// @Router /notifications [put]
+func (h NotificationHandler) UpdatePushNotification(c *gin.Context) {
+	userId := util.GetUserId(c)
+
+	var req PushNotificationReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		// 400 Bad Request
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	result, err := h.notificationUsecase.UpdatePushNotification(req, userId)
+	if err != nil {
+		// 500 Internal Server Error
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// 200 OK
+	c.JSON(http.StatusOK, result)
+}

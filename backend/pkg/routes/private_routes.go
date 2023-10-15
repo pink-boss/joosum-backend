@@ -70,5 +70,6 @@ func PrivateRoutes(router *gin.Engine) {
 	notificationRouter := router.Group("/notifications")
 	{
 		notificationRouter.POST("/device", notificationHandler.SaveDeviceId)
+		notificationRouter.PUT("", notificationHandler.UpdatePushNotification)
 	}
 }

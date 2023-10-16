@@ -1,4 +1,4 @@
-package notif
+package setting
 
 import (
 	"context"
@@ -9,15 +9,15 @@ import (
 	"time"
 )
 
-type NotificationModel struct {
+type SettingModel struct {
 }
 
 type Agree struct {
-	AgreeId         string `bson:"_id"`
-	DeviceId        string `bson:"device_id"`
-	IsReadAgree     bool   `bson:"is_read_agree"`
-	IsClassifyAgree bool   `bson:"is_classify_agree"`
-	UserId          string `bson:"user_id"`
+	AgreeId         *string `bson:"_id" json:"agreeId" example:"652bf9508de1187ff1e16e24"`
+	DeviceId        *string `bson:"device_id" json:"deviceId"`
+	IsReadAgree     bool    `bson:"is_read_agree" json:"isReadAgree"`
+	IsClassifyAgree bool    `bson:"is_classify_agree" json:"isClassifyAgree"`
+	UserId          string  `bson:"user_id" json:"userId" example:"User-dea95e0a-6d06-4d9f-bd2e-094bcedcc792"`
 }
 
 type DeviceReq struct {
@@ -29,7 +29,7 @@ type PushNotificationReq struct {
 	IsClassifyAgree bool `json:"isClassifyAgree"`
 }
 
-func (NotificationModel) SaveDeviceId(deviceId, userId string) (*mongo.UpdateResult, error) {
+func (SettingModel) SaveDeviceId(deviceId, userId string) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -44,17 +44,21 @@ func (NotificationModel) SaveDeviceId(deviceId, userId string) (*mongo.UpdateRes
 	return result, nil
 }
 
-//func (NotificationModel) GetNotificationAgree(userId string) (*mongo.UpdateResult, error) {
-//	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-//	defer cancel()
-//
-//	cur, err := db.NotificationAgreeCollection.Find(ctx, filter, opts)
-//
-//
-//	return result, nil
-//}
+func (SettingModel) GetNotificationAgree(userId string) (*Agree, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-func (NotificationModel) UpdatePushNotification(req PushNotificationReq, userId string) (*mongo.UpdateResult, error) {
+	filter := bson.D{{"user_id", userId}}
+	var agree Agree
+	err := db.NotificationAgreeCollection.FindOne(ctx, filter).Decode(&agree)
+	if err != nil {
+		return nil, err
+	}
+
+	return &agree, nil
+}
+
+func (SettingModel) UpdatePushNotification(req PushNotificationReq, userId string) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 

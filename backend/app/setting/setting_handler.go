@@ -1,4 +1,4 @@
-package notif
+package setting
 
 import (
 	"github.com/gin-gonic/gin"
@@ -6,18 +6,18 @@ import (
 	"net/http"
 )
 
-type NotificationHandler struct {
-	notificationUsecase NotificationUsecase
+type SettingHandler struct {
+	settingUsecase SettingUsecase
 }
 
 // SaveDeviceId
-// @Tags 알림
+// @Tags 설정
 // @Summary 푸시 디바이스 ID 저장
 // @Param request body DeviceReq true "request"
 // @Success 200 {object} db.UpdateResult
 // @Security ApiKeyAuth
-// @Router /notifications/device [post]
-func (h NotificationHandler) SaveDeviceId(c *gin.Context) {
+// @Router /settings/device [post]
+func (h SettingHandler) SaveDeviceId(c *gin.Context) {
 	userId := util.GetUserId(c)
 
 	var req DeviceReq
@@ -27,7 +27,7 @@ func (h NotificationHandler) SaveDeviceId(c *gin.Context) {
 		return
 	}
 
-	result, err := h.notificationUsecase.SaveDeviceId(req.DeviceId, userId)
+	result, err := h.settingUsecase.SaveDeviceId(req.DeviceId, userId)
 	if err != nil {
 		// 500 Internal Server Error
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -38,9 +38,15 @@ func (h NotificationHandler) SaveDeviceId(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-func (h NotificationHandler) GetNotificationAgree(c *gin.Context) {
+// GetNotificationAgree
+// @Tags 설정
+// @Summary 푸시알림 여부 조회
+// @Success 200 {object} Agree
+// @Security ApiKeyAuth
+// @Router /settings/notification [get]
+func (h SettingHandler) GetNotificationAgree(c *gin.Context) {
 	userId := util.GetUserId(c)
-	result, err := h.notificationUsecase.GetNotificationAgree(userId)
+	result, err := h.settingUsecase.GetNotificationAgree(userId)
 	if err != nil {
 		// 500 Internal Server Error
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -52,13 +58,13 @@ func (h NotificationHandler) GetNotificationAgree(c *gin.Context) {
 }
 
 // UpdatePushNotification
-// @Tags 알림
+// @Tags 설정
 // @Summary 푸시알림 여부 수정
 // @Param request body PushNotificationReq true "request"
 // @Success 200 {object} db.UpdateResult
 // @Security ApiKeyAuth
-// @Router /notifications [put]
-func (h NotificationHandler) UpdatePushNotification(c *gin.Context) {
+// @Router /settings/notification [put]
+func (h SettingHandler) UpdatePushNotification(c *gin.Context) {
 	userId := util.GetUserId(c)
 
 	var req PushNotificationReq
@@ -68,7 +74,7 @@ func (h NotificationHandler) UpdatePushNotification(c *gin.Context) {
 		return
 	}
 
-	result, err := h.notificationUsecase.UpdatePushNotification(req, userId)
+	result, err := h.settingUsecase.UpdatePushNotification(req, userId)
 	if err != nil {
 		// 500 Internal Server Error
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

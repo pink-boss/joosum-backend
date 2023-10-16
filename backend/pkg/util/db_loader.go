@@ -27,6 +27,7 @@ func StartMongoDB() {
 	db.InitInactiveUserCollection(client, dbName)
 	db.InitTagCollection(client, dbName)
 	db.InitNotificationCollection(client, dbName)
+	db.InitNotificationAgreeCollection(client, dbName)
 
 }
 

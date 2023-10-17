@@ -14,11 +14,13 @@ func PublicRoutes(router *gin.Engine) {
 	googleHandler := auth.GoogleHandler{}
 	authHandler := auth.AuthHandler{}
 	appleHandler := auth.AppleHandler{}
+	naverHandler := auth.NaverHandler{}
 
 	authRouter := router.Group("/auth")
 	{
 		authRouter.POST("/apple", appleHandler.VerifyAndIssueToken)
 		authRouter.POST("/google", googleHandler.VerifyGoogleAccessToken)
+		authRouter.POST("/naver", naverHandler.VerifyNaverAccessToken)
 		authRouter.POST("/signup", authHandler.SignUp)
 	}
 

@@ -37,3 +37,9 @@ brew install jq
 docker logs joosum_dev -f # 개발환경 로그확인
 docker logs server 2>&1 -f | jq # 배포서버 로그확인
 ```
+
+## Version
+
+---
+
+- Mongo-driver: v1.11.4

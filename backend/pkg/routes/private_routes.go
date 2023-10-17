@@ -4,6 +4,7 @@ import (
 	"joosum-backend/app/auth"
 	"joosum-backend/app/link"
 	"joosum-backend/app/page"
+	"joosum-backend/app/setting"
 	"joosum-backend/app/tag"
 	"joosum-backend/app/user"
 	"joosum-backend/pkg/middleware"
@@ -20,6 +21,7 @@ func PrivateRoutes(router *gin.Engine) {
 	linkBookHandler := link.LinkBookHandler{}
 	linkHandler := link.LinkHandler{}
 	pageHandler := page.PageHandler{}
+	settingHandler := setting.SettingHandler{}
 
 	router.Use(middleware.SetUserData())
 
@@ -65,4 +67,10 @@ func PrivateRoutes(router *gin.Engine) {
 		linkRouter.POST("/thumbnail", linkHandler.GetThumnailURL)
 	}
 
+	settingRouter := router.Group("/settings")
+	{
+		settingRouter.POST("/device", settingHandler.SaveDeviceId)
+		settingRouter.GET("/notification", settingHandler.GetNotificationAgree)
+		settingRouter.PUT("/notification", settingHandler.UpdatePushNotification)
+	}
 }

@@ -45,6 +45,24 @@ func (SettingModel) SaveDeviceId(deviceId, userId string) (*mongo.UpdateResult, 
 	return result, nil
 }
 
+func (SettingModel) GetNotificationAgrees() (*NotificationAgree, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{
+		{"is_read_agree", true},
+		{"is_classify_agree", true},
+	}
+	var agree NotificationAgree
+	cur, err := db.NotificationAgreeCollection.Find(ctx, filter)
+
+	var results []NotificationAgree
+	if err = cur.All(context.TODO(), &results); err != nil {
+		panic(err)
+	}
+	return &agree, nil
+}
+
 func (SettingModel) GetNotificationAgree(userId string) (*NotificationAgree, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

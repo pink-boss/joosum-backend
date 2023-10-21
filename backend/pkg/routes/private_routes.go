@@ -36,6 +36,7 @@ func PrivateRoutes(router *gin.Engine) {
 	{
 		authRouter.GET("/me", authHandler.GetMe)
 		authRouter.DELETE("/me", UserHandler.DeleteUser)
+		authRouter.POST("/logout", authHandler.Logout)
 	}
 	tagRouter := router.Group("/tags")
 	{

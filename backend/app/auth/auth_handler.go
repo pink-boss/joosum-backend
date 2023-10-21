@@ -85,6 +85,27 @@ func (h AuthHandler) SignUp(c *gin.Context) {
 	c.JSON(http.StatusOK, util.TokenRes{AccessToken: accessToken, RefreshToken: refreshToken})
 }
 
+// Logout
+// @Tags 유저
+// @Summary 로그아웃
+// @Description 디바이스 ID 삭제
+// @Success 200 {object} db.UpdateResult
+// @Security ApiKeyAuth
+// @Router /auth/logout [POST]
+func (h AuthHandler) Logout(c *gin.Context) {
+	userId := util.GetUserId(c)
+
+	result, err := h.authUsecase.Logout(userId)
+	if err != nil {
+		// 500 Internal Server Error
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// 200 OK
+	c.JSON(http.StatusOK, result)
+}
+
 // GetMe godoc
 // @Summary 내 정보 조회
 // @Description 현재 로그인된 사용자의 정보를 반환합니다.

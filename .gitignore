@@ -32,3 +32,6 @@ docs
 
 # pem key for apple login
 Apple_AuthKey.p8
+
+# KEY 관리 
+fireBaseKey.json

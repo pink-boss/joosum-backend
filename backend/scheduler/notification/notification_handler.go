@@ -22,11 +22,14 @@ func SendUnreadLink() {
 	// 1. device token 가져옴
 	notificationAgrees, err := setting.GetNotificationAgrees()
 	if err != nil {
-		panic("failed to get the device tokens")
+		panic("failed to get the device tokens: " + err.Error())
 	}
 
 	// 2. 알림 보냄, 저장
-	sendAndSaveNotifications(notificationAgrees)
+	err = sendAndSaveNotifications(notificationAgrees)
+	if err != nil {
+		panic("failed to send or save notifications: " + err.Error())
+	}
 
 	log.Println("Successfully send notification about unread link!!")
 }

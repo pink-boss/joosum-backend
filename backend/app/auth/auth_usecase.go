@@ -6,6 +6,8 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"fmt"
+
+	"joosum-backend/app/setting"
 	"joosum-backend/app/user"
 	localConfig "joosum-backend/pkg/config"
 	"joosum-backend/pkg/util"
@@ -13,13 +15,15 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/golang-jwt/jwt/v4"
+	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/api/oauth2/v2"
 	"google.golang.org/api/option"
 )
 
 type AuthUsecase struct {
-	salt      string
-	userModel user.UserModel
+	salt         string
+	userModel    user.UserModel
+	settingModel setting.SettingModel
 }
 
 func (u *AuthUsecase) GenerateNewJWTToken(email string) (string, string, error) {
@@ -41,6 +45,14 @@ func (u *AuthUsecase) SignUp(userInfo user.User) (*user.User, error) {
 		return nil, err
 	}
 	return user, nil
+}
+
+func (u *AuthUsecase) Logout(userId string) (*mongo.UpdateResult, error) {
+	result, err := u.settingModel.DeleteDivceId(userId)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 func (u *AuthUsecase) GetEmailFromJWT(social, idToken string) (string, error) {

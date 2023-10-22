@@ -4,7 +4,7 @@ on:
   schedule:
     # UTC 로 실행됨. UTC + 9 = KST
     # 매주 목요일 19:00
-    - cron: '0 10 * * 4'
+    - cron: "0 10 * * 4"
 
 jobs:
   send-notification:
@@ -16,7 +16,11 @@ jobs:
 
       - name: Create config.yml
         run: |
-          echo "${{ secrets.CONFIG_YML }}" > backend/cmd/scheduler/config.yml
+          echo "${{ secrets.SCHEDULER_CONFIG_V1 }}" > backend/cmd/scheduler/config.yml
+
+      - name: Create fireBaseKey.json
+        run: |
+          echo "${{ secrets.FIRE_BASE_KEY }}" > backend/fireBaseKey.json
 
       - name: Set up Go
         uses: actions/setup-go@v2

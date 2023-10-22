@@ -1,9 +1,10 @@
 package setting
 
 import (
-	"github.com/gin-gonic/gin"
 	"joosum-backend/pkg/util"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type SettingHandler struct {
@@ -41,7 +42,7 @@ func (h SettingHandler) SaveDeviceId(c *gin.Context) {
 // GetNotificationAgree
 // @Tags 설정
 // @Summary 푸시알림 여부 조회
-// @Success 200 {object} Agree
+// @Success 200 {object} NotificationAgree
 // @Security ApiKeyAuth
 // @Router /settings/notification [get]
 func (h SettingHandler) GetNotificationAgree(c *gin.Context) {

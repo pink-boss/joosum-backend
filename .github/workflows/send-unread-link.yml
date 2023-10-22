@@ -20,8 +20,10 @@ jobs:
           echo "${{ secrets.SCHEDULER_CONFIG_V1 }}" > backend/cmd/scheduler/config.yml
 
       - name: Create fireBaseKey.json
+        env:
+          FIREBASE_CREDENTIALS: ${{ secrets.FIRE_BASE_KEY }}
         run: |
-          echo "${{ secrets.FIRE_BASE_KEY }}" > backend/cmd/scheduler/fireBaseKey.json
+          echo "$FIREBASE_CREDENTIALS" > backend/fireBaseKey.json
 
       - name: Set up Go
         uses: actions/setup-go@v2

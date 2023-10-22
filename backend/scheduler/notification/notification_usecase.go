@@ -14,10 +14,9 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-func sendAndSaveNotifications(notificationAgrees []setting.NotificationAgree) error {
+func sendAndSaveNotifications(notificationAgrees []setting.NotificationAgree, notificationType string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
-	link := link.LinkModel{}
 
 	projectId := config.GetEnvConfig("projectId")
 	googleToken, err := getAccesstoken()
@@ -33,15 +32,12 @@ func sendAndSaveNotifications(notificationAgrees []setting.NotificationAgree) er
 		deviceToken := notificationAgree.DeviceId
 		userId := notificationAgree.UserId
 
-		// 1. 읽지않은 링크 갯수 세기
-		unreadLinkCnt, err := link.GetUserUnreadLinkCount(userId)
+		title, body, err := getNotificationText(notificationType, userId)
 		if err != nil {
 			return err
 		}
 
 		// 2. 알림 보내기
-		title := fmt.Sprintf("읽지 않은 링크가 %d건 있어요.", unreadLinkCnt)
-		body := "저장해 둔 링크를 확인해보세요!"
 
 		msg := FcmReq{
 			Token: *deviceToken,
@@ -69,7 +65,7 @@ func sendAndSaveNotifications(notificationAgrees []setting.NotificationAgree) er
 			NotificationId: util.CreateId("Notification"),
 			Title:          title,
 			Body:           body,
-			Type:           "unread",
+			Type:           notificationType,
 			CreatedAt:      time.Now(),
 			UserId:         userId,
 		}
@@ -83,4 +79,34 @@ func sendAndSaveNotifications(notificationAgrees []setting.NotificationAgree) er
 	log.Printf("failUserIds=%v \n", failUserIds)
 
 	return nil
+}
+
+func getNotificationText(notificationType, userId string) (title, body string, err error) {
+	linkBookModel := link.LinkBookModel{}
+	linkModel := link.LinkModel{}
+
+	// 읽지않은 링크 갯수 세기
+	if notificationType == "unread" {
+		unreadLinkCnt, err := linkModel.GetUserUnreadLinkCount(userId)
+		if err != nil {
+			return "", "", err
+		}
+		title = fmt.Sprintf("읽지 않은 링크가 %d건 있어요.", unreadLinkCnt)
+		body = "저장해 둔 링크를 확인해보세요!"
+
+		// 분류되지 않은 링크 갯수 세기
+	} else {
+		defaultLinkBook, err := linkBookModel.GetDefaultLinkBook(userId)
+		if err != nil {
+			return "", "", err
+		}
+		unclassifyCnt, err := linkModel.GetLinkBookLinkCount(defaultLinkBook.LinkBookId)
+		if err != nil {
+			return "", "", err
+		}
+
+		title = fmt.Sprintf("분류되지 않은 링크가 %d건 있어요.", unclassifyCnt)
+		body = "폴더를 만들어서 정리해보세요!"
+	}
+	return
 }

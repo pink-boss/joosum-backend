@@ -4,8 +4,7 @@ on:
   schedule:
     # UTC 로 실행됨. UTC + 9 = KST
     # 매주 월요일 19:00
-    # - cron: '0 10 * * 1'
-    - cron: "* * * * *"
+    - cron: "0 10 * * 1"
 
 jobs:
   send-notification:

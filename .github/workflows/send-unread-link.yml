@@ -21,7 +21,7 @@ jobs:
 
       - name: Create fireBaseKey.json
         run: |
-          echo "${{ secrets.FIRE_BASE_KEY }}" > backend/cmd/scheduler/fireBaseKey.json
+          echo "${{ secrets.FIRE_BASE_KEY }}" > backend/fireBaseKey.json
 
       - name: Set up Go
         uses: actions/setup-go@v2

@@ -58,7 +58,7 @@ func SendUnclassifiedLink() error {
 }
 
 func getAccesstoken() (string, error) {
-	tokenProvider, err := newTokenProvider("../../fireBaseKey.json")
+	tokenProvider, err := newTokenProvider("fireBaseKey.json")
 	if err != nil {
 		return "", fmt.Errorf("Failed to get Token provider: %v", err)
 	}

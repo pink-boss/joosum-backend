@@ -268,6 +268,19 @@ func (LinkModel) GetUserLinkCount(userId string) (int64, error) {
 	return result, nil
 }
 
+func (LinkModel) GetUserUnreadLinkCount(userId string) (int64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.M{"user_id": userId, "read_count": 0}
+	result, error := db.LinkCollection.CountDocuments(ctx, filter)
+	if error != nil {
+		return 0, error
+	}
+
+	return result, nil
+}
+
 func (LinkModel) DeleteOneByLinkId(linkId string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

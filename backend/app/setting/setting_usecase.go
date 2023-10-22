@@ -16,11 +16,11 @@ func (u SettingUsecase) SaveDeviceId(deviceId, userId string) (*mongo.UpdateResu
 	return result, nil
 }
 
-func (u SettingUsecase) GetNotificationAgree(userId string) (*Agree, error) {
+func (u SettingUsecase) GetNotificationAgree(userId string) (*NotificationAgree, error) {
 	result, err := u.settingModel.GetNotificationAgree(userId)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			agree := &Agree{
+			agree := &NotificationAgree{
 				IsReadAgree:     false,
 				IsClassifyAgree: false,
 				UserId:          userId,

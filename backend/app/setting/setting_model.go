@@ -45,14 +45,23 @@ func (SettingModel) SaveDeviceId(deviceId, userId string) (*mongo.UpdateResult, 
 	return result, nil
 }
 
-func (SettingModel) GetNotificationAgrees() ([]NotificationAgree, error) {
+func (SettingModel) GetNotificationAgrees(notificationType string) ([]NotificationAgree, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+	var filter bson.M
 
-	filter := bson.D{
-		{"is_read_agree", true},
-		{"is_classify_agree", true},
+	if notificationType == "unread" {
+		filter = bson.M{
+			"is_read_agree": true,
+			"device_id":     bson.M{"$ne": nil},
+		}
+	} else if notificationType == "unclassified" {
+		filter = bson.M{
+			"is_classify_agree": true,
+			"device_id":         bson.M{"$ne": nil},
+		}
 	}
+
 	cur, err := db.NotificationAgreeCollection.Find(ctx, filter)
 
 	var results []NotificationAgree

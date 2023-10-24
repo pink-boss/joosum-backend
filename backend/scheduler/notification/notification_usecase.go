@@ -2,7 +2,9 @@ package notification
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"joosum-backend/app/link"
 	"joosum-backend/app/setting"
 	"joosum-backend/pkg/config"
@@ -12,6 +14,7 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
+	"golang.org/x/oauth2/google"
 )
 
 func sendAndSaveNotifications(notificationAgrees []setting.NotificationAgree, notificationType string) error {
@@ -38,7 +41,6 @@ func sendAndSaveNotifications(notificationAgrees []setting.NotificationAgree, no
 		}
 
 		// 2. 알림 보내기
-
 		msg := FcmReq{
 			Token: *deviceToken,
 			Notification: FcmNotification{
@@ -55,12 +57,6 @@ func sendAndSaveNotifications(notificationAgrees []setting.NotificationAgree, no
 			SetError(&authErr). // or SetError(AuthError{}).
 			Post("https://fcm.googleapis.com/v1/projects/" + projectId + "/messages:send")
 
-		if result.IsSuccess() {
-			successUserIds = append(successUserIds, userId)
-		} else {
-			failUserIds = append(failUserIds, userId)
-		}
-
 		notification := Notification{
 			NotificationId: util.CreateId("Notification"),
 			Title:          title,
@@ -70,9 +66,15 @@ func sendAndSaveNotifications(notificationAgrees []setting.NotificationAgree, no
 			UserId:         userId,
 		}
 
-		_, err = db.NotificationCollection.InsertOne(ctx, notification)
-		if err != nil {
-			return err
+		if result.IsSuccess() {
+			successUserIds = append(successUserIds, userId)
+
+			_, err = db.NotificationCollection.InsertOne(ctx, notification)
+			if err != nil {
+				return err
+			}
+		} else {
+			failUserIds = append(failUserIds, userId)
 		}
 	}
 	log.Printf("successUserIds=%v \n", successUserIds)
@@ -109,4 +111,41 @@ func getNotificationText(notificationType, userId string) (title, body string, e
 		body = "폴더를 만들어서 정리해보세요!"
 	}
 	return
+}
+
+func getAccesstoken() (string, error) {
+	tokenProvider, err := newTokenProvider("../../fireBaseKey.json")
+	if err != nil {
+		return "", fmt.Errorf("Failed to get Token provider: %v", err)
+	}
+	token, err := tokenProvider.token()
+	if err != nil {
+		return "", fmt.Errorf("Failed to get Token: %v", err)
+	}
+
+	return token, nil
+}
+
+// newTokenProvider function to get token for fcm-send
+func newTokenProvider(credentialsLocation string) (*tokenProvider, error) {
+	jsonKey, err := ioutil.ReadFile(credentialsLocation)
+	if err != nil {
+		return nil, errors.New("fcm: failed to read credentials file at: " + credentialsLocation)
+	}
+	cfg, err := google.JWTConfigFromJSON(jsonKey, firebaseScope)
+	if err != nil {
+		return nil, errors.New("fcm: failed to get JWT config for the firebase.messaging scope: " + err.Error())
+	}
+	ts := cfg.TokenSource(context.Background())
+	return &tokenProvider{
+		tokenSource: ts,
+	}, nil
+}
+
+func (src *tokenProvider) token() (string, error) {
+	token, err := src.tokenSource.Token()
+	if err != nil {
+		return "", errors.New("fcm: failed to generate Bearer token")
+	}
+	return token.AccessToken, nil
 }

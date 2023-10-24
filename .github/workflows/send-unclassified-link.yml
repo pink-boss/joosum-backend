@@ -16,7 +16,7 @@ jobs:
 
       - name: Create config.yml
         run: |
-          echo "${{ secrets.SCHEDULER_CONFIG_V1 }}" > backend/cmd/scheduler/config.yml
+          echo "${{ secrets.SCHEDULER_CONFIG_V1 }}" > backend/scheduler-config.yml
 
       - name: Create fireBaseKey.json
         env:
@@ -31,6 +31,5 @@ jobs:
 
       - name: Build and run Go application for Notification
         run: |
-          cd backend/cmd/scheduler
-          go build
+          go build -o scheduler ./cmd/scheduler
           ./scheduler unclassified

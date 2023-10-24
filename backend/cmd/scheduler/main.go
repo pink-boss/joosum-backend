@@ -1,15 +1,15 @@
 package main
 
 import (
+	"joosum-backend/job/notification"
 	"joosum-backend/pkg/config"
 	"joosum-backend/pkg/util"
-	"joosum-backend/scheduler/notification"
 	"log"
 	"os"
 )
 
 func main() {
-	config.EnvConfig()
+	config.EnvSchedulerConfig()
 	util.StartMongoDB()
 
 	var notificationType string
@@ -22,6 +22,7 @@ func main() {
 	} else if notificationType == "unclassified" {
 		notification.SendUnclassifiedLink()
 	} else {
+		notification.SendUnclassifiedLink()
 		log.Fatal("invalid notificationType")
 	}
 

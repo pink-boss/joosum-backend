@@ -22,7 +22,6 @@ func main() {
 	} else if notificationType == "unclassified" {
 		notification.SendUnclassifiedLink()
 	} else {
-		notification.SendUnclassifiedLink()
 		log.Fatal("invalid notificationType")
 	}
 

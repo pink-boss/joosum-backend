@@ -15,18 +15,23 @@ type NotificationModel struct {
 }
 
 type Notification struct {
-	NotificationId string    `json:"notificationId" bson:"notification_id"`
-	Title          string    `json:"title" bson:"title"`
-	Body           string    `json:"body" bson:"body"`
+	NotificationId string    `json:"notificationId" bson:"_id" example:"Notification-bb61159e-da11-47b2-bdfc-fbda0e85a856"`
+	Title          string    `json:"title" bson:"title" example:"읽지 않은 링크가 3건 있어요."`
+	Body           string    `json:"body" bson:"body" example:"저장해 둔 링크를 확인해보세요!"`
 	IsRead         bool      `json:"isRead" bson:"is_read"`
-	Type           string    `json:"type" bson:"type"`
+	Type           string    `json:"type" bson:"type" example:"unread"`
 	CreatedAt      time.Time `json:"createdAt" bson:"created_at"`
-	UserId         string    `json:"userId" bson:"user_id"`
+	UserId         string    `json:"userId" bson:"user_id" example:"User-590e39b3-7661-4387-8501-85aaf87d133c"`
 }
 
 type NotificationRes struct {
 	Notifications []Notification                  `json:"notifications" bson:"notifications"`
 	Page          *mongopagination.PaginationData `json:"page" bson:"page"`
+}
+
+type notificationResDocs struct {
+	Notifications []Notification     `json:"notifications" bson:"notifications"`
+	Page          *db.PaginationData `json:"page" bson:"page"`
 }
 
 func (NotificationModel) Notifications(userId string, page int64) (*NotificationRes, error) {

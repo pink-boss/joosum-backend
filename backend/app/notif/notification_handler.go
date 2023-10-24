@@ -16,7 +16,7 @@ type NotificationHandler struct {
 // @Tags 알림
 // @Summary 알림 목록 조회
 // @Param page query int false "페이지"
-// @Success 200 {object} Notification
+// @Success 200 {object} notificationResDocs
 // @Security ApiKeyAuth
 // @Router /notifications [get]
 func (h NotificationHandler) Notifications(c *gin.Context) {

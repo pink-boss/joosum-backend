@@ -8,18 +8,19 @@ import (
 	"joosum-backend/app/link"
 	"joosum-backend/app/setting"
 	"joosum-backend/pkg/config"
-	"joosum-backend/pkg/db"
-	"joosum-backend/pkg/util"
 	"log"
-	"time"
+	. "strconv"
+	"strings"
 
 	"github.com/go-resty/resty/v2"
 	"golang.org/x/oauth2/google"
 )
 
-func sendAndSaveNotifications(notificationAgrees []setting.NotificationAgree, notificationType string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
-	defer cancel()
+// count == 0 알림 x, 저장 x
+// device id == null 알림 x 저장 o
+// 동의여부 == true 면 알림 o 저장 o, false 면 알림 x 저장 o
+func SendUnreadLinks(notificationAgrees []setting.NotificationAgree) error {
+	linkModel := link.LinkModel{}
 
 	projectId := config.GetEnvConfig("projectId")
 	googleToken, err := getAccesstoken()
@@ -32,49 +33,43 @@ func sendAndSaveNotifications(notificationAgrees []setting.NotificationAgree, no
 	client := resty.New()
 	client.SetAuthToken(googleToken)
 	for _, notificationAgree := range notificationAgrees {
-		deviceToken := notificationAgree.DeviceId
-		userId := notificationAgree.UserId
+		title := "읽지 않은 링크가 n건 있어요."
+		body := "저장해 둔 링크를 확인해보세요!"
 
-		title, body, err := getNotificationText(notificationType, userId)
+		userId := notificationAgree.UserId
+		deviceToken := notificationAgree.DeviceId
+
+		// 읽지않은 링크 갯수 세기
+		unreadLinkCnt, err := linkModel.GetUserUnreadLinkCount(userId)
 		if err != nil {
 			return err
 		}
 
-		// 2. 알림 보내기
-		msg := FcmReq{
-			Token: *deviceToken,
-			Notification: FcmNotification{
-				Title: title,
-				Body:  body,
-			},
+		// count == 0 이면 패스
+		if unreadLinkCnt == 0 {
+			continue
 		}
 
-		var res FcmRes
-		var authErr resty.Request
-		result, _ := client.R().
-			SetBody(map[string]FcmReq{"message": msg}).
-			SetResult(&res).
-			SetError(&authErr). // or SetError(AuthError{}).
-			Post("https://fcm.googleapis.com/v1/projects/" + projectId + "/messages:send")
+		title = strings.Replace(title, "n", FormatInt(unreadLinkCnt, 10), 1)
 
-		notification := Notification{
-			NotificationId: util.CreateId("Notification"),
-			Title:          title,
-			Body:           body,
-			Type:           notificationType,
-			CreatedAt:      time.Now(),
-			UserId:         userId,
-		}
+		// device id 가 null 이 아니고, 알림 동의 일 때
+		if deviceToken != nil && notificationAgree.IsReadAgree {
 
-		if result.IsSuccess() {
-			successUserIds = append(successUserIds, userId)
+			// Firebase 로 알림 보내기
+			result := sendNotification(client, deviceToken, title, body, projectId)
 
-			_, err = db.NotificationCollection.InsertOne(ctx, notification)
-			if err != nil {
-				return err
+			if result.IsSuccess() {
+				successUserIds = append(successUserIds, userId)
+
+			} else {
+				failUserIds = append(failUserIds, userId)
 			}
-		} else {
-			failUserIds = append(failUserIds, userId)
+		}
+
+		// 알림 저장
+		err = SaveNotification(userId, title, body, Unread)
+		if err != nil {
+			return err
 		}
 	}
 	log.Printf("successUserIds=%v \n", successUserIds)
@@ -83,34 +78,68 @@ func sendAndSaveNotifications(notificationAgrees []setting.NotificationAgree, no
 	return nil
 }
 
-func getNotificationText(notificationType, userId string) (title, body string, err error) {
-	linkBookModel := link.LinkBookModel{}
+func SendUnclassifiedLinks(notificationAgrees []setting.NotificationAgree) error {
 	linkModel := link.LinkModel{}
+	linkBookModel := link.LinkBookModel{}
 
-	// 읽지않은 링크 갯수 세기
-	if notificationType == "unread" {
-		unreadLinkCnt, err := linkModel.GetUserUnreadLinkCount(userId)
-		if err != nil {
-			return "", "", err
-		}
-		title = fmt.Sprintf("읽지 않은 링크가 %d건 있어요.", unreadLinkCnt)
-		body = "저장해 둔 링크를 확인해보세요!"
+	projectId := config.GetEnvConfig("projectId")
+	googleToken, err := getAccesstoken()
+	if err != nil {
+		return err
+	}
+	var successUserIds []string
+	var failUserIds []string
+
+	client := resty.New()
+	client.SetAuthToken(googleToken)
+	for _, notificationAgree := range notificationAgrees {
+		title := "분류되지 않은 링크가 n건 있어요."
+		body := "폴더를 만들어서 정리해보세요!"
+
+		userId := notificationAgree.UserId
+		deviceToken := notificationAgree.DeviceId
 
 		// 분류되지 않은 링크 갯수 세기
-	} else {
 		defaultLinkBook, err := linkBookModel.GetDefaultLinkBook(userId)
 		if err != nil {
-			return "", "", err
+			return err
 		}
 		unclassifyCnt, err := linkModel.GetLinkBookLinkCount(defaultLinkBook.LinkBookId)
 		if err != nil {
-			return "", "", err
+			return err
 		}
 
-		title = fmt.Sprintf("분류되지 않은 링크가 %d건 있어요.", unclassifyCnt)
-		body = "폴더를 만들어서 정리해보세요!"
+		// count == 0 이면 패스
+		if unclassifyCnt == 0 {
+			continue
+		}
+
+		title = strings.Replace(title, "n", FormatInt(unclassifyCnt, 10), 1)
+
+		// device id 가 null 이 아니고, 알림 동의 일 때
+		if deviceToken != nil && notificationAgree.IsClassifyAgree {
+
+			// Firebase 로 알림 보내기
+			result := sendNotification(client, deviceToken, title, body, projectId)
+
+			if result.IsSuccess() {
+				successUserIds = append(successUserIds, userId)
+
+			} else {
+				failUserIds = append(failUserIds, userId)
+			}
+		}
+
+		// 알림 저장
+		err = SaveNotification(userId, title, body, Unclassified)
+		if err != nil {
+			return err
+		}
 	}
-	return
+	log.Printf("successUserIds=%v \n", successUserIds)
+	log.Printf("failUserIds=%v \n", failUserIds)
+
+	return nil
 }
 
 func getAccesstoken() (string, error) {
@@ -148,4 +177,24 @@ func (src *tokenProvider) token() (string, error) {
 		return "", errors.New("fcm: failed to generate Bearer token")
 	}
 	return token.AccessToken, nil
+}
+
+func sendNotification(client *resty.Client, deviceToken *string, title, body, projectId string) *resty.Response {
+	msg := FcmReq{
+		Token: *deviceToken,
+		Notification: FcmNotification{
+			Title: title,
+			Body:  body,
+		},
+	}
+
+	var res FcmRes
+	var authErr resty.Request
+	result, _ := client.R().
+		SetBody(map[string]FcmReq{"message": msg}).
+		SetResult(&res).
+		SetError(&authErr). // or SetError(AuthError{}).
+		Post("https://fcm.googleapis.com/v1/projects/" + projectId + "/messages:send")
+
+	return result
 }

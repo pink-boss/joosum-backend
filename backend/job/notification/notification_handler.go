@@ -1,23 +1,21 @@
 package notification
 
 import (
-	"joosum-backend/app/setting"
 	"log"
 )
 
 const firebaseScope = "https://www.googleapis.com/auth/firebase.messaging"
 
 func SendUnreadLink() {
-	setting := setting.SettingModel{}
 
 	// 1. device token 가져옴
-	notificationAgrees, err := setting.GetNotificationAgrees("unread")
+	notificationAgrees, err := getNotificationAgrees()
 	if err != nil {
 		panic("failed to get the device tokens: " + err.Error())
 	}
 
 	// 2. 알림 보냄, 저장
-	err = sendAndSaveNotifications(notificationAgrees, "unread")
+	err = SendUnreadLinks(notificationAgrees)
 	if err != nil {
 		panic("failed to send or save notifications: " + err.Error())
 	}
@@ -26,16 +24,15 @@ func SendUnreadLink() {
 }
 
 func SendUnclassifiedLink() {
-	setting := setting.SettingModel{}
 
 	// 1. device token 가져옴
-	notificationAgrees, err := setting.GetNotificationAgrees("unclassified")
+	notificationAgrees, err := getNotificationAgrees()
 	if err != nil {
 		panic("failed to get the device tokens: " + err.Error())
 	}
 
 	// 2. 알림 보냄, 저장
-	err = sendAndSaveNotifications(notificationAgrees, "unclassified")
+	err = SendUnclassifiedLinks(notificationAgrees)
 	if err != nil {
 		panic("failed to send or save notifications: " + err.Error())
 	}

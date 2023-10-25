@@ -9,6 +9,7 @@ import (
 	mongopagination "github.com/gobeam/mongo-go-pagination"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type NotificationModel struct {
@@ -52,4 +53,21 @@ func (NotificationModel) Notifications(userId string, page int64) (*Notification
 	}
 
 	return &NotificationRes{Notifications: notifications, Page: &paginatedData.Pagination}, nil
+}
+
+func (NotificationModel) UpdateIsRead(notificationId string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	update := bson.M{
+		"$set": bson.M{
+			"is_read": true,
+		},
+	}
+
+	err := db.NotificationCollection.FindOneAndUpdate(ctx, bson.M{"_id": notificationId}, update).Decode(&mongo.SingleResult{})
+	if err != nil {
+		return err
+	}
+	return nil
 }

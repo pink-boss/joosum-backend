@@ -3,6 +3,7 @@ package routes
 import (
 	"joosum-backend/app/auth"
 	"joosum-backend/app/link"
+	"joosum-backend/app/notif"
 	"joosum-backend/app/page"
 	"joosum-backend/app/setting"
 	"joosum-backend/app/tag"
@@ -22,6 +23,7 @@ func PrivateRoutes(router *gin.Engine) {
 	linkHandler := link.LinkHandler{}
 	pageHandler := page.PageHandler{}
 	settingHandler := setting.SettingHandler{}
+	notificationHandler := notif.NotificationHandler{}
 
 	router.Use(middleware.SetUserData())
 
@@ -73,5 +75,11 @@ func PrivateRoutes(router *gin.Engine) {
 		settingRouter.POST("/device", settingHandler.SaveDeviceId)
 		settingRouter.GET("/notification", settingHandler.GetNotificationAgree)
 		settingRouter.PUT("/notification", settingHandler.UpdatePushNotification)
+	}
+
+	notificationRouter := router.Group("/notifications")
+	{
+		notificationRouter.GET("", notificationHandler.Notifications)
+		notificationRouter.PUT("/:notificationId", notificationHandler.ReadNotification)
 	}
 }

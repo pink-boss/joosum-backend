@@ -16,3 +16,13 @@ type UpdateResult struct {
 type DeleteResult struct {
 	DeletedCount int64 `bson:"n"` // The number of documents deleted.
 }
+
+// pagination 라이브러리
+type PaginationData struct {
+	Total     int64 `json:"total"`
+	Page      int64 `json:"page"`
+	PerPage   int64 `json:"perPage"`
+	Prev      int64 `json:"prev"`
+	Next      int64 `json:"next"`
+	TotalPage int64 `json:"totalPage"`
+}

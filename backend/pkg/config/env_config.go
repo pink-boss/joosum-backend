@@ -15,6 +15,15 @@ func EnvConfig() {
 
 }
 
+func EnvSchedulerConfig() {
+	viper.SetConfigFile("scheduler-config.yml")
+	err := viper.ReadInConfig()
+	if err != nil {
+		log.Fatal("Error loading scheduler-config.yml file")
+	}
+
+}
+
 func GetEnvConfig(key string) string {
 	return viper.GetString(key)
 }

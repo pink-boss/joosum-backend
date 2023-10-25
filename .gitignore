@@ -26,6 +26,7 @@ go.work
 
 # private config file
 config.yml
+scheduler-config.yml
 
 # Swagger directory
 docs
@@ -35,3 +36,4 @@ Apple_AuthKey.p8
 
 # KEY 관리 
 fireBaseKey.json
+fireBaseKey-test.json

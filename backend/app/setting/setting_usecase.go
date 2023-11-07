@@ -31,8 +31,8 @@ func (u SettingUsecase) GetNotificationAgree(userId string) (*NotificationAgree,
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			agree := &NotificationAgree{
-				IsReadAgree:     true,
-				IsClassifyAgree: true,
+				IsReadAgree:     false,
+				IsClassifyAgree: false,
 				UserId:          userId,
 			}
 			return agree, nil

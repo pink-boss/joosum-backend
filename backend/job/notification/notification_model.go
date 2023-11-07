@@ -41,6 +41,12 @@ type FcmRes struct {
 	Name string `json:"name" bson:"name"`
 }
 
+type NotificationResult struct {
+	UserId string
+	Msg    string
+	Err    error
+}
+
 type tokenProvider struct {
 	tokenSource oauth2.TokenSource
 }
@@ -73,7 +79,7 @@ func getNotificationAgrees() ([]setting.NotificationAgree, error) {
 
 	var results []setting.NotificationAgree
 	if err = cur.All(context.TODO(), &results); err != nil {
-		panic(err)
+		return nil, err
 	}
 	return results, nil
 }

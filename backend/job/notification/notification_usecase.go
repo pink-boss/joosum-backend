@@ -28,7 +28,7 @@ func SendUnreadLinks(notificationAgrees []setting.NotificationAgree) error {
 		return err
 	}
 	var successUserIds []string
-	var failUserIds []string
+	var failUserIds []NotificationResult
 
 	client := resty.New()
 	client.SetAuthToken(googleToken)
@@ -42,7 +42,8 @@ func SendUnreadLinks(notificationAgrees []setting.NotificationAgree) error {
 		// 읽지않은 링크 갯수 세기
 		unreadLinkCnt, err := linkModel.GetUserUnreadLinkCount(userId)
 		if err != nil {
-			return err
+			failUserIds = append(failUserIds, NotificationResult{userId, "링크갯수 조회 실패", err})
+			continue
 		}
 
 		// count == 0 이면 패스
@@ -62,18 +63,24 @@ func SendUnreadLinks(notificationAgrees []setting.NotificationAgree) error {
 				successUserIds = append(successUserIds, userId)
 
 			} else {
-				failUserIds = append(failUserIds, userId)
+				failUserIds = append(failUserIds, NotificationResult{userId, "알림발송 실패", errors.New("")})
 			}
 		}
 
 		// 알림 저장
 		err = SaveNotification(userId, title, body, Unread)
 		if err != nil {
-			return err
+			failUserIds = append(failUserIds, NotificationResult{userId, "알림저장 실패", err})
 		}
 	}
-	log.Printf("successUserIds=%v \n", successUserIds)
-	log.Printf("failUserIds=%v \n", failUserIds)
+
+	log.Println("\t\t[알림발송 실패 목록]\n")
+	log.Printf("               UserId                           Message                       Error")
+	for _, failUser := range failUserIds {
+		log.Printf("%s \t %s \t %s", failUser.UserId, failUser.Msg, failUser.Err)
+	}
+	log.Println()
+	log.Printf("successUserIds=%v \n\n %d 개의 '읽지않은 링크' 알림을 보내는데 성공했습니다.\n\n", successUserIds, len(successUserIds))
 
 	return nil
 }
@@ -88,7 +95,7 @@ func SendUnclassifiedLinks(notificationAgrees []setting.NotificationAgree) error
 		return err
 	}
 	var successUserIds []string
-	var failUserIds []string
+	var failUserIds []NotificationResult
 
 	client := resty.New()
 	client.SetAuthToken(googleToken)
@@ -102,11 +109,14 @@ func SendUnclassifiedLinks(notificationAgrees []setting.NotificationAgree) error
 		// 분류되지 않은 링크 갯수 세기
 		defaultLinkBook, err := linkBookModel.GetDefaultLinkBook(userId)
 		if err != nil {
-			return err
+			failUserIds = append(failUserIds, NotificationResult{userId, "기본폴더 조회 실패", err})
+			continue
 		}
+
 		unclassifyCnt, err := linkModel.GetLinkBookLinkCount(defaultLinkBook.LinkBookId)
 		if err != nil {
-			return err
+			failUserIds = append(failUserIds, NotificationResult{userId, "링크갯수 조회 실패", err})
+			continue
 		}
 
 		// count == 0 이면 패스
@@ -126,18 +136,24 @@ func SendUnclassifiedLinks(notificationAgrees []setting.NotificationAgree) error
 				successUserIds = append(successUserIds, userId)
 
 			} else {
-				failUserIds = append(failUserIds, userId)
+				failUserIds = append(failUserIds, NotificationResult{userId, "알림발송 실패", errors.New("")})
 			}
 		}
 
 		// 알림 저장
 		err = SaveNotification(userId, title, body, Unclassified)
 		if err != nil {
-			return err
+			failUserIds = append(failUserIds, NotificationResult{userId, "알림저장 실패", err})
 		}
 	}
-	log.Printf("successUserIds=%v \n", successUserIds)
-	log.Printf("failUserIds=%v \n", failUserIds)
+
+	log.Println("\t\t[알림발송 실패 목록]\n")
+	log.Printf("               UserId                           Message                       Error")
+	for _, failUser := range failUserIds {
+		log.Printf("%s \t %s \t %s", failUser.UserId, failUser.Msg, failUser.Err)
+	}
+	log.Println()
+	log.Printf("successUserIds=%v \n\n %d 개의 '분류되지 않은 링크' 알림을 보내는데 성공했습니다.\n\n", successUserIds, len(successUserIds))
 
 	return nil
 }

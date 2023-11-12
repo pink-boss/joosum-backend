@@ -17,9 +17,9 @@ func main() {
 		notificationType = os.Args[1]
 	}
 
-	if notificationType == "unread" {
+	if notificationType == notification.Unread {
 		notification.SendUnreadLink()
-	} else if notificationType == "unclassified" {
+	} else if notificationType == notification.Unclassified {
 		notification.SendUnclassifiedLink()
 	} else {
 		log.Fatal("invalid notificationType")

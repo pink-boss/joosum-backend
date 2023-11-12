@@ -13,6 +13,16 @@ func (u SettingUsecase) SaveDeviceId(deviceId, userId string) (*mongo.UpdateResu
 	if err != nil {
 		return nil, err
 	}
+
+	// 알림동의가 디폴트 Y 로 저장
+	if result.UpsertedCount == 1 {
+		pushNotification := PushNotificationReq{IsReadAgree: true, IsClassifyAgree: true}
+		_, err := u.settingModel.UpdatePushNotification(pushNotification, userId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return result, nil
 }
 

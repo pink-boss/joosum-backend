@@ -1,5 +1,9 @@
 package tag
 
+import (
+	"joosum-backend/pkg/util"
+)
+
 type TagUsecase struct {
 	tagModel TagModel
 }
@@ -20,10 +24,16 @@ func (u TagUsecase) FindTagsByUserId(userId string) ([]string, error) {
 	return tags, nil
 }
 
-func (u TagUsecase) DeleteTag(user_id string, tag_id string) error {
-	err := u.tagModel.DeleteTag(user_id, tag_id)
+func (u TagUsecase) DeleteTag(userId string, tag string) ([]string, error) {
+	tags, err := u.tagModel.FindTagsByUserId(userId)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	tags = util.ListUtil.Remove(tags, tag)
+	_, err = u.tagModel.UpsertTags(userId, tags)
+	if err != nil {
+		return nil, err
+	}
+
+	return tags, err
 }

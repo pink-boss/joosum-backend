@@ -1,9 +1,10 @@
 package tag
 
 import (
-	"go.mongodb.org/mongo-driver/mongo"
 	"joosum-backend/app/user"
 	"net/http"
+
+	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/gin-gonic/gin"
 )
@@ -97,16 +98,16 @@ func (h TagHandler) GetTags(c *gin.Context) {
 // DeleteTag godoc
 // @Tags 태그
 // @Summary 태그를 삭제합니다.
-// @Description 사용자 아이디와 태그 아이디를 통해 해당 태그를 삭제합니다.
+// @Description 사용자 아이디와 태그 명을 통해 해당 태그를 삭제합니다.
 // @Accept  json
 // @Produce  json
-// @Param id path int true "태그 ID"
-// @Success 200 {boolean} true "태그 삭제가 성공적으로 이루어졌을 때 true 반환"
+// @Param tag path string true "태그 명"
+// @Success 200 {array} []string "태그"
 // @Failure 400 {object} util.APIError "요청이 유효하지 않을 때 반환합니다."
 // @Failure 401 {object} util.APIError "Authorization 헤더가 없을 때 반환합니다."
 // @Failure 500 {object} util.APIError "태그 삭제 과정에서 오류가 발생한 경우 반환합니다."
 // @Security ApiKeyAuth
-// @Router /tags/{id} [delete]
+// @Router /tags/{tag} [delete]
 func (h TagHandler) DeleteTag(c *gin.Context) {
 	currentUser, exists := c.Get("user")
 	if !exists {
@@ -117,14 +118,15 @@ func (h TagHandler) DeleteTag(c *gin.Context) {
 
 	userId := currentUser.(*user.User).UserId
 
-	tagId := c.Param("id")
+	tag := c.Param("tag")
 
-	if err := h.tagUsecase.DeleteTag(userId, tagId); err != nil {
+	tags, err := h.tagUsecase.DeleteTag(userId, tag)
+	if err != nil {
 		// 500 Internal Server Error
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	// 200 OK
-	c.JSON(http.StatusOK, true)
+	c.JSON(http.StatusOK, tags)
 }

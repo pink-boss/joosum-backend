@@ -24,7 +24,7 @@ type CreateTagReq struct {
 // @Accept  json
 // @Produce  json
 // @Param request body []string true "태그 생성 요청 본문"
-// @Success 200 {object} Tag "태그 생성이 성공적으로 이루어졌을 때 새로 생성된 태그 객체 반환"
+// @Success 200 {array} []string "태그 생성이 성공적으로 이루어졌을 때 새로 생성된 태그 리스트 반환"
 // @Failure 400 {object} util.APIError "요청 본문이 유효하지 않을 때 반환합니다."
 // @Failure 401 {object} util.APIError "Authorization 헤더가 없을 때 반환합니다."
 // @Failure 500 {object} util.APIError "태그 생성 과정에서 오류가 발생한 경우 반환합니다."
@@ -55,7 +55,7 @@ func (h TagHandler) CreateTags(c *gin.Context) {
 	}
 
 	// 200 OK
-	c.JSON(http.StatusOK, tags)
+	c.JSON(http.StatusOK, tags.Names)
 }
 
 // GetTags godoc

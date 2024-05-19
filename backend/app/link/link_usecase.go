@@ -229,6 +229,15 @@ func (LinkUsecase) GetThumnailURL(url string) (*LinkThumbnailRes, error) {
 		}
 	})
 
+	// meta tag 에서 없는 경우들 처리
+	// og:title 이 없는 경우 title tag 에서 가져옴
+	if ogTitle == nil {
+		doc.Find("title").Each(func(index int, item *goquery.Selection) {
+			ogTitle = new(string)
+			*ogTitle = item.Text()
+		})
+	}
+
 	return &LinkThumbnailRes{
 		URL:          url,
 		ThumbnailURL: ogImage,

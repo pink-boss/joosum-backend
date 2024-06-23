@@ -238,6 +238,40 @@ func (LinkUsecase) GetThumnailURL(url string) (*LinkThumbnailRes, error) {
 		})
 	}
 
+	// schema.org/SearchResultsPage를 사용하는 경우
+	if ogImage == nil {
+		// itemtype="http://schema.org/SearchResultsPage"를 가진 요소 찾기
+		doc.Find(`[itemtype="http://schema.org/SearchResultsPage"]`).Each(func(index int, item *goquery.Selection) {
+			// 필요한 데이터 추출 (예시: 썸네일 이미지)
+			item.Find("img").Each(func(i int, img *goquery.Selection) {
+				src, exists := img.Attr("src")
+				if exists {
+					ogImage = &src
+				}
+			})
+		})
+	}
+
+	// twitter:image를 사용하는 경우
+	if ogImage == nil {
+		doc.Find(`meta[name="twitter:image"]`).Each(func(index int, item *goquery.Selection) {
+			content, exists := item.Attr("content")
+			if exists {
+				ogImage = &content
+			}
+		})
+	}
+
+	// twitter:title를 사용하는 경우
+	if ogTitle == nil {
+		doc.Find(`meta[name="twitter:title"]`).Each(func(index int, item *goquery.Selection) {
+			content, exists := item.Attr("content")
+			if exists {
+				ogTitle = &content
+			}
+		})
+	}
+
 	return &LinkThumbnailRes{
 		URL:          url,
 		ThumbnailURL: ogImage,

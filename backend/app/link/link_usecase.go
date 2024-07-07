@@ -210,7 +210,7 @@ func (LinkUsecase) GetThumnailURL(url string) (*LinkThumbnailRes, error) {
 		return nil, err
 	}
 
-	var ogTitle, ogImage *string
+	var ogTitle, ogImage, thumbnail *string
 
 	doc.Find("meta").Each(func(index int, item *goquery.Selection) {
 		if property, exists := item.Attr("property"); exists {
@@ -225,6 +225,12 @@ func (LinkUsecase) GetThumnailURL(url string) (*LinkThumbnailRes, error) {
 				if strings.HasPrefix(*ogImage, "//") {
 					*ogImage = "https:" + *ogImage
 				}
+			}
+		}
+		if name, exists := item.Attr("name"); exists {
+			if name == "thumbnail" {
+				content, _ := item.Attr("content")
+				thumbnail = &content
 			}
 		}
 	})
@@ -243,12 +249,35 @@ func (LinkUsecase) GetThumnailURL(url string) (*LinkThumbnailRes, error) {
 		// itemtype="http://schema.org/SearchResultsPage"를 가진 요소 찾기
 		doc.Find(`[itemtype="http://schema.org/SearchResultsPage"]`).Each(func(index int, item *goquery.Selection) {
 			// 필요한 데이터 추출 (예시: 썸네일 이미지)
-			item.Find("img").Each(func(i int, img *goquery.Selection) {
-				src, exists := img.Attr("src")
+			item.Find(`meta[itemprop="image"]`).Each(func(i int, img *goquery.Selection) {
+				content, exists := img.Attr("content")
 				if exists {
-					ogImage = &src
+					ogImage = &content
+				} else {
+					src, exists := img.Attr("src")
+					if exists {
+						ogImage = &src
+					}
 				}
 			})
+		})
+	}
+
+	// google search에서 사용하는 경우
+	if ogImage == nil && strings.Contains(url, "google.com/search") {
+		// 무조건 https://www.gstatic.com/images/branding/googleg/1x/googleg_standard_color_128dp.png 사용
+		ogImage = new(string)
+		*ogImage = "https://www.gstatic.com/images/branding/googleg/1x/googleg_standard_color_128dp.png"
+	}
+
+	// Attempt to find the first valid image URL
+	if ogImage == nil {
+		doc.Find("img").Each(func(index int, item *goquery.Selection) {
+			src, exists := item.Attr("src")
+			if exists && !strings.HasPrefix(src, "data:image") { // Ignore base64 images
+				ogImage = &src
+				return
+			}
 		})
 	}
 
@@ -270,6 +299,11 @@ func (LinkUsecase) GetThumnailURL(url string) (*LinkThumbnailRes, error) {
 				ogTitle = &content
 			}
 		})
+	}
+
+	// Thumbnail URL이 ogImage보다 우선순위가 낮기 때문에 마지막에 설정
+	if ogImage == nil && thumbnail != nil {
+		ogImage = thumbnail
 	}
 
 	return &LinkThumbnailRes{

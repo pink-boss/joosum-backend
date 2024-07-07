@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"joosum-backend/pkg/config"
 	"joosum-backend/pkg/middleware"
 	"joosum-backend/pkg/routes"
@@ -47,6 +48,7 @@ func main() {
 
 	// http.Server 인스턴스 생성
 
+	fmt.Println("Starting server on the port 5001")
 	server := &http.Server{
 		Addr:    ":5001",
 		Handler: router,

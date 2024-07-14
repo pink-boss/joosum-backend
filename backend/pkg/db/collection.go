@@ -132,3 +132,9 @@ var NotificationAgreeCollection *mongo.Collection
 func InitNotificationAgreeCollection(client *mongo.Client, dbName string) {
 	NotificationAgreeCollection = client.Database(dbName).Collection("notificationAgrees")
 }
+
+var BannerCollection *mongo.Collection
+
+func InitBannerCollection(client *mongo.Client, dbName string) {
+	BannerCollection = client.Database(dbName).Collection("banners")
+}

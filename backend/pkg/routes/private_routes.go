@@ -2,6 +2,7 @@ package routes
 
 import (
 	"joosum-backend/app/auth"
+	"joosum-backend/app/banner"
 	"joosum-backend/app/link"
 	"joosum-backend/app/notif"
 	"joosum-backend/app/page"
@@ -24,6 +25,7 @@ func PrivateRoutes(router *gin.Engine) {
 	pageHandler := page.PageHandler{}
 	settingHandler := setting.SettingHandler{}
 	notificationHandler := notif.NotificationHandler{}
+	BannerHandler := banner.BannerHandler{}
 
 	router.Use(middleware.SetUserData())
 
@@ -81,5 +83,12 @@ func PrivateRoutes(router *gin.Engine) {
 	{
 		notificationRouter.GET("", notificationHandler.Notifications)
 		notificationRouter.PUT("/:notificationId", notificationHandler.ReadNotification)
+	}
+
+	bannerRouter := router.Group("/banners")
+	{
+		bannerRouter.GET("", BannerHandler.GetBanners)
+		bannerRouter.POST("", BannerHandler.CreateBanner)
+		bannerRouter.DELETE("/:bannerId", BannerHandler.DeleteBanner)
 	}
 }

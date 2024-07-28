@@ -306,6 +306,11 @@ func (LinkUsecase) GetThumnailURL(url string) (*LinkThumbnailRes, error) {
 		ogImage = thumbnail
 	}
 
+	// 만약 http 나 https로 시작하지 않는 경우, null 반환
+	if ogImage != nil && !strings.HasPrefix(*ogImage, "http") {
+		ogImage = nil
+	}
+
 	return &LinkThumbnailRes{
 		URL:          url,
 		ThumbnailURL: ogImage,

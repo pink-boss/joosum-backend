@@ -1,9 +1,10 @@
 package link
 
 import (
-	"github.com/gin-gonic/gin"
 	"joosum-backend/app/user"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type LinkHandler struct {
@@ -86,7 +87,6 @@ func (h LinkHandler) CreateLink(c *gin.Context) {
 // @Router /links [get]
 func (h LinkHandler) GetLinks(c *gin.Context) {
 	currentUser, exists := c.Get("user")
-
 	if !exists {
 		// 401 Unauthorized
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
@@ -95,40 +95,58 @@ func (h LinkHandler) GetLinks(c *gin.Context) {
 
 	userId := currentUser.(*user.User).UserId
 
-	sort := c.Query("sort")
-	order := c.Query("order")
-
-	if sort == "" {
-		sort = "created_at"
-	}
-
-	if order == "" {
-		order = "asc"
-	}
-
+	// Query 파라미터 받기
+	sortParam := c.Query("sort")
+	orderParam := c.Query("order")
 	search := c.Query("search")
 
-	var links []*Link
-	var err error
+	// 정렬 필드 허용 목록
+	allowedSorts := map[string]bool{
+		"created_at": true,
+		"updated_at": true,
+		"title":      true,
+	}
 
-	if search == "" && sort == "" {
-		links, err = h.linkUsecase.FindAllLinksByUserId(userId, sort)
+	// 허용된 정렬 필드가 아니면 기본값으로 설정
+	if !allowedSorts[sortParam] {
+		sortParam = "created_at"
+	}
+
+	// 정렬 순서 허용 목록
+	allowedOrders := map[string]bool{
+		"asc":  true,
+		"desc": true,
+	}
+
+	// 허용된 정렬 순서가 아니면 기본값으로 설정
+	if !allowedOrders[orderParam] {
+		orderParam = "asc"
+	}
+
+	var (
+		links []*Link
+		err   error
+	)
+
+	// 검색어가 비어있으면 전체 조회, 그렇지 않으면 검색 조회
+	if search == "" {
+		// 검색어 없이 정렬만 적용
+		links, err = h.linkUsecase.FindAllLinksByUserId(userId, sortParam)
 		if err != nil {
-			// 500 Internal Server Error
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 	} else {
-		links, err = h.linkUsecase.FindAllLinksByUserIdAndSearch(userId, search, sort, order)
+		// 검색어와 정렬, 정렬순서 모두 적용
+		links, err = h.linkUsecase.FindAllLinksByUserIdAndSearch(userId, search, sortParam, orderParam)
 		if err != nil {
-			// 500 Internal Server Error
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 	}
 
-	// 200 OK
 	c.JSON(http.StatusOK, links)
+
 }
 
 // GetLinkByLinkId godoc

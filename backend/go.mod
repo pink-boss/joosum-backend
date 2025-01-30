@@ -27,7 +27,7 @@ require (
 
 require (
 	cloud.google.com/go/compute v1.20.1 // indirect
-	cloud.google.com/go/compute/metadata v0.2.3 // indirect
+	cloud.google.com/go/compute/metadata v0.3.0 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
@@ -100,7 +100,7 @@ require (
 	go.mongodb.org/mongo-driver v1.12.1
 	golang.org/x/arch v0.3.0 // indirect
 	golang.org/x/crypto v0.14.0 // indirect
-	golang.org/x/oauth2 v0.13.0
+	golang.org/x/oauth2 v0.25.0
 	golang.org/x/tools v0.8.0 // indirect
 	google.golang.org/api v0.126.0
 )

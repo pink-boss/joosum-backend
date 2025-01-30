@@ -2,7 +2,9 @@ package auth
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 
 	localConfig "joosum-backend/pkg/config"
 
@@ -64,4 +66,31 @@ func (GoogleUsecae) GetUserEmail(idToken string) (string, error) {
 	}
 
 	return "", fmt.Errorf("unable to retrieve user's email")
+}
+
+func (GoogleUsecae) GetUserInfoFromToken(ctx context.Context, accessToken string) (*GoogleUserInfo, error) {
+	// 구글 userinfo 엔드포인트
+	req, err := http.NewRequestWithContext(ctx, "GET",
+		"https://www.googleapis.com/oauth2/v2/userinfo?access_token="+accessToken, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create userinfo request: %v", err)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get userinfo: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("userinfo endpoint returned status %d", resp.StatusCode)
+	}
+
+	var userInfo GoogleUserInfo
+	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
+		return nil, fmt.Errorf("failed to decode userinfo: %v", err)
+	}
+
+	return &userInfo, nil
 }

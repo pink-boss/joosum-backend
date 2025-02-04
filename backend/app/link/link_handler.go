@@ -131,7 +131,7 @@ func (h LinkHandler) GetLinks(c *gin.Context) {
 	// 검색어가 비어있으면 전체 조회, 그렇지 않으면 검색 조회
 	if search == "" {
 		// 검색어 없이 정렬만 적용
-		links, err = h.linkUsecase.FindAllLinksByUserId(userId, sortParam)
+		links, err = h.linkUsecase.FindAllLinksByUserId(userId, sortParam, orderParam)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

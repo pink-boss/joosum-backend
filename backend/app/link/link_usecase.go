@@ -68,8 +68,8 @@ func (u LinkUsecase) FindOneLinkByLinkId(linkId string) (*Link, error) {
 	return link, nil
 }
 
-func (u LinkUsecase) FindAllLinksByUserId(userId string, sort string) ([]*Link, error) {
-	links, err := u.linkModel.GetAllLinkByUserId(userId, sort)
+func (u LinkUsecase) FindAllLinksByUserId(userId string, sort string, order string) ([]*Link, error) {
+	links, err := u.linkModel.GetAllLinkByUserId(userId, sort, order)
 	if err != nil {
 		return nil, err
 	}

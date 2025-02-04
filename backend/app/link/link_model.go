@@ -119,15 +119,20 @@ func (LinkModel) GetAllLink() ([]*Link, error) {
 	return links, nil
 }
 
-func (LinkModel) GetAllLinkByUserId(userId string, sort string) ([]*Link, error) {
+func (LinkModel) GetAllLinkByUserId(userId string, sort string, order string) ([]*Link, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	var links []*Link
 
+	setOrder := 1
+	if order == "desc" {
+		setOrder = -1
+	}
+
 	opts := options.Find()
 	opts.SetSort(bson.D{
-		{Key: sort, Value: 1},
+		{Key: sort, Value: setOrder},
 	})
 
 	cursor, err := db.LinkCollection.Find(ctx, bson.M{"user_id": userId}, opts)

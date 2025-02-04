@@ -19,10 +19,11 @@ func PublicRoutes(router *gin.Engine) {
 	authRouter := router.Group("/auth")
 	{
 
-		authRouter.GET("/auth/google/web", googleHandler.AuthGoogleWebLogin)
-		authRouter.GET("/auth/google/callback", googleHandler.AuthGoogleWebCallback)
+		authRouter.GET("/google/web", googleHandler.AuthGoogleWebLogin)
+		authRouter.GET("/google/callback", googleHandler.AuthGoogleWebCallback)
 		authRouter.POST("/apple", appleHandler.VerifyAndIssueToken)
 		authRouter.POST("/google", googleHandler.VerifyGoogleAccessToken)
+		authRouter.POST("/google/android", googleHandler.VerifyGoogleAccessTokenInAndroid)
 		authRouter.POST("/naver", naverHandler.VerifyNaverAccessToken)
 		authRouter.POST("/signup", authHandler.SignUp)
 	}

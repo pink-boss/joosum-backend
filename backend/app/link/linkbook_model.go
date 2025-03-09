@@ -70,20 +70,22 @@ func (LinkBookModel) GetLinkBooks(req LinkBookListReq, userId string) ([]LinkBoo
 	var order int
 	switch req.Sort {
 	case "created_at":
-		order = db.Desc
+		order = -1 // db.Desc와 동일
 	case "title": // 폴더명 순일 때는 오름차순
-		order = db.Asc
+		order = 1 // db.Asc와 동일
 	case "last_saved_at":
-		order = db.Desc
+		order = -1 // db.Desc와 동일
+	default:
+		order = -1 // 기본값은 내림차순
 	}
 
 	sort := bson.D{
-		{"is_default", db.Desc}, // 기본 폴더북은 정렬에 관계없이 첫번째. y-n 정렬 (lmn opqr...vwxyz)}
+		{"is_default", -1}, // 기본 폴더북은 정렬에 관계없이 첫번째. y-n 정렬 (lmn opqr...vwxyz)
 		{req.Sort, order},
 	}
 
 	if req.Sort == "last_saved_at" {
-		sort = append(sort, bson.E{"created_at", db.Desc}) // 업데이트 순이 같다면 생성 순으로 정렬
+		sort = append(sort, bson.E{"created_at", -1}) // 업데이트 순이 같다면 생성 순으로 정렬
 	}
 	// 폴더 정렬
 	opts := options.Find()

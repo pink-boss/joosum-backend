@@ -201,6 +201,14 @@ func (LinkUsecase) GetThumnailURL(url string) (*LinkThumbnailRes, error) {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode == http.StatusForbidden {
+		return &LinkThumbnailRes{
+			URL:          url,
+			ThumbnailURL: nil,
+			Title:        &url,
+		}, nil
+	}
+
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("status code error: %d %s", resp.StatusCode, resp.Status)
 	}

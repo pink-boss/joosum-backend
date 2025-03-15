@@ -14,6 +14,9 @@ type AuthHandler struct {
 	authUsecase     AuthUsecase
 	userUsecase     user.UserUsecase
 	linkBookUsecase link.LinkBookUsecase
+	linkUsecase     link.LinkUsecase
+	linkModel       link.LinkModel
+	linkBookModel   link.LinkBookModel
 }
 
 // SignUp godoc
@@ -108,7 +111,7 @@ func (h AuthHandler) Logout(c *gin.Context) {
 
 // GetMe godoc
 // @Summary 내 정보 조회
-// @Description 현재 로그인된 사용자의 정보를 반환합니다.
+// @Description 현재 로그인된 사용자의 정보와 저장된 링크 수, 전체 폴더 수를 반환합니다.
 // @Tags 로그인
 // @Accept  json
 // @Produce  json
@@ -127,8 +130,29 @@ func (h AuthHandler) GetMe(c *gin.Context) {
 	userId := currentUser.(*user.User).UserId
 	h.userUsecase.GetUserById(userId)
 
-	c.JSON(http.StatusOK, currentUser)
+	// 사용자의 링크 수 가져오기
+	linkCount, err := h.linkModel.GetUserLinkCount(userId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get link count"})
+		return
+	}
 
+	// 폴더 수 계산을 위한 링크북 목록 가져오기
+	req := link.LinkBookListReq{}
+	linkBooks, err := h.linkBookModel.GetLinkBooks(req, userId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get link books"})
+		return
+	}
+
+	// 응답 객체에 링크 수와 폴더 수 추가
+	response := gin.H{
+		"user":             currentUser,
+		"totalLinkCount":   linkCount,
+		"totalFolderCount": len(linkBooks),
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 // Protected

@@ -21,6 +21,7 @@ func PublicRoutes(router *gin.Engine) {
 
 		authRouter.GET("/google/web", googleHandler.AuthGoogleWebLogin)
 		authRouter.GET("/google/callback", googleHandler.AuthGoogleWebCallback)
+		authRouter.POST("/google/web", googleHandler.VerifyGoogleAccessTokenInWeb)
 		authRouter.POST("/apple", appleHandler.VerifyAndIssueToken)
 		authRouter.POST("/google", googleHandler.VerifyGoogleAccessToken)
 		authRouter.POST("/google/android", googleHandler.VerifyGoogleAccessTokenInAndroid)

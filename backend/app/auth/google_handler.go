@@ -141,6 +141,55 @@ func (h *GoogleHandler) VerifyGoogleAccessTokenInAndroid(c *gin.Context) {
 
 }
 
+func (h *GoogleHandler) VerifyGoogleAccessTokenInWeb(c *gin.Context) {
+	var req AccessTokenReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, util.APIError{Error: "Invalid request body"})
+		return
+	}
+
+	accessToken := req.IdToken
+
+	if accessToken == "" {
+		c.JSON(http.StatusBadRequest, util.APIError{Error: "idToken is required"})
+		return
+	}
+
+	if valid, err := h.googleUsecae.ValidateIdTokenForWeb(accessToken); err != nil || !valid {
+		c.JSON(http.StatusInternalServerError, util.APIError{Error: "Invalid id token"})
+		return
+	}
+
+	email, err := h.googleUsecae.GetUserEmail(accessToken)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, util.APIError{Error: err.Error()})
+		return
+	}
+
+	user, err := h.userUsecase.GetUserByEmail(email)
+	if err != nil && err != mongo.ErrNoDocuments {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("failed to get user by email: %v", err.Error())})
+		return
+	}
+
+	if user == nil {
+		c.JSON(http.StatusOK, util.TokenRes{AccessToken: "", RefreshToken: ""})
+		return
+	}
+
+	accessToken, refreshToken, err := h.authUsecase.GenerateNewJWTToken(email)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, util.APIError{Error: err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, util.TokenRes{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	})
+}
+
 // 웹/안드로이드용 OAuth2 설정 (google_handler.go 안에서 바로 선언)
 var googleWebOAuthConfig = &oauth2.Config{
 	ClientID:     localConfig.GetEnvConfig("googleWebClientID"),

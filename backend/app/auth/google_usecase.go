@@ -63,6 +63,25 @@ func (GoogleUsecae) ValidateIdTokenForAndroid(idToken string) (bool, error) {
 	return false, fmt.Errorf("id token is not issued by this app")
 }
 
+func (GoogleUsecae) ValidateIdTokenForWeb(idToken string) (bool, error) {
+	ctx := context.Background()
+	// use web client id & secret ( googleWebClientID,googleWebSecret )
+	oauth2Service, err := oauth2.NewService(ctx, option.WithAPIKey(localConfig.GetEnvConfig("googleWebClientID")))
+	if err != nil {
+		return false, fmt.Errorf("unable to create OAuth2 service: %v", err)
+	}
+
+	tokenInfoCall := oauth2Service.Tokeninfo()
+	tokenInfoCall.IdToken(idToken)
+
+	_, err = tokenInfoCall.Do()
+	if err != nil {
+		return false, fmt.Errorf("unable to verify id token: %v", err)
+	}
+
+	return true, nil
+}
+
 func (GoogleUsecae) GetUserEmail(idToken string) (string, error) {
 	ctx := context.Background()
 

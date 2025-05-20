@@ -155,7 +155,13 @@ func (h *GoogleHandler) VerifyGoogleAccessTokenInWeb(c *gin.Context) {
 		return
 	}
 
-	if valid, err := h.googleUsecae.ValidateIdTokenForWeb(accessToken); err != nil || !valid {
+	valid, err := h.googleUsecae.ValidateIdTokenForWeb(accessToken)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, util.APIError{Error: fmt.Sprintf("Invalid id token: %v", err)})
+		return
+	}
+	
+	if !valid {
 		c.JSON(http.StatusInternalServerError, util.APIError{Error: "Invalid id token"})
 		return
 	}

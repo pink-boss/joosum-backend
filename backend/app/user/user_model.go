@@ -179,3 +179,23 @@ func (*UserModel) CreateInactiveUserByUser(user *User) error {
 	return nil
 
 }
+
+func (*UserModel) FindInactiveUsers() ([]*InactiveUser, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var users []*InactiveUser
+
+	cursor, err := db.InactiveUserCollection.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+
+	for cursor.Next(ctx) {
+		var user InactiveUser
+		cursor.Decode(&user)
+		users = append(users, &user)
+	}
+
+	return users, nil
+}

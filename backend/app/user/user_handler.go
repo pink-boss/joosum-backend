@@ -48,3 +48,22 @@ func (h UserHandler) DeleteUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "유저 삭제 성공"})
 }
+
+// GetWithdrawUsers
+// @Tags 유저
+// @Summary 탈퇴한 유저 목록을 조회합니다.
+// @Description
+// @Accept json
+// @Produce json
+// @Success 200 {array} InactiveUser
+// @Failure 500 {object} util.APIError "서버에서 유저 조회 실패"
+// @Router /withdraw-users [get]
+func (h UserHandler) GetWithdrawUsers(c *gin.Context) {
+	users, err := h.userUsecase.GetWithdrawUsers()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "서버에서 유저 조회 실패"})
+		return
+	}
+
+	c.JSON(http.StatusOK, users)
+}

@@ -40,6 +40,14 @@ func (u UserUsecase) UpdateUserToInactiveUserByEmail(email string) error {
 	return nil
 }
 
+func (u UserUsecase) GetWithdrawUsers() ([]*InactiveUser, error) {
+	users, err := u.userModel.FindInactiveUsers()
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
 func (u UserUsecase) GetInactiveUserByEmail(email string) (*InactiveUser, error) {
 	inactiveUser, err := u.userModel.FindInactiveUser(email)
 	if err != nil {

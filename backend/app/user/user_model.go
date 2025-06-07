@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"joosum-backend/pkg/db"
+	"joosum-backend/pkg/util"
 	"time"
 
 	"github.com/google/uuid"
@@ -39,17 +40,26 @@ type InactiveUser struct {
 }
 
 // FindUserByEmail은 주어진 이메일을 가진 사용자를 찾아 반환합니다.
+// FindUserByEmail은 주어진 이메일로 사용자를 조회합니다.
+// 암호화된 이메일과 이전 평문 이메일 모두 검색합니다.
 func (*UserModel) FindUserByEmail(email string) (*User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	filter := bson.M{"email": email}
-	user := &User{}
-
-	err := db.UserCollection.FindOne(ctx, filter).Decode(user)
+	encEmail, err := util.EncryptString(email)
 	if err != nil {
 		return nil, err
 	}
+
+	filter := bson.M{"email": bson.M{"$in": []string{encEmail, email}}}
+	user := &User{}
+
+	err = db.UserCollection.FindOne(ctx, filter).Decode(user)
+	if err != nil {
+		return nil, err
+	}
+
+	user.Email = util.DecryptIfPossible(user.Email)
 
 	return user, nil
 }
@@ -70,10 +80,15 @@ func (*UserModel) CreatUser(userInfo User) (*User, error) {
 	}()
 
 	uid := <-uniqueKey
+	encEmail, err := util.EncryptString(userInfo.Email)
+	if err != nil {
+		return nil, err
+	}
+
 	newUserInfo := &User{
 		UserId:    uid,
 		Name:      userInfo.Name,
-		Email:     userInfo.Email,
+		Email:     encEmail,
 		Social:    userInfo.Social,
 		Gender:    userInfo.Gender,
 		Age:       userInfo.Age,
@@ -87,6 +102,7 @@ func (*UserModel) CreatUser(userInfo User) (*User, error) {
 	}
 
 	newUserInfo.ID = result.InsertedID.(primitive.ObjectID)
+	newUserInfo.Email = userInfo.Email
 
 	return newUserInfo, nil
 }
@@ -102,6 +118,8 @@ func (*UserModel) FindUserById(id string) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	user.Email = util.DecryptIfPossible(user.Email)
 
 	return user, nil
 }
@@ -120,6 +138,7 @@ func (*UserModel) FindUsers() ([]*User, error) {
 	for cursor.Next(ctx) {
 		var user User
 		cursor.Decode(&user)
+		user.Email = util.DecryptIfPossible(user.Email)
 		users = append(users, &user)
 	}
 
@@ -130,13 +149,20 @@ func (*UserModel) FindInactiveUser(email string) (*InactiveUser, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	filter := bson.M{"email": email}
-	inactiveUser := &InactiveUser{}
-
-	err := db.InactiveUserCollection.FindOne(ctx, filter).Decode(inactiveUser)
+	encEmail, err := util.EncryptString(email)
 	if err != nil {
 		return nil, err
 	}
+
+	filter := bson.M{"email": bson.M{"$in": []string{encEmail, email}}}
+	inactiveUser := &InactiveUser{}
+
+	err = db.InactiveUserCollection.FindOne(ctx, filter).Decode(inactiveUser)
+	if err != nil {
+		return nil, err
+	}
+
+	inactiveUser.Email = util.DecryptIfPossible(inactiveUser.Email)
 
 	return inactiveUser, nil
 }
@@ -145,9 +171,14 @@ func (*UserModel) DeleteUserByEmail(email string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	filter := bson.M{"email": email}
+	encEmail, err := util.EncryptString(email)
+	if err != nil {
+		return err
+	}
 
-	_, err := db.UserCollection.DeleteOne(ctx, filter)
+	filter := bson.M{"email": bson.M{"$in": []string{encEmail, email}}}
+
+	_, err = db.UserCollection.DeleteOne(ctx, filter)
 	if err != nil {
 		return err
 	}
@@ -159,10 +190,15 @@ func (*UserModel) CreateInactiveUserByUser(user *User) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	encEmail, err := util.EncryptString(user.Email)
+	if err != nil {
+		return err
+	}
+
 	inactiveUser := &InactiveUser{
 		UserId:    user.UserId,
 		Name:      user.Name,
-		Email:     user.Email,
+		Email:     encEmail,
 		Social:    user.Social,
 		Age:       user.Age,
 		Gender:    user.Gender,
@@ -170,7 +206,7 @@ func (*UserModel) CreateInactiveUserByUser(user *User) error {
 		UpdatedAt: time.Now(),
 	}
 
-	_, err := db.InactiveUserCollection.InsertOne(ctx, inactiveUser)
+	_, err = db.InactiveUserCollection.InsertOne(ctx, inactiveUser)
 
 	if err != nil {
 		return err
@@ -194,6 +230,7 @@ func (*UserModel) FindInactiveUsers() ([]*InactiveUser, error) {
 	for cursor.Next(ctx) {
 		var user InactiveUser
 		cursor.Decode(&user)
+		user.Email = util.DecryptIfPossible(user.Email)
 		users = append(users, &user)
 	}
 

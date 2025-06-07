@@ -1,6 +1,7 @@
 package link
 
 import (
+	"joosum-backend/app/tag"
 	"joosum-backend/app/user"
 	"net/http"
 
@@ -9,6 +10,7 @@ import (
 
 type LinkHandler struct {
 	linkUsecase LinkUsecase
+	tagUsecase  tag.TagUsecase
 }
 
 type CreateLinkReq struct {
@@ -67,6 +69,9 @@ func (h LinkHandler) CreateLink(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	// 최근 사용한 태그 기록
+	_ = h.tagUsecase.UpdateLastUsedTags(userId, req.Tags)
 
 	// 200 OK
 	c.JSON(http.StatusOK, link)

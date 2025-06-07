@@ -15,9 +15,10 @@ import (
 type TagModel struct{}
 
 type Tag struct {
-	ID     string   `json:"-"`
-	Names  []string `json:"names"`
-	UserId string   `json:"user_id" bson:"user_id"`
+	ID       string   `json:"-"`
+	Names    []string `json:"names"`
+	UserId   string   `json:"user_id" bson:"user_id"`
+	LastUsed []string `json:"lastUsed" bson:"last_used"`
 }
 
 func (TagModel) UpsertTags(userId string, names []string) (*Tag, error) {
@@ -88,4 +89,33 @@ func (TagModel) DeleteTag(user_id string, tag_id string) error {
 	}
 
 	return nil
+}
+
+// FindTagByUserId는 사용자 아이디로 태그 문서를 조회합니다.
+func (TagModel) FindTagByUserId(userId string) (*Tag, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.M{"user_id": userId}
+	var tagData = &Tag{}
+
+	err := db.TagCollection.FindOne(ctx, filter).Decode(tagData)
+	if err != nil {
+		return nil, err
+	}
+
+	return tagData, nil
+}
+
+// UpdateLastUsedTags는 사용자가 마지막으로 사용한 태그 목록을 저장합니다.
+func (TagModel) UpdateLastUsedTags(userId string, tags []string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.M{"user_id": userId}
+	update := bson.M{"$set": bson.M{"last_used": tags}}
+	opts := options.Update().SetUpsert(true)
+
+	_, err := db.TagCollection.UpdateOne(ctx, filter, update, opts)
+	return err
 }

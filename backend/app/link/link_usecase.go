@@ -8,6 +8,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"gopkg.in/errgo.v2/errors"
+	"joosum-backend/pkg/util"
 )
 
 type LinkUsecase struct {
@@ -16,6 +17,9 @@ type LinkUsecase struct {
 }
 
 func (u LinkUsecase) CreateLink(url string, title string, userId string, linkBookId string, thumbnailURL string, tags []string) (*Link, error) {
+
+	// URL 이 http:// 혹은 https:// 로 시작하지 않으면 https:// 를 붙입니다.
+	url = util.EnsureHTTPPrefix(url)
 
 	// linkBookId 가 root 이거나 빈 스트링이라면 기본 폴더에 저장
 	var linkBookName string
@@ -186,6 +190,8 @@ func (u LinkUsecase) UpdateLinkBookIdByLinkId(linkId string, linkBookId string) 
 }
 
 func (u LinkUsecase) UpdateTitleAndUrlByLinkId(linkId string, url string, title string, thumbnailURL string, tags []string) (*Link, error) {
+	// URL 이 http:// 혹은 https:// 로 시작하지 않으면 https:// 를 붙입니다.
+	url = util.EnsureHTTPPrefix(url)
 	link, err := u.linkModel.UpdateTitleAndUrlByLinkId(linkId, url, title, thumbnailURL, tags)
 	if err != nil {
 		return nil, err
@@ -195,6 +201,8 @@ func (u LinkUsecase) UpdateTitleAndUrlByLinkId(linkId string, url string, title 
 }
 
 func (LinkUsecase) GetThumnailURL(url string) (*LinkThumbnailRes, error) {
+	// URL 이 http:// 혹은 https:// 로 시작하지 않으면 https:// 를 붙입니다.
+	url = util.EnsureHTTPPrefix(url)
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err

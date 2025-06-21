@@ -36,6 +36,10 @@ docker logs joosum_dev -f # 개발환경 로그확인
 docker logs server 2>&1 -f | jq # 배포서버 로그확인
 ```
 
+### 환경 변수
+
+사용자 이메일 암호화를 위해 `aes_key` 값을 config.yml에 설정해야 합니다.
+
 ## Version
 
 ---

@@ -30,7 +30,6 @@ func PrivateRoutes(router *gin.Engine) {
 	router.Use(middleware.SetUserData())
 
 	router.GET("/protected", authHandler.Protected)
-	router.GET("/withdraw-users", UserHandler.GetWithdrawUsers)
 
 	pageRouter := router.Group("/pages")
 	{

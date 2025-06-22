@@ -44,6 +44,35 @@ func (u TagUsecase) FindTagsByUserId(userId string) ([]string, error) {
 	return tags, nil
 }
 
+// FindTagsByUserIdAndSearch는 사용자 아이디와 검색어로 태그를 조회합니다.
+func (u TagUsecase) FindTagsByUserIdAndSearch(userId string, search string) ([]string, error) {
+	tagData, err := u.tagModel.FindTagByUserId(userId)
+	if err != nil {
+		return nil, err
+	}
+
+	tags := make([]string, 0)
+	used := make(map[string]bool)
+
+	for _, tag := range tagData.LastUsed {
+		for _, name := range tagData.Names {
+			if tag == name && util.HangulMatch(tag, search) && !used[tag] {
+				tags = append(tags, tag)
+				used[tag] = true
+			}
+		}
+	}
+
+	for _, name := range tagData.Names {
+		if util.HangulMatch(name, search) && !used[name] {
+			tags = append(tags, name)
+			used[name] = true
+		}
+	}
+
+	return tags, nil
+}
+
 func (u TagUsecase) DeleteTag(userId string, tag string) ([]string, error) {
 	tags, err := u.tagModel.FindTagsByUserId(userId)
 	if err != nil {

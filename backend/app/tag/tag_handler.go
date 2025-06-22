@@ -61,9 +61,10 @@ func (h TagHandler) CreateTags(c *gin.Context) {
 // GetTags godoc
 // @Tags 태그
 // @Summary 태그를 조회합니다.
-// @Description 사용자 아이디를 통해 해당 사용자의 모든 태그를 조회합니다.
+// @Description 사용자 아이디를 통해 해당 사용자의 모든 태그를 조회합니다. 검색어를 전달하면 해당 검색어에 맞는 태그만 반환합니다.
 // @Accept  json
 // @Produce  json
+// @Param search query string false "검색어"
 // @Success 200 {array} []string "태그 조회가 성공적으로 이루어졌을 때 태그 배열 반환"
 // @Failure 401 {object} util.APIError "Authorization 헤더가 없을 때 반환합니다."
 // @Failure 500 {object} util.APIError "태그 조회 과정에서 오류가 발생한 경우 반환합니다."
@@ -79,7 +80,18 @@ func (h TagHandler) GetTags(c *gin.Context) {
 
 	userId := currentUser.(*user.User).UserId
 
-	tags, err := h.tagUsecase.FindTagsByUserId(userId)
+	search := c.Query("search")
+
+	var (
+		tags []string
+		err  error
+	)
+
+	if search == "" {
+		tags, err = h.tagUsecase.FindTagsByUserId(userId)
+	} else {
+		tags, err = h.tagUsecase.FindTagsByUserIdAndSearch(userId, search)
+	}
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			c.JSON(http.StatusOK, []string{})

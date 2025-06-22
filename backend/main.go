@@ -27,6 +27,9 @@ import (
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
 // @name Authorization
+// @securityDefinitions.apikey InternalApiKeyAuth
+// @in header
+// @name X-Internal-Api-Key
 // @BasePath /api
 func main() {
 	config.EnvConfig()
@@ -42,6 +45,9 @@ func main() {
 
 	routes.PublicRoutes(router)
 	routes.SwaggerRoutes(router)
+
+	// 내부용 API 라우터
+	routes.InternalRoutes(router)
 
 	// SwaggerRoutes 보다 위에 있으면 swagger 문서가 보이지 않음
 	routes.PrivateRoutes(router)

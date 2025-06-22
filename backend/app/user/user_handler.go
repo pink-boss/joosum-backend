@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type UserHandler struct {
@@ -55,6 +56,7 @@ func (h UserHandler) DeleteUser(c *gin.Context) {
 // @Description
 // @Accept json
 // @Produce json
+// @Security InternalApiKeyAuth
 // @Success 200 {array} InactiveUser
 // @Failure 500 {object} util.APIError "서버에서 유저 조회 실패"
 // @Router /withdraw-users [get]
@@ -66,4 +68,40 @@ func (h UserHandler) GetWithdrawUsers(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, users)
+}
+
+// CheckUserSignupByEmail
+// @Tags 유저
+// @Summary 이메일 가입 여부 확인
+// @Description 쿼리 파라미터로 전달된 이메일이 가입되어 있는지 확인합니다.
+// @Accept json
+// @Produce json
+// @Security InternalApiKeyAuth
+// @Param email query string true "이메일"
+// @Success 200 {object} map[string]bool "가입 여부"
+// @Failure 400 {object} util.APIError "이메일 파라미터 누락"
+// @Failure 500 {object} util.APIError "서버 오류"
+// @Router /signup-check [get]
+func (h UserHandler) CheckUserSignupByEmail(c *gin.Context) {
+	email := c.Query("email")
+	if email == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "email is required"})
+		return
+	}
+
+	user, err := h.userUsecase.GetUserByEmail(email)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			c.JSON(http.StatusOK, gin.H{"signedUp": false})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to check user"})
+		return
+	}
+
+	if user != nil {
+		c.JSON(http.StatusOK, gin.H{"signedUp": true})
+	} else {
+		c.JSON(http.StatusOK, gin.H{"signedUp": false})
+	}
 }

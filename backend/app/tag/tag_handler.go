@@ -34,7 +34,7 @@ func (h TagHandler) CreateTags(c *gin.Context) {
 	currentUser, exists := c.Get("user")
 	if !exists {
 		// 401 Unauthorized
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
+		util.SendError(c, http.StatusUnauthorized, util.CodeMissingAuthorization, util.MsgMissingAuthorization)
 		return
 	}
 
@@ -43,14 +43,14 @@ func (h TagHandler) CreateTags(c *gin.Context) {
 	var req []string
 	if err := c.ShouldBindJSON(&req); err != nil {
 		// 400 Bad Request
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody, util.MsgInvalidRequestBody)
 		return
 	}
 
 	tags, err := h.tagUsecase.CreateTags(userId, req)
 	if err != nil {
 		// 500 Internal Server Error
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError, err.Error())
 		return
 	}
 
@@ -74,7 +74,7 @@ func (h TagHandler) GetTags(c *gin.Context) {
 	currentUser, exists := c.Get("user")
 	if !exists {
 		// 401 Unauthorized
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
+		util.SendError(c, http.StatusUnauthorized, util.CodeMissingAuthorization, util.MsgMissingAuthorization)
 		return
 	}
 
@@ -99,7 +99,7 @@ func (h TagHandler) GetTags(c *gin.Context) {
 		}
 
 		// 500 Internal Server Error
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError, err.Error())
 		return
 	}
 
@@ -124,7 +124,7 @@ func (h TagHandler) DeleteTag(c *gin.Context) {
 	currentUser, exists := c.Get("user")
 	if !exists {
 		// 401 Unauthorized
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
+		util.SendError(c, http.StatusUnauthorized, util.CodeMissingAuthorization, util.MsgMissingAuthorization)
 		return
 	}
 
@@ -135,7 +135,7 @@ func (h TagHandler) DeleteTag(c *gin.Context) {
 	tags, err := h.tagUsecase.DeleteTag(userId, tag)
 	if err != nil {
 		// 500 Internal Server Error
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError, err.Error())
 		return
 	}
 

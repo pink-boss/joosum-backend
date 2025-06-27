@@ -30,26 +30,26 @@ type NaverHandler struct {
 func (h *NaverHandler) VerifyNaverAccessToken(c *gin.Context) {
 	var req AccessTokenReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, util.APIError{Error: "Invalid request body"})
+		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody, util.MsgInvalidRequestBody)
 		return
 	}
 
 	accessToken := req.IdToken
 
 	if accessToken == "" {
-		c.JSON(http.StatusBadRequest, util.APIError{Error: "idToken is required"})
+		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody, "idToken 값이 필요합니다")
 		return
 	}
 
 	email, err := h.naverUsecae.GetUserEmailByToken(accessToken)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, util.APIError{Error: err.Error()})
+		util.SendError(c, http.StatusUnauthorized, util.CodeMissingAuthorization, err.Error())
 		return
 	}
 
 	user, err := h.userUsecase.GetUserByEmail(email)
 	if err != nil && err != mongo.ErrNoDocuments {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("failed to get user by email: %v", err.Error())})
+		util.SendError(c, http.StatusUnauthorized, util.CodeInternalServerError, fmt.Sprintf("failed to get user by email: %v", err.Error()))
 		return
 	}
 
@@ -61,7 +61,7 @@ func (h *NaverHandler) VerifyNaverAccessToken(c *gin.Context) {
 	accessToken, refreshToken, err := h.authUsecase.GenerateNewJWTToken(email)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, util.APIError{Error: err.Error()})
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError, err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, util.TokenRes{

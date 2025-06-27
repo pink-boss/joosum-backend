@@ -10,7 +10,7 @@ func GetUserId(c *gin.Context) string {
 	currentUser, exists := c.Get("user")
 	if !exists {
 		// 401 Unauthorized
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
+		SendError(c, http.StatusUnauthorized, CodeMissingAuthorization, MsgMissingAuthorization)
 		return ""
 	}
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
+	"joosum-backend/pkg/util"
 )
 
 type UserHandler struct {
@@ -36,18 +37,18 @@ func (h UserHandler) DeleteUser(c *gin.Context) {
 	currentUser, exists := c.Get("user")
 	if !exists {
 		// 401 Unauthorized
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
+		util.SendError(c, http.StatusUnauthorized, util.CodeMissingAuthorization, util.MsgMissingAuthorization)
 		return
 	}
 	email := currentUser.(*User).Email
 
 	err := h.userUsecase.UpdateUserToInactiveUserByEmail(email)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "서버에서 유저 삭제 실패"})
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError, "서버에서 유저 삭제 실패")
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "유저 삭제 성공"})
+	c.JSON(http.StatusOK, util.APIResponse{Message: "유저 삭제 성공"})
 }
 
 // GetWithdrawUsers
@@ -85,7 +86,7 @@ func (h UserHandler) GetWithdrawUsers(c *gin.Context) {
 func (h UserHandler) CheckUserSignupByEmail(c *gin.Context) {
 	email := c.Query("email")
 	if email == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "email is required"})
+		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody, "이메일 파라미터가 필요합니다")
 		return
 	}
 
@@ -95,7 +96,7 @@ func (h UserHandler) CheckUserSignupByEmail(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"signedUp": false})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to check user"})
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError, "서버 오류")
 		return
 	}
 

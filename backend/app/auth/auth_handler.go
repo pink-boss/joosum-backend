@@ -34,25 +34,25 @@ type AuthHandler struct {
 func (h AuthHandler) SignUp(c *gin.Context) {
 	var req SignUpReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, util.APIError{Error: "Invalid request body"})
+		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody, util.MsgInvalidRequestBody)
 		return
 	}
 
 	email, err := h.authUsecase.GetEmailFromJWT(req.Social, req.IdToken)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, util.APIError{Error: fmt.Sprintf("failed to get email from the JWT token: %v", err.Error())})
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError, "이메일을 가져오는 중 오류가 발생했습니다")
 		return
 	}
 
 	isExist, _ := h.userUsecase.GetUserByEmail(email)
 	if isExist != nil {
-		c.JSON(http.StatusConflict, util.APIError{Error: "user already exists"})
+		util.SendError(c, http.StatusConflict, "USER_EXISTS", "이미 존재하는 사용자입니다")
 		return
 	}
 
 	inactiveUser, _ := h.userUsecase.GetInactiveUserByEmail(email)
 	if inactiveUser != nil {
-		c.JSON(http.StatusConflict, util.APIError{Error: "It hasn't been 30 days since you left"})
+		util.SendError(c, http.StatusConflict, "USER_RECENTLY_LEFT", "탈퇴 후 30일이 지나지 않았습니다")
 		return
 	}
 
@@ -71,14 +71,14 @@ func (h AuthHandler) SignUp(c *gin.Context) {
 
 	user, err := h.authUsecase.SignUp(userInfo)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, util.APIError{Error: err.Error()})
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError, "회원 가입에 실패했습니다")
 		return
 	}
 
 	accessToken, refreshToken, err := h.authUsecase.GenerateNewJWTToken(email)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, util.APIError{Error: err.Error()})
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError, "토큰 생성 중 오류가 발생했습니다")
 		return
 	}
 
@@ -101,7 +101,7 @@ func (h AuthHandler) Logout(c *gin.Context) {
 	result, err := h.authUsecase.Logout(userId)
 	if err != nil {
 		// 500 Internal Server Error
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError, err.Error())
 		return
 	}
 
@@ -123,7 +123,7 @@ func (h AuthHandler) GetMe(c *gin.Context) {
 	currentUser, exists := c.Get("user")
 	if !exists {
 		// 401 Unauthorized
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
+		util.SendError(c, http.StatusUnauthorized, util.CodeMissingAuthorization, util.MsgMissingAuthorization)
 		return
 	}
 
@@ -133,7 +133,7 @@ func (h AuthHandler) GetMe(c *gin.Context) {
 	// 사용자의 링크 수 가져오기
 	linkCount, err := h.linkModel.GetUserLinkCount(userId)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get link count"})
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError, "링크 수를 가져오는 데 실패했습니다")
 		return
 	}
 
@@ -141,7 +141,7 @@ func (h AuthHandler) GetMe(c *gin.Context) {
 	req := link.LinkBookListReq{}
 	linkBooks, err := h.linkBookModel.GetLinkBooks(req, userId)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get link books"})
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError, "링크북을 가져오는 데 실패했습니다")
 		return
 	}
 
@@ -162,7 +162,7 @@ func (h AuthHandler) GetMe(c *gin.Context) {
 // @Security ApiKeyAuth
 // @Router /protected [get]
 func (h AuthHandler) Protected(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "success"})
+	c.JSON(http.StatusOK, util.APIResponse{Message: "success"})
 }
 
 /*

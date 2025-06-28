@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"joosum-backend/pkg/util"
 )
 
 type BannerHandler struct {

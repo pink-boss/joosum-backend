@@ -5,7 +5,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"joosum-backend/app/user"
-	"joosum-backend/pkg/util"
 )
 
 type SettingHandler struct {

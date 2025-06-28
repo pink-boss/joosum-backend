@@ -7,7 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
 	"joosum-backend/app/user"
-	"joosum-backend/pkg/util"
 )
 
 type NotificationHandler struct {

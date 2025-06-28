@@ -1,12 +1,13 @@
 package notif
 
 import (
-	"joosum-backend/pkg/util"
 	"net/http"
 	. "strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
+	"joosum-backend/app/user"
+	"joosum-backend/pkg/util"
 )
 
 type NotificationHandler struct {
@@ -21,7 +22,7 @@ type NotificationHandler struct {
 // @Security ApiKeyAuth
 // @Router /notifications [get]
 func (h NotificationHandler) Notifications(c *gin.Context) {
-	userId := util.GetUserId(c)
+	userId := user.GetUserId(c)
 	page, err := ParseInt(c.Query("page"), 10, 64)
 	result, err := h.notificationUsecase.Notifications(userId, page)
 	if err != nil {

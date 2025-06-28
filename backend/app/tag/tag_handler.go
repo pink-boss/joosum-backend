@@ -65,6 +65,7 @@ func (h TagHandler) CreateTags(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param search query string false "검색어"
+// @Param sort query string false "정렬 방식" Enums(used,created)
 // @Success 200 {array} []string "태그 조회가 성공적으로 이루어졌을 때 태그 배열 반환"
 // @Failure 401 {object} util.APIError "Authorization 헤더가 없을 때 반환합니다."
 // @Failure 500 {object} util.APIError "태그 조회 과정에서 오류가 발생한 경우 반환합니다."
@@ -81,16 +82,29 @@ func (h TagHandler) GetTags(c *gin.Context) {
 	userId := currentUser.(*user.User).UserId
 
 	search := c.Query("search")
+	sortParam := c.Query("sort")
+
+	if sortParam == "" {
+		sortParam = "used"
+	}
 
 	var (
 		tags []string
 		err  error
 	)
 
-	if search == "" {
-		tags, err = h.tagUsecase.FindTagsByUserId(userId)
+	if sortParam == "created" {
+		if search == "" {
+			tags, err = h.tagUsecase.FindTagsByUserIdCreated(userId)
+		} else {
+			tags, err = h.tagUsecase.FindTagsByUserIdAndSearchCreated(userId, search)
+		}
 	} else {
-		tags, err = h.tagUsecase.FindTagsByUserIdAndSearch(userId, search)
+		if search == "" {
+			tags, err = h.tagUsecase.FindTagsByUserId(userId)
+		} else {
+			tags, err = h.tagUsecase.FindTagsByUserIdAndSearch(userId, search)
+		}
 	}
 	if err != nil {
 		if err == mongo.ErrNoDocuments {

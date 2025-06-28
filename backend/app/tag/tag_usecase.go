@@ -44,6 +44,32 @@ func (u TagUsecase) FindTagsByUserId(userId string) ([]string, error) {
 	return tags, nil
 }
 
+// FindTagsByUserIdCreated는 태그 생성 순서대로 태그를 조회합니다.
+func (u TagUsecase) FindTagsByUserIdCreated(userId string) ([]string, error) {
+	tags, err := u.tagModel.FindTagsByUserId(userId)
+	if err != nil {
+		return nil, err
+	}
+	return tags, nil
+}
+
+// FindTagsByUserIdAndSearchCreated는 생성 순서대로 검색어에 맞는 태그를 조회합니다.
+func (u TagUsecase) FindTagsByUserIdAndSearchCreated(userId string, search string) ([]string, error) {
+	tagData, err := u.tagModel.FindTagByUserId(userId)
+	if err != nil {
+		return nil, err
+	}
+
+	tags := make([]string, 0)
+	for _, name := range tagData.Names {
+		if util.HangulMatch(name, search) {
+			tags = append(tags, name)
+		}
+	}
+
+	return tags, nil
+}
+
 // FindTagsByUserIdAndSearch는 사용자 아이디와 검색어로 태그를 조회합니다.
 func (u TagUsecase) FindTagsByUserIdAndSearch(userId string, search string) ([]string, error) {
 	tagData, err := u.tagModel.FindTagByUserId(userId)

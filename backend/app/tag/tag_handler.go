@@ -7,6 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/gin-gonic/gin"
+	"joosum-backend/pkg/util"
 )
 
 type TagHandler struct {

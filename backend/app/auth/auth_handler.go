@@ -96,7 +96,7 @@ func (h AuthHandler) SignUp(c *gin.Context) {
 // @Security ApiKeyAuth
 // @Router /auth/logout [POST]
 func (h AuthHandler) Logout(c *gin.Context) {
-	userId := util.GetUserId(c)
+	userId := user.GetUserId(c)
 
 	result, err := h.authUsecase.Logout(userId)
 	if err != nil {

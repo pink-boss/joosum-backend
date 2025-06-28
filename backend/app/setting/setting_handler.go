@@ -1,10 +1,10 @@
 package setting
 
 import (
-	"joosum-backend/pkg/util"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"joosum-backend/app/user"
 )
 
 type SettingHandler struct {
@@ -19,7 +19,7 @@ type SettingHandler struct {
 // @Security ApiKeyAuth
 // @Router /settings/device [post]
 func (h SettingHandler) SaveDeviceId(c *gin.Context) {
-	userId := util.GetUserId(c)
+	userId := user.GetUserId(c)
 
 	var req DeviceReq
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -46,7 +46,7 @@ func (h SettingHandler) SaveDeviceId(c *gin.Context) {
 // @Security ApiKeyAuth
 // @Router /settings/notification [get]
 func (h SettingHandler) GetNotificationAgree(c *gin.Context) {
-	userId := util.GetUserId(c)
+	userId := user.GetUserId(c)
 	result, err := h.settingUsecase.GetNotificationAgree(userId)
 	if err != nil {
 		// 500 Internal Server Error
@@ -66,7 +66,7 @@ func (h SettingHandler) GetNotificationAgree(c *gin.Context) {
 // @Security ApiKeyAuth
 // @Router /settings/notification [put]
 func (h SettingHandler) UpdatePushNotification(c *gin.Context) {
-	userId := util.GetUserId(c)
+	userId := user.GetUserId(c)
 
 	var req PushNotificationReq
 	if err := c.ShouldBindJSON(&req); err != nil {

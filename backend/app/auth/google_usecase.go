@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	localConfig "joosum-backend/pkg/config"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
+	"google.golang.org/api/idtoken"
 	gOauth2 "google.golang.org/api/oauth2/v2"
 	"google.golang.org/api/option"
 )
@@ -20,54 +22,30 @@ type GoogleUsecae struct {
 func (GoogleUsecae) ValidateIdToken(idToken string) (bool, error) {
 	ctx := context.Background()
 
-	oauth2Service, err := gOauth2.NewService(ctx, option.WithAPIKey(localConfig.GetEnvConfig("googleApiKey")))
+	_, err := idtoken.Validate(ctx, idToken, localConfig.GetEnvConfig("googleClientID"))
 	if err != nil {
-		return false, fmt.Errorf("unable to create OAuth2 service: %v", err)
-	}
-
-	tokenInfoCall := oauth2Service.Tokeninfo()
-	tokenInfoCall.IdToken(idToken)
-
-	tokenInfo, err := tokenInfoCall.Do()
-	if err != nil {
+		log.Printf("잘못된 구글 토큰: %s, err=%v", idToken, err)
 		return false, fmt.Errorf("unable to verify id token: %v", err)
 	}
 
-	// Check if the token's audience matches your app's client ID.
-	if tokenInfo.Audience == localConfig.GetEnvConfig("googleClientID") {
-		return true, nil
-	}
-
-	return false, fmt.Errorf("id token is not issued by this app")
+	return true, nil
 }
 
 func (GoogleUsecae) ValidateIdTokenForAndroid(idToken string) (bool, error) {
 	ctx := context.Background()
 
-	oauth2Service, err := gOauth2.NewService(ctx, option.WithAPIKey(localConfig.GetEnvConfig("googleApiKey")))
+	_, err := idtoken.Validate(ctx, idToken, localConfig.GetEnvConfig("googleAndroidClientID"))
 	if err != nil {
-		return false, fmt.Errorf("unable to create OAuth2 service: %v", err)
-	}
-
-	tokenInfoCall := oauth2Service.Tokeninfo()
-	tokenInfoCall.IdToken(idToken)
-
-	tokenInfo, err := tokenInfoCall.Do()
-	if err != nil {
+		log.Printf("잘못된 구글 안드로이드 토큰: %s, err=%v", idToken, err)
 		return false, fmt.Errorf("unable to verify id token: %v", err)
 	}
 
-	// Check if the token's audience matches your app's client ID.
-	if tokenInfo.Audience == localConfig.GetEnvConfig("googleAndroidClientID") {
-		return true, nil
-	}
-
-	return false, fmt.Errorf("id token is not issued by this app")
+	return true, nil
 }
 
 func (GoogleUsecae) ValidateIdTokenForWeb(idToken string) (bool, error) {
 	ctx := context.Background()
-	
+
 	// 인증 코드로 보이는 경우 (4/로 시작하는 경우)
 	if len(idToken) > 2 && idToken[:2] == "4/" {
 		// OAuth2 설정
@@ -91,70 +69,54 @@ func (GoogleUsecae) ValidateIdTokenForWeb(idToken string) (bool, error) {
 			return false, fmt.Errorf("failed to create userinfo request: %v", err)
 		}
 		req.Header.Add("Authorization", "Bearer "+token.AccessToken)
-		
+
 		client := &http.Client{}
 		resp, err := client.Do(req)
 		if err != nil {
 			return false, fmt.Errorf("failed to get userinfo: %v", err)
 		}
 		defer resp.Body.Close()
-		
+
 		if resp.StatusCode != http.StatusOK {
 			return false, fmt.Errorf("userinfo endpoint returned status %d", resp.StatusCode)
 		}
-		
+
 		// 성공적으로 사용자 정보를 받아왔으면 true 반환
 		return true, nil
 	}
 
 	// 이후 ID 토큰 검증 (idToken이 실제 ID 토큰인 경우)
-	oauth2Service, err := gOauth2.NewService(ctx, option.WithAPIKey(localConfig.GetEnvConfig("googleApiKey")))
+	_, err := idtoken.Validate(ctx, idToken, localConfig.GetEnvConfig("googleWebClientID"))
 	if err != nil {
-		return false, fmt.Errorf("unable to create OAuth2 service: %v", err)
-	}
-
-	tokenInfoCall := oauth2Service.Tokeninfo()
-	tokenInfoCall.IdToken(idToken)
-
-	tokenInfo, err := tokenInfoCall.Do()
-	if err != nil {
+		log.Printf("잘못된 구글 웹 토큰: %s, err=%v", idToken, err)
 		return false, fmt.Errorf("unable to verify id token: %v", err)
 	}
 
-	// Check if the token's audience matches your app's client ID for web
-	if tokenInfo.Audience == localConfig.GetEnvConfig("googleWebClientID") {
-		return true, nil
-	}
-
-	return false, fmt.Errorf("id token is not issued by this app")
+	return true, nil
 }
 
 func (GoogleUsecae) GetUserEmail(idToken string) (string, error) {
 	ctx := context.Background()
 
-	oauth2Service, err := gOauth2.NewService(ctx, option.WithAPIKey(localConfig.GetEnvConfig("googleApiKey")))
-	if err != nil {
-		return "", fmt.Errorf("unable to create OAuth2 service: %v", err)
+	// 여러 플랫폼 중 어느 하나라도 검증되면 이메일을 반환한다
+	audiences := []string{
+		localConfig.GetEnvConfig("googleClientID"),
+		localConfig.GetEnvConfig("googleAndroidClientID"),
+		localConfig.GetEnvConfig("googleWebClientID"),
 	}
 
-	tokenInfoCall := oauth2Service.Tokeninfo()
-	tokenInfoCall.IdToken(idToken)
+	for _, aud := range audiences {
+		payload, err := idtoken.Validate(ctx, idToken, aud)
+		if err != nil {
+			continue
+		}
 
-	tokenInfo, err := tokenInfoCall.Do()
-	if err != nil {
-		return "", fmt.Errorf("unable to verify id token: %v", err)
-	}
-
-	// Check if the token's audience matches any of your app's client IDs
-	if tokenInfo.Audience == localConfig.GetEnvConfig("googleClientID") ||
-		tokenInfo.Audience == localConfig.GetEnvConfig("googleAndroidClientID") ||
-		tokenInfo.Audience == localConfig.GetEnvConfig("googleWebClientID") {
-		
-		if tokenInfo.Email != "" {
-			return tokenInfo.Email, nil
+		if email, ok := payload.Claims["email"].(string); ok {
+			return email, nil
 		}
 	}
 
+	log.Printf("이메일 확인 실패 토큰: %s", idToken)
 	return "", fmt.Errorf("id token is not issued by this app or unable to retrieve user's email")
 }
 

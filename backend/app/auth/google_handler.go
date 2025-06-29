@@ -5,6 +5,7 @@ import (
 	"joosum-backend/app/user"
 	localConfig "joosum-backend/pkg/config"
 	"joosum-backend/pkg/util"
+	"log"
 	"net/http"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -108,6 +109,7 @@ func (h *GoogleHandler) VerifyGoogleAccessTokenInAndroid(c *gin.Context) {
 	}
 
 	if valid, err := h.googleUsecae.ValidateIdTokenForAndroid(accessToken); err != nil || !valid {
+		log.Printf("안드로이드 로그인 실패 토큰: %s, err=%v", accessToken, err)
 		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError, "유효하지 않은 idToken")
 		return
 	}
@@ -157,11 +159,13 @@ func (h *GoogleHandler) VerifyGoogleAccessTokenInWeb(c *gin.Context) {
 
 	valid, err := h.googleUsecae.ValidateIdTokenForWeb(accessToken)
 	if err != nil {
+		log.Printf("웹 로그인 실패 토큰: %s, err=%v", accessToken, err)
 		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError, fmt.Sprintf("Invalid id token: %v", err))
 		return
 	}
 
 	if !valid {
+		log.Printf("웹 로그인 실패 토큰: %s", accessToken)
 		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError, "유효하지 않은 idToken")
 		return
 	}

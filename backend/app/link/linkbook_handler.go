@@ -26,7 +26,7 @@ type LinkBookHandler struct {
 func (h LinkBookHandler) GetLinkBooks(c *gin.Context) {
 	var req LinkBookListReq
 	if err := c.ShouldBindQuery(&req); err != nil {
-		c.JSON(http.StatusBadRequest, util.APIError{Error: fmt.Sprintf("Invalid request parameter: %v", err.Error())})
+		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody, fmt.Sprintf("잘못된 요청 파라미터: %v", err.Error()))
 		return
 	}
 
@@ -59,7 +59,7 @@ func (h LinkBookHandler) GetLinkBooks(c *gin.Context) {
 func (h LinkBookHandler) CreateLinkBook(c *gin.Context) {
 	var req LinkBookCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, util.APIError{Error: "Invalid request body"})
+		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody, util.MsgInvalidRequestBody)
 		return
 	}
 
@@ -108,7 +108,7 @@ func (h LinkBookHandler) CreateLinkBook(c *gin.Context) {
 func (h LinkBookHandler) UpdateLinkBook(c *gin.Context) {
 	var req LinkBookCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, util.APIError{Error: "Invalid request body"})
+		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody, util.MsgInvalidRequestBody)
 		return
 	}
 

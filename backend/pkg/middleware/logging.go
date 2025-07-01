@@ -1,9 +1,6 @@
 package middleware
 
 import (
-	"bytes"
-	"encoding/json"
-	"io/ioutil"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -35,50 +32,22 @@ func init() {
 	logger, _ = config.Build() // 아무것도 넣지 않으면 caller 에 로깅위치 나옴
 }
 
+// LoggingMiddleware는 민감한 정보 노출을 막기 위해 요청과 응답 본문을 기록하지 않는다.
 func LoggingMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// 요청 시작 시간 기록
+		start := time.Now()
 
-		// Log the request
-		requestBody, _ := ioutil.ReadAll(c.Request.Body)
+		c.Next()
 
-		c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
-
-		var jsonReq interface{}
-		json.Unmarshal(requestBody, &jsonReq)
-
+		// 민감 정보 노출을 피하기 위해 본문은 기록하지 않는다
+		elapsed := time.Since(start)
 		logger.Info("Request",
 			zap.String("method", c.Request.Method),
 			zap.String("path", c.Request.URL.Path),
 			zap.Any("query", c.Request.URL.Query()),
-			zap.Any("request_body", jsonReq),
-		)
-
-		// Start the timer
-		start := time.Now()
-
-		blw := &bodyLogWriter{body: bytes.NewBufferString(""), ResponseWriter: c.Writer}
-		c.Writer = blw
-		c.Next()
-
-		var jsonRes interface{}
-		json.Unmarshal(blw.body.Bytes(), &jsonRes)
-
-		// Log the response
-		elapsed := time.Since(start)
-		logger.Info("Response",
 			zap.Int("status_code", c.Writer.Status()),
-			zap.Any("response_body", jsonRes),
 			zap.Duration("elapsed_time", elapsed),
 		)
 	}
-}
-
-type bodyLogWriter struct {
-	gin.ResponseWriter
-	body *bytes.Buffer
-}
-
-func (w bodyLogWriter) Write(b []byte) (int, error) {
-	w.body.Write(b)
-	return w.ResponseWriter.Write(b)
 }

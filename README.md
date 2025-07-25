@@ -1,7 +1,7 @@
 # :link: JOOSUM
 
 ## 실행
-
+d
 로컬 실행
 
 ```bash

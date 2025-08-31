@@ -1,7 +1,6 @@
 package link
 
 import (
-	"fmt"
 	"joosum-backend/app/user"
 	"joosum-backend/pkg/util"
 	"net/http"

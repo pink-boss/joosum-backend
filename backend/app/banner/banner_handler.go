@@ -27,7 +27,7 @@ func (h BannerHandler) CreateBanner(c *gin.Context) {
 
 	var req BannerCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody, util.MsgInvalidRequestBody)
+		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody)
 		return
 	}
 
@@ -35,14 +35,14 @@ func (h BannerHandler) CreateBanner(c *gin.Context) {
 	clickURL := req.ClickURL
 
 	if imageURL == "" || clickURL == "" {
-		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody, "필수 파라미터가 누락되었습니다")
+		util.SendError(c, http.StatusBadRequest, util.CodeMissingParameter)
 		return
 	}
 
 	banner, err := h.BannerUsecase.CreateBanner(imageURL, clickURL)
 
 	if err != nil {
-		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError, err.Error())
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError)
 		return
 	}
 
@@ -63,7 +63,7 @@ func (h BannerHandler) GetBanners(c *gin.Context) {
 	banners, err := h.BannerUsecase.GetBanners()
 
 	if err != nil {
-		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError, err.Error())
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError)
 		return
 	}
 
@@ -86,14 +86,13 @@ func (h BannerHandler) DeleteBanner(c *gin.Context) {
 	bannerId := c.Param("bannerId")
 
 	if bannerId == "" {
-		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody, "필수 파라미터가 누락되었습니다")
+		util.SendError(c, http.StatusBadRequest, util.CodeMissingParameter)
 		return
 	}
 
 	count, err := h.BannerUsecase.DeleteBannerById(bannerId)
-
 	if err != nil {
-		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError, err.Error())
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError)
 		return
 	}
 

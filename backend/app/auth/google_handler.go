@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"fmt"
 	"joosum-backend/app/user"
 	localConfig "joosum-backend/pkg/config"
 	"joosum-backend/pkg/util"

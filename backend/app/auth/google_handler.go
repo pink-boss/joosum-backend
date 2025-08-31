@@ -38,31 +38,31 @@ type GoogleHandler struct {
 func (h *GoogleHandler) VerifyGoogleAccessToken(c *gin.Context) {
 	var req AccessTokenReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody, util.MsgInvalidRequestBody)
+		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody)
 		return
 	}
 
 	accessToken := req.IdToken
 
 	if accessToken == "" {
-		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody, "idToken 값이 필요합니다")
+		util.SendError(c, http.StatusBadRequest, util.CodeMissingParameter)
 		return
 	}
 
 	if valid, err := h.googleUsecae.ValidateIdToken(accessToken); err != nil || !valid {
-		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError, "유효하지 않은 idToken")
+		util.SendError(c, http.StatusUnauthorized, util.CodeInvalidIDToken)
 		return
 	}
 
 	email, err := h.googleUsecae.GetUserEmail(accessToken)
 	if err != nil {
-		util.SendError(c, http.StatusUnauthorized, util.CodeMissingAuthorization, err.Error())
+		util.SendError(c, http.StatusUnauthorized, util.CodeInvalidIDToken)
 		return
 	}
 
 	user, err := h.userUsecase.GetUserByEmail(email)
 	if err != nil && err != mongo.ErrNoDocuments {
-		util.SendError(c, http.StatusUnauthorized, util.CodeMissingAuthorization, fmt.Sprintf("failed to get user by email: %v", err.Error()))
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError)
 		return
 	}
 
@@ -72,9 +72,8 @@ func (h *GoogleHandler) VerifyGoogleAccessToken(c *gin.Context) {
 	}
 
 	accessToken, refreshToken, err := h.authUsecase.GenerateNewJWTToken(email)
-
 	if err != nil {
-		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError, err.Error())
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError)
 		return
 	}
 	c.JSON(http.StatusOK, util.TokenRes{
@@ -97,32 +96,32 @@ func (h *GoogleHandler) VerifyGoogleAccessToken(c *gin.Context) {
 func (h *GoogleHandler) VerifyGoogleAccessTokenInAndroid(c *gin.Context) {
 	var req AccessTokenReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody, util.MsgInvalidRequestBody)
+		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody)
 		return
 	}
 
 	accessToken := req.IdToken
 
 	if accessToken == "" {
-		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody, "idToken 값이 필요합니다")
+		util.SendError(c, http.StatusBadRequest, util.CodeMissingParameter)
 		return
 	}
 
 	if valid, err := h.googleUsecae.ValidateIdTokenForAndroid(accessToken); err != nil || !valid {
 		log.Printf("안드로이드 로그인 실패 토큰: %s, err=%v", accessToken, err)
-		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError, "유효하지 않은 idToken")
+		util.SendError(c, http.StatusUnauthorized, util.CodeInvalidIDToken)
 		return
 	}
 
 	email, err := h.googleUsecae.GetUserEmail(accessToken)
 	if err != nil {
-		util.SendError(c, http.StatusUnauthorized, util.CodeMissingAuthorization, err.Error())
+		util.SendError(c, http.StatusUnauthorized, util.CodeInvalidIDToken)
 		return
 	}
 
 	user, err := h.userUsecase.GetUserByEmail(email)
 	if err != nil && err != mongo.ErrNoDocuments {
-		util.SendError(c, http.StatusUnauthorized, util.CodeMissingAuthorization, fmt.Sprintf("failed to get user by email: %v", err.Error()))
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError)
 		return
 	}
 
@@ -132,9 +131,8 @@ func (h *GoogleHandler) VerifyGoogleAccessTokenInAndroid(c *gin.Context) {
 	}
 
 	accessToken, refreshToken, err := h.authUsecase.GenerateNewJWTToken(email)
-
 	if err != nil {
-		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError, err.Error())
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError)
 		return
 	}
 	c.JSON(http.StatusOK, util.TokenRes{
@@ -146,39 +144,39 @@ func (h *GoogleHandler) VerifyGoogleAccessTokenInAndroid(c *gin.Context) {
 func (h *GoogleHandler) VerifyGoogleAccessTokenInWeb(c *gin.Context) {
 	var req AccessTokenReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody, util.MsgInvalidRequestBody)
+		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody)
 		return
 	}
 
 	accessToken := req.IdToken
 
 	if accessToken == "" {
-		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody, "idToken 값이 필요합니다")
+		util.SendError(c, http.StatusBadRequest, util.CodeMissingParameter)
 		return
 	}
 
 	valid, err := h.googleUsecae.ValidateIdTokenForWeb(accessToken)
 	if err != nil {
 		log.Printf("웹 로그인 실패 토큰: %s, err=%v", accessToken, err)
-		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError, fmt.Sprintf("Invalid id token: %v", err))
+		util.SendError(c, http.StatusUnauthorized, util.CodeInvalidIDToken)
 		return
 	}
 
 	if !valid {
 		log.Printf("웹 로그인 실패 토큰: %s", accessToken)
-		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError, "유효하지 않은 idToken")
+		util.SendError(c, http.StatusUnauthorized, util.CodeInvalidIDToken)
 		return
 	}
 
 	email, err := h.googleUsecae.GetUserEmail(accessToken)
 	if err != nil {
-		util.SendError(c, http.StatusUnauthorized, util.CodeMissingAuthorization, err.Error())
+		util.SendError(c, http.StatusUnauthorized, util.CodeInvalidIDToken)
 		return
 	}
 
 	user, err := h.userUsecase.GetUserByEmail(email)
 	if err != nil && err != mongo.ErrNoDocuments {
-		util.SendError(c, http.StatusUnauthorized, util.CodeMissingAuthorization, fmt.Sprintf("failed to get user by email: %v", err.Error()))
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError)
 		return
 	}
 
@@ -188,9 +186,8 @@ func (h *GoogleHandler) VerifyGoogleAccessTokenInWeb(c *gin.Context) {
 	}
 
 	accessToken, refreshToken, err := h.authUsecase.GenerateNewJWTToken(email)
-
 	if err != nil {
-		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError, err.Error())
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError)
 		return
 	}
 
@@ -229,45 +226,45 @@ func (h *GoogleHandler) AuthGoogleWebCallback(c *gin.Context) {
 	state := c.Query("state")
 	storedState, err := c.Cookie("google_oauth_state")
 	if err != nil {
-		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody, "state 쿠키를 찾을 수 없습니다")
+		util.SendError(c, http.StatusBadRequest, util.CodeMissingParameter)
 		return
 	}
 	if state != storedState {
-		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody, "잘못된 OAuth 상태입니다")
+		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody)
 		return
 	}
 
 	// 2) code 가져오기
 	code := c.Query("code")
 	if code == "" {
-		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody, "코드를 찾을 수 없습니다")
+		util.SendError(c, http.StatusBadRequest, util.CodeMissingParameter)
 		return
 	}
 
 	// 3) code로 토큰 교환
 	token, err := googleWebOAuthConfig.Exchange(c, code)
 	if err != nil {
-		util.SendError(c, http.StatusUnauthorized, util.CodeMissingAuthorization, "토큰 교환 실패: "+err.Error())
+		util.SendError(c, http.StatusUnauthorized, util.CodeInvalidIDToken)
 		return
 	}
 
 	// 4) 토큰으로 구글 사용자 정보 가져오기
 	userInfo, err := h.googleUsecae.GetUserInfoFromToken(c, token.AccessToken)
 	if err != nil {
-		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError, "유저 정보를 가져오지 못했습니다: "+err.Error())
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError)
 		return
 	}
 
 	email := userInfo.Email
 	if email == "" {
-		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError, "유저 정보에 이메일이 없습니다")
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError)
 		return
 	}
 
 	// 5) DB에서 해당 이메일 유저 조회
 	foundUser, err := h.userUsecase.GetUserByEmail(email)
 	if err != nil && err != mongo.ErrNoDocuments {
-		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError, "유저 조회 실패: "+err.Error())
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError)
 		return
 	}
 
@@ -280,7 +277,7 @@ func (h *GoogleHandler) AuthGoogleWebCallback(c *gin.Context) {
 	// 6) JWT 토큰 발급
 	accessTokenStr, refreshTokenStr, err := h.authUsecase.GenerateNewJWTToken(email)
 	if err != nil {
-		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError, "JWT 생성 실패: "+err.Error())
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError)
 		return
 	}
 

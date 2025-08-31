@@ -15,7 +15,7 @@ func GetUserId(c *gin.Context) string {
 	currentUser, exists := c.Get("user")
 	if !exists {
 		// 401 Unauthorized
-		util.SendError(c, http.StatusUnauthorized, util.CodeMissingAuthorization, util.MsgMissingAuthorization)
+		util.SendError(c, http.StatusUnauthorized, util.CodeMissingAuthorization)
 		return ""
 	}
 

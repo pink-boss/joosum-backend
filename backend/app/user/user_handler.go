@@ -37,14 +37,14 @@ func (h UserHandler) DeleteUser(c *gin.Context) {
 	currentUser, exists := c.Get("user")
 	if !exists {
 		// 401 Unauthorized
-		util.SendError(c, http.StatusUnauthorized, util.CodeMissingAuthorization, util.MsgMissingAuthorization)
+		util.SendError(c, http.StatusUnauthorized, util.CodeMissingAuthorization)
 		return
 	}
 	email := currentUser.(*User).Email
 
 	err := h.userUsecase.UpdateUserToInactiveUserByEmail(email)
 	if err != nil {
-		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError, "서버에서 유저 삭제 실패")
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError)
 		return
 	}
 
@@ -86,7 +86,7 @@ func (h UserHandler) GetWithdrawUsers(c *gin.Context) {
 func (h UserHandler) CheckUserSignupByEmail(c *gin.Context) {
 	email := c.Query("email")
 	if email == "" {
-		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody, "이메일 파라미터가 필요합니다")
+		util.SendError(c, http.StatusBadRequest, util.CodeMissingParameter)
 		return
 	}
 
@@ -96,7 +96,7 @@ func (h UserHandler) CheckUserSignupByEmail(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"signedUp": false})
 			return
 		}
-		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError, "서버 오류")
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError)
 		return
 	}
 

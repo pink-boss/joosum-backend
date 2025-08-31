@@ -26,14 +26,14 @@ type LinkBookHandler struct {
 func (h LinkBookHandler) GetLinkBooks(c *gin.Context) {
 	var req LinkBookListReq
 	if err := c.ShouldBindQuery(&req); err != nil {
-		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody, fmt.Sprintf("잘못된 요청 파라미터: %v", err.Error()))
+		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody)
 		return
 	}
 
 	currentUser, exists := c.Get("user")
 	if !exists {
 		// 401 Unauthorized
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
+		util.SendError(c, http.StatusUnauthorized, util.CodeMissingAuthorization)
 		return
 	}
 
@@ -42,7 +42,7 @@ func (h LinkBookHandler) GetLinkBooks(c *gin.Context) {
 	res, err := h.linkBookUsecase.GetLinkBooks(req, userId)
 	if err != nil {
 		// 500 Internal Server Error
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError)
 		return
 	}
 
@@ -59,14 +59,18 @@ func (h LinkBookHandler) GetLinkBooks(c *gin.Context) {
 func (h LinkBookHandler) CreateLinkBook(c *gin.Context) {
 	var req LinkBookCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody, util.MsgInvalidRequestBody)
+		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody)
 		return
 	}
 
 	err := util.Validate.Struct(req)
 	if err != nil {
 		fields := util.ValidatorErrors(err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "ValidatorErrors", "fields": fields})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    util.CodeInvalidRequestBody,
+			"message": util.ErrorMessage(util.CodeInvalidRequestBody),
+			"fields":  fields,
+		})
 		return
 	}
 
@@ -75,7 +79,7 @@ func (h LinkBookHandler) CreateLinkBook(c *gin.Context) {
 	currentUser, exists := c.Get("user")
 	if !exists {
 		// 401 Unauthorized
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
+		util.SendError(c, http.StatusUnauthorized, util.CodeMissingAuthorization)
 		return
 	}
 
@@ -83,14 +87,13 @@ func (h LinkBookHandler) CreateLinkBook(c *gin.Context) {
 
 	res, err := h.linkBookUsecase.CreateLinkBook(req, userId)
 	if err != nil {
-
 		if err == util.ErrDuplicatedTitle {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			util.SendError(c, http.StatusBadRequest, util.CodeDuplicateTitle)
 			return
 		}
 
 		// 500 Internal Server Error
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError)
 		return
 	}
 
@@ -108,7 +111,7 @@ func (h LinkBookHandler) CreateLinkBook(c *gin.Context) {
 func (h LinkBookHandler) UpdateLinkBook(c *gin.Context) {
 	var req LinkBookCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody, util.MsgInvalidRequestBody)
+		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody)
 		return
 	}
 
@@ -117,7 +120,7 @@ func (h LinkBookHandler) UpdateLinkBook(c *gin.Context) {
 	currentUser, exists := c.Get("user")
 	if !exists {
 		// 401 Unauthorized
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
+		util.SendError(c, http.StatusUnauthorized, util.CodeMissingAuthorization)
 		return
 	}
 
@@ -127,14 +130,13 @@ func (h LinkBookHandler) UpdateLinkBook(c *gin.Context) {
 
 	res, err := h.linkBookUsecase.UpdateLinkBook(linkBookId, req, userId)
 	if err != nil {
-
 		if err.Error() == mongo.ErrNoDocuments.Error() {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			util.SendError(c, http.StatusNotFound, util.CodeInvalidRequestBody)
 			return
 		}
 
 		// 500 Internal Server Error
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError)
 		return
 	}
 
@@ -155,7 +157,7 @@ func (h LinkBookHandler) DeleteLinkBook(c *gin.Context) {
 	currentUser, exists := c.Get("user")
 	if !exists {
 		// 401 Unauthorized
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
+		util.SendError(c, http.StatusUnauthorized, util.CodeMissingAuthorization)
 		return
 	}
 
@@ -164,7 +166,7 @@ func (h LinkBookHandler) DeleteLinkBook(c *gin.Context) {
 	res, err := h.linkBookUsecase.DeleteLinkBookWithLinks(userId, linkBookId)
 	if err != nil {
 		// 500 Internal Server Error
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError)
 		return
 	}
 

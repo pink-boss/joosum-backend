@@ -17,9 +17,12 @@ type LinkBookHandler struct {
 // GetLinkBooks
 // @Tags 링크북
 // @Summary 링크북 목록 조회
-// @Description 파라미터로 전달되는 `sort` 는 고도화 때 enum 으로 바꾸면 좋을 것 같습니다.
-// @Param request query link.LinkBookListReq true "request"
+// @Description `sort` 파라미터는 `created_at`, `last_saved_at`, `title` 중 하나만 허용됩니다.
+// @Param sort query string false "정렬 기준" Enums(created_at,last_saved_at,title)
 // @Success 200 {object} link.LinkBookListRes
+// @Failure 400 {object} util.APIError "허용되지 않은 sort 값이 전달된 경우"
+// @Failure 401 {object} util.APIError "Authorization 헤더가 없을 때 반환합니다."
+// @Failure 500 {object} util.APIError "링크북 목록 조회 과정에서 오류가 발생한 경우"
 // @Security ApiKeyAuth
 // @Router /link-books [get]
 func (h LinkBookHandler) GetLinkBooks(c *gin.Context) {
@@ -40,6 +43,10 @@ func (h LinkBookHandler) GetLinkBooks(c *gin.Context) {
 
 	res, err := h.linkBookUsecase.GetLinkBooks(req, userId)
 	if err != nil {
+		if err == util.ErrInvalidSort {
+			util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody)
+			return
+		}
 		// 500 Internal Server Error
 		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError)
 		return

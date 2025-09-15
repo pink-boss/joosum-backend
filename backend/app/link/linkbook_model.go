@@ -3,7 +3,6 @@ package link
 import (
 	"context"
 	"joosum-backend/pkg/db"
-	"joosum-backend/pkg/util"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -63,13 +62,8 @@ func (LinkBookModel) GetLinkBooks(req LinkBookListReq, userId string) ([]LinkBoo
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	// 정렬 값 검증
-	if req.Sort != "" && req.Sort != "created_at" && req.Sort != "last_saved_at" && req.Sort != "title" {
-		return nil, util.ErrInvalidSort
-	}
-
 	// 정렬 순서 디폴트: 생성 순
-	if req.Sort == "" {
+	if req.Sort == "" || req.Sort == "create_at" {
 		req.Sort = "created_at"
 	}
 

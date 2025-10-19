@@ -116,6 +116,21 @@ go test ./...           # Run all tests
 go test ./app/link      # Run tests for specific package
 ```
 
+## AI Tag Recommendation Feature
+
+A new AI-powered tag recommendation feature has been implemented:
+
+- **Endpoint**: `POST /links/ai-tags` (requires JWT authentication)
+- **Purpose**: Analyzes URL content and recommends up to 5 relevant tags using OpenAI GPT-4o-mini
+- **Configuration**: Requires `openaiApiKey` in `config.yml`
+- **Policy**: Tag generation follows strict rules defined in `ai_tag_policy.md`
+- **Implementation**:
+  - `link_usecase.go`: `GetAIRecommendedTags()` - crawls URL, extracts content, calls OpenAI API
+  - `link_handler.go`: `GetAIRecommendedTags()` - HTTP handler
+  - `link_model.go`: `AITagRecommendationReq`, `AITagRecommendationRes` - request/response types
+- **Content Extraction**: Crawls title, meta description, article/section content, hashtags while filtering ads/comments/navigation
+- **See**: `AI_TAG_FEATURE.md` for detailed usage guide
+
 ## Important Notes
 
 - The main Go module path is `joosum-backend`, all imports use this prefix
@@ -124,3 +139,4 @@ go test ./app/link      # Run tests for specific package
 - Production environment uses custom logging middleware
 - Apple public keys are loaded at startup via `util.LoadApplePublicKeys()`
 - Validator is initialized globally: `util.Validate = validator.New()`
+- OpenAI SDK: `github.com/sashabaranov/go-openai` for AI tag recommendations

@@ -1,8 +1,10 @@
 package link
 
 import (
+	"fmt"
 	"joosum-backend/app/tag"
 	"joosum-backend/app/user"
+	"joosum-backend/pkg/util"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -30,6 +32,42 @@ type UpdateLinkReq struct {
 
 type DeleteLinkReq struct {
 	LinkIds []string `json:"linkIds"`
+}
+
+// GetAIRecommendedTags
+// @Tags 링크
+// @Summary AI 태그 추천
+// @Description URL의 본문 내용을 분석하여 검색에 유용한 태그 최대 5개를 AI로 추천합니다
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param request body AITagRecommendationReq true "AI 태그 추천 요청 본문"
+// @Success 200 {object} AITagRecommendationRes "AI 태그 추천이 성공적으로 이루어졌을 때 추천 태그 목록 반환"
+// @Failure 400 {object} util.APIError "요청 본문이 유효하지 않을 때 반환합니다."
+// @Failure 401 {object} util.APIError "Authorization 헤더가 없을 때 반환합니다."
+// @Failure 500 {object} util.APIError "AI 태그 추천 과정에서 오류가 발생한 경우 반환합니다."
+// @Security ApiKeyAuth
+// @Router /links/ai-tags [post]
+func (h LinkHandler) GetAIRecommendedTags(c *gin.Context) {
+	var req AITagRecommendationReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody)
+		return
+	}
+
+	if req.URL == "" {
+		util.SendError(c, http.StatusBadRequest, util.CodeMissingParameter)
+		return
+	}
+
+	result, err := h.linkUsecase.GetAIRecommendedTags(req.URL)
+	if err != nil {
+		c.Error(fmt.Errorf("GetAIRecommendedTags failed: %v", err))
+		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
 }
 
 // CreateLink

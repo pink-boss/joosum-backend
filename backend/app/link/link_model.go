@@ -39,6 +39,15 @@ type LinkThumbnailReq struct {
 	URL string `bson:"url" json:"url" example:"https://www.naver.com"`
 }
 
+type AITagRecommendationReq struct {
+	URL string `bson:"url" json:"url" example:"https://brunch.co.kr/@wine-ny/163"`
+}
+
+type AITagRecommendationRes struct {
+	URL             string   `bson:"url" json:"url" example:"https://brunch.co.kr/@wine-ny/163"`
+	RecommendedTags []string `bson:"recommendedTags" json:"recommendedTags" example:"프롬프트,요구사항분석,기획자,개발자협업,기능명세서"`
+}
+
 type LinkModel struct {
 }
 

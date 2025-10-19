@@ -1,13 +1,16 @@
 package link
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
-
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/sashabaranov/go-openai"
 	"gopkg.in/errgo.v2/errors"
+	localConfig "joosum-backend/pkg/config"
 	"joosum-backend/pkg/util"
 )
 
@@ -333,4 +336,195 @@ func (LinkUsecase) GetThumnailURL(url string) (*LinkThumbnailRes, error) {
 		Title:        ogTitle,
 	}, nil
 
+}
+
+// GetAIRecommendedTags AI를 사용하여 URL의 본문 내용을 분석하고 추천 태그를 생성합니다
+func (LinkUsecase) GetAIRecommendedTags(url string) (*AITagRecommendationRes, error) {
+	// URL 이 http:// 혹은 https:// 로 시작하지 않으면 https:// 를 붙입니다.
+	url = util.EnsureHTTPPrefix(url)
+
+	// URL에서 본문 내용 크롤링
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch URL: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("status code error: %d %s", resp.StatusCode, resp.Status)
+	}
+
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse HTML: %v", err)
+	}
+
+	// 본문 텍스트 추출
+	var contentBuilder strings.Builder
+
+	// 1. 제목 추출 (og:title 또는 title 태그)
+	title := ""
+	doc.Find("meta[property='og:title']").Each(func(i int, s *goquery.Selection) {
+		if content, exists := s.Attr("content"); exists {
+			title = content
+		}
+	})
+	if title == "" {
+		title = doc.Find("title").First().Text()
+	}
+	contentBuilder.WriteString("제목: ")
+	contentBuilder.WriteString(title)
+	contentBuilder.WriteString("\n\n")
+
+	// 2. 메타 디스크립션 추출
+	doc.Find("meta[property='og:description'], meta[name='description']").Each(func(i int, s *goquery.Selection) {
+		if content, exists := s.Attr("content"); exists && i == 0 {
+			contentBuilder.WriteString("설명: ")
+			contentBuilder.WriteString(content)
+			contentBuilder.WriteString("\n\n")
+		}
+	})
+
+	// 3. 본문 내용 추출 (article, main, section, p 태그)
+	contentBuilder.WriteString("본문 내용:\n")
+	doc.Find("article, main, section").Each(func(i int, s *goquery.Selection) {
+		// 광고, 댓글, 네비게이션 영역 제외
+		s.Find("nav, aside, footer, .ad, .advertisement, .comment").Remove()
+		text := strings.TrimSpace(s.Text())
+		if text != "" && len(text) > 50 {
+			contentBuilder.WriteString(text)
+			contentBuilder.WriteString("\n")
+		}
+	})
+
+	// section이 없는 경우 p 태그에서 직접 추출
+	if contentBuilder.Len() < 200 {
+		doc.Find("p").Each(func(i int, s *goquery.Selection) {
+			text := strings.TrimSpace(s.Text())
+			if text != "" && len(text) > 30 {
+				contentBuilder.WriteString(text)
+				contentBuilder.WriteString("\n")
+			}
+		})
+	}
+
+	// 4. 해시태그 추출
+	hashtags := []string{}
+	doc.Find("a[href*='tag'], .hashtag, [class*='tag']").Each(func(i int, s *goquery.Selection) {
+		text := strings.TrimSpace(s.Text())
+		if strings.HasPrefix(text, "#") {
+			hashtags = append(hashtags, text)
+		}
+	})
+	if len(hashtags) > 0 {
+		contentBuilder.WriteString("\n해시태그: ")
+		contentBuilder.WriteString(strings.Join(hashtags, ", "))
+	}
+
+	content := contentBuilder.String()
+
+	// 본문이 너무 짧으면 에러
+	if len(content) < 100 {
+		return nil, fmt.Errorf("insufficient content extracted from URL")
+	}
+
+	// 본문이 너무 길면 최대 8000자로 제한 (OpenAI 토큰 제한 고려)
+	if len(content) > 8000 {
+		content = content[:8000] + "..."
+	}
+
+	// OpenAI API 호출하여 태그 추천 받기
+	tags, err := callOpenAIForTags(content, url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get AI recommendations: %v", err)
+	}
+
+	return &AITagRecommendationRes{
+		URL:             url,
+		RecommendedTags: tags,
+	}, nil
+}
+
+// callOpenAIForTags OpenAI API를 호출하여 태그 추천을 받습니다
+func callOpenAIForTags(content string, url string) ([]string, error) {
+	apiKey := localConfig.GetEnvConfig("openaiApiKey")
+	if apiKey == "" {
+		return nil, fmt.Errorf("OpenAI API key not configured")
+	}
+
+	client := openai.NewClient(apiKey)
+
+	// AI 태그 정책에 따른 시스템 프롬프트
+	systemPrompt := `당신은 웹 콘텐츠를 분석하여 검색에 유용한 태그를 추천하는 전문가입니다.
+
+다음 규칙을 엄격히 따라 태그를 생성하세요:
+
+**포함해야 할 태그:**
+- 핵심 개념/명사형 주제어 (예: 프롬프트, UX리서치, 포트폴리오)
+- 고유명사 (예: ChatGPT, Notion, 토스, Apple, Figma)
+- 전문 용어 (예: SBI모델, 파인튜닝, 데이터레이블링)
+- 도메인 단어 (예: 클라우드, 마케팅, 디자인) - 문맥상 의미 있을 때만
+- 본문 내 해시태그
+
+**절대 제외해야 할 태그:**
+- 도메인명/플랫폼명 (예: yozm, naver, brunch, medium)
+- 감정 형용사 (예: 멋진, 새로운, 유용한)
+- 문장형 표현 (예: ~하는 방법, ~를 해보자)
+- CTA 문구 (예: 클릭, 확인, 공유, 신청하기)
+- 날짜/버전 정보 (예: 2024, 1.0, 7월)
+- 이모지/특수문자
+
+**형식 규칙:**
+- 명사형 중심으로 작성
+- 1~10자 사이의 짧고 직관적인 단어
+- 최대 5개까지만 추천
+- JSON 배열 형식으로만 응답: ["태그1", "태그2", ...]
+
+콘텐츠의 핵심 주제를 파악하고, 사용자가 나중에 검색할 때 유용한 태그만 선정하세요.`
+
+	userPrompt := fmt.Sprintf("URL: %s\n\n콘텐츠:\n%s\n\n위 콘텐츠를 분석하여 최대 5개의 추천 태그를 JSON 배열로 반환하세요.", url, content)
+
+	ctx := context.Background()
+	req := openai.ChatCompletionRequest{
+		Model: "gpt-5-nano", // GPT-5 nano 모델 사용
+		Messages: []openai.ChatCompletionMessage{
+			{
+				Role:    openai.ChatMessageRoleSystem,
+				Content: systemPrompt,
+			},
+			{
+				Role:    openai.ChatMessageRoleUser,
+				Content: userPrompt,
+			},
+		},
+		Temperature: 0.3, // 일관성을 위해 낮은 temperature 사용
+		MaxTokens:   200,
+	}
+
+	resp, err := client.CreateChatCompletion(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("OpenAI API error: %v", err)
+	}
+
+	if len(resp.Choices) == 0 {
+		return nil, fmt.Errorf("no response from OpenAI")
+	}
+
+	responseText := strings.TrimSpace(resp.Choices[0].Message.Content)
+
+	// JSON 배열 파싱
+	var tags []string
+	err = json.Unmarshal([]byte(responseText), &tags)
+	if err != nil {
+		// JSON 파싱 실패 시 응답에서 태그 추출 시도
+		// 예: "["태그1", "태그2"]" 형식이 아닌 경우 처리
+		return nil, fmt.Errorf("failed to parse AI response as JSON: %v, response: %s", err, responseText)
+	}
+
+	// 최대 5개로 제한
+	if len(tags) > 5 {
+		tags = tags[:5]
+	}
+
+	return tags, nil
 }

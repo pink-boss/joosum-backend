@@ -70,6 +70,7 @@ func PrivateRoutes(router *gin.Engine) {
 		linkRouter.PUT("/:linkId/link-book-id/:linkBookId", linkHandler.UpdateLinkBookIdByLinkId)
 		linkRouter.PUT("/:linkId", linkHandler.UpdateTitleAndUrlByLinkId)
 		linkRouter.POST("/thumbnail", linkHandler.GetThumnailURL)
+		linkRouter.POST("/ai-tags", linkHandler.GetAIRecommendedTags)
 	}
 
 	settingRouter := router.Group("/settings")

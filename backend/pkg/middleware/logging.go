@@ -65,11 +65,22 @@ func LoggingMiddleware() gin.HandlerFunc {
 
 		// Log the response
 		elapsed := time.Since(start)
-		logger.Info("Response",
-			zap.Int("status_code", c.Writer.Status()),
-			zap.Any("response_body", jsonRes),
-			zap.Duration("elapsed_time", elapsed),
-		)
+
+		// 에러가 있으면 에러도 함께 로깅
+		if len(c.Errors) > 0 {
+			logger.Error("Response with errors",
+				zap.Int("status_code", c.Writer.Status()),
+				zap.Any("response_body", jsonRes),
+				zap.Duration("elapsed_time", elapsed),
+				zap.String("errors", c.Errors.String()),
+			)
+		} else {
+			logger.Info("Response",
+				zap.Int("status_code", c.Writer.Status()),
+				zap.Any("response_body", jsonRes),
+				zap.Duration("elapsed_time", elapsed),
+			)
+		}
 	}
 }
 

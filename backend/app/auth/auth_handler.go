@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"fmt"
 	"joosum-backend/app/link"
 	"joosum-backend/app/user"
 	"joosum-backend/pkg/util"
@@ -39,6 +40,8 @@ func (h AuthHandler) SignUp(c *gin.Context) {
 
 	email, err := h.authUsecase.GetEmailFromJWT(req.Social, req.IdToken)
 	if err != nil {
+		// 에러 로그 출력으로 디버깅 가능하도록 함
+		c.Error(fmt.Errorf("GetEmailFromJWT failed: %v", err))
 		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError)
 		return
 	}
@@ -70,12 +73,14 @@ func (h AuthHandler) SignUp(c *gin.Context) {
 
 	user, err := h.authUsecase.SignUp(userInfo)
 	if err != nil {
+		c.Error(fmt.Errorf("SignUp failed: %v", err))
 		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError)
 		return
 	}
 
 	accessToken, refreshToken, err := h.authUsecase.GenerateNewJWTToken(email)
 	if err != nil {
+		c.Error(fmt.Errorf("GenerateNewJWTToken failed: %v", err))
 		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError)
 		return
 	}

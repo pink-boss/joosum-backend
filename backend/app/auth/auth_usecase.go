@@ -99,30 +99,45 @@ func (u *AuthUsecase) GetEmailFromJWT(social, idToken string) (string, error) {
 	} else if social == "google" {
 		ctx := context.Background()
 
-		oauth2Service, err := oauth2.NewService(ctx, option.WithAPIKey(localConfig.GetEnvConfig("googleApiKey")))
-		if err != nil {
-			return "", fmt.Errorf("unable to create OAuth2 service: %v", err)
+		// Google ID 토큰 검증 - 여러 플랫폼 지원 (iOS, Android, Web)
+		audiences := []string{
+			localConfig.GetEnvConfig("googleClientID"),        // iOS
+			localConfig.GetEnvConfig("googleAndroidClientID"), // Android
+			localConfig.GetEnvConfig("googleWebClientID"),     // Web
 		}
 
-		tokenInfoCall := oauth2Service.Tokeninfo()
-		tokenInfoCall.IdToken(idToken)
+		var lastErr error
+		for _, audience := range audiences {
+			oauth2Service, err := oauth2.NewService(ctx, option.WithAPIKey(localConfig.GetEnvConfig("googleApiKey")))
+			if err != nil {
+				lastErr = fmt.Errorf("unable to create OAuth2 service: %v", err)
+				continue
+			}
 
-		tokenInfo, err := tokenInfoCall.Do()
-		if err != nil {
-			return "", fmt.Errorf("unable to verify IdToken: %v", err)
+			tokenInfoCall := oauth2Service.Tokeninfo()
+			tokenInfoCall.IdToken(idToken)
+
+			tokenInfo, err := tokenInfoCall.Do()
+			if err != nil {
+				lastErr = fmt.Errorf("unable to verify IdToken with audience %s: %v", audience, err)
+				continue
+			}
+
+			// Check if the token's audience matches the current audience
+			if tokenInfo.Audience == audience {
+				// Return the user's email address.
+				if tokenInfo.Email != "" {
+					return tokenInfo.Email, nil
+				}
+				return "", fmt.Errorf("unable to retrieve user's email from token")
+			}
 		}
 
-		// Check if the token's audience matches your app's client ID.
-		if tokenInfo.Audience != localConfig.GetEnvConfig("googleClientID") {
-			return "", fmt.Errorf("IdToken is not issued by this app")
+		// 모든 audience로 검증 실패
+		if lastErr != nil {
+			return "", fmt.Errorf("failed to verify Google ID token for all audiences: %v", lastErr)
 		}
-
-		// Return the user's email address.
-		if tokenInfo.Email != "" {
-			return tokenInfo.Email, nil
-		}
-
-		return "", fmt.Errorf("unable to retrieve user's email")
+		return "", fmt.Errorf("Google ID token audience does not match any configured client IDs")
 	} else {
 		return "", fmt.Errorf("invalid social name")
 	}

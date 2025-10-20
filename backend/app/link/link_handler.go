@@ -6,6 +6,7 @@ import (
 	"joosum-backend/app/user"
 	"joosum-backend/pkg/util"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -139,32 +140,9 @@ func (h LinkHandler) GetLinks(c *gin.Context) {
 	userId := currentUser.(*user.User).UserId
 
 	// Query 파라미터 받기
-	sortParam := c.Query("sort")
-	orderParam := c.Query("order")
+	sortParam := normalizeLinkSortParam(c.Query("sort"))
+	orderParam := normalizeLinkOrderParam(c.Query("order"))
 	search := c.Query("search")
-
-	// 정렬 필드 허용 목록
-	allowedSorts := map[string]bool{
-		"created_at": true,
-		"updated_at": true,
-		"title":      true,
-	}
-
-	// 허용된 정렬 필드가 아니면 기본값으로 설정
-	if !allowedSorts[sortParam] {
-		sortParam = "created_at"
-	}
-
-	// 정렬 순서 허용 목록
-	allowedOrders := map[string]bool{
-		"asc":  true,
-		"desc": true,
-	}
-
-	// 허용된 정렬 순서가 아니면 기본값으로 설정
-	if !allowedOrders[orderParam] {
-		orderParam = "asc"
-	}
 
 	var (
 		links []*Link
@@ -245,24 +223,15 @@ func (h LinkHandler) GetLinksByLinkBookId(c *gin.Context) {
 
 	linkBookId := c.Param("linkBookId")
 
-	sort := c.Query("sort")
-	order := c.Query("order")
-
-	if sort == "" {
-		sort = "created_at"
-	}
-
-	if order == "" {
-		order = "asc"
-	}
-
+	sort := normalizeLinkSortParam(c.Query("sort"))
+	order := normalizeLinkOrderParam(c.Query("order"))
 	search := c.Query("search")
 
 	var links []*Link
 	var err error
 
-	if search == "" && sort == "" {
-		links, err = h.linkUsecase.FindAllLinksByUserIdAndLinkBookId(userId, linkBookId)
+	if search == "" {
+		links, err = h.linkUsecase.FindAllLinksByUserIdAndLinkBookId(userId, linkBookId, sort, order)
 		if err != nil {
 			// 500 Internal Server Error
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -496,4 +465,44 @@ func (h LinkHandler) GetThumnailURL(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, linkThumbnailRes)
+}
+
+// normalizeLinkSortParam 함수는 링크 조회 시 허용된 정렬 필드를 스네이크 케이스로 통일합니다.
+func normalizeLinkSortParam(rawSort string) string {
+	cleaned := strings.TrimSpace(rawSort)
+	if cleaned == "" {
+		return "created_at"
+	}
+
+	lowered := strings.ToLower(cleaned)
+
+	switch lowered {
+	case "created_at", "createdat":
+		return "created_at"
+	case "updated_at", "updatedat":
+		return "updated_at"
+	case "title":
+		return "title"
+	default:
+		return "created_at"
+	}
+}
+
+// normalizeLinkOrderParam 함수는 링크 조회 시 허용된 정렬 순서를 통일합니다.
+func normalizeLinkOrderParam(rawOrder string) string {
+	cleaned := strings.TrimSpace(rawOrder)
+	if cleaned == "" {
+		return "asc"
+	}
+
+	lowered := strings.ToLower(cleaned)
+
+	switch lowered {
+	case "desc", "descending", "new", "newest":
+		return "desc"
+	case "asc", "ascending", "old", "oldest":
+		return "asc"
+	default:
+		return "asc"
+	}
 }

@@ -103,10 +103,14 @@ func (u LinkUsecase) FindAllLinksByUserIdAndSearch(userId string, search string,
 	return links, nil
 }
 
-func (u LinkUsecase) FindAllLinksByUserIdAndLinkBookId(userId string, linkBookId string) ([]*Link, error) {
-	links, err := u.linkModel.GetAllLinkByUserIdAndLinkBookId(userId, linkBookId)
+func (u LinkUsecase) FindAllLinksByUserIdAndLinkBookId(userId string, linkBookId string, sort string, order string) ([]*Link, error) {
+	links, err := u.linkModel.GetAllLinkByUserIdAndLinkBookId(userId, linkBookId, sort, order)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(links) == 0 {
+		return []*Link{}, nil
 	}
 
 	return links, nil

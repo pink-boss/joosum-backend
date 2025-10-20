@@ -40,7 +40,7 @@ var codeMessages = map[int]string{
 	CodeMissingParameter:     "필수 파라미터가 누락되었습니다.",
 	CodeInvalidIDToken:       "유효하지 않은 ID 토큰입니다.",
 	CodeUserExists:           "이미 존재하는 사용자입니다.",
-	CodeUserRecentlyLeft:     "탈퇴 후 30일이 지나지 않았습니다.",
+	CodeUserRecentlyLeft:     "탈퇴 후 1일이 지나지 않았습니다.",
 	CodeDuplicateTitle:       "같은 이름의 폴더가 존재합니다.",
 }
 

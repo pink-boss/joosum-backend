@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type UserModel struct{}
@@ -126,6 +127,7 @@ func (*UserModel) FindUsers() ([]*User, error) {
 	return users, nil
 }
 
+// FindInactiveUser 는 이메일을 기준으로 휴면 사용자 정보를 검색합니다.
 func (*UserModel) FindInactiveUser(email string) (*InactiveUser, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -135,10 +137,31 @@ func (*UserModel) FindInactiveUser(email string) (*InactiveUser, error) {
 
 	err := db.InactiveUserCollection.FindOne(ctx, filter).Decode(inactiveUser)
 	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
 		return nil, err
 	}
 
 	return inactiveUser, nil
+}
+
+// DeleteInactiveUsersOlderThan 는 지정된 기간보다 오래된 휴면 사용자 정보를 정리합니다.
+func (*UserModel) DeleteInactiveUsersOlderThan(duration time.Duration) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	threshold := time.Now().Add(-duration)
+	filter := bson.M{
+		"updated_at": bson.M{"$lt": threshold},
+	}
+
+	_, err := db.InactiveUserCollection.DeleteMany(ctx, filter)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (*UserModel) DeleteUserByEmail(email string) error {

@@ -1,5 +1,7 @@
 package user
 
+import "time"
+
 type UserUsecase struct {
 	userModel UserModel
 }
@@ -54,4 +56,9 @@ func (u UserUsecase) GetInactiveUserByEmail(email string) (*InactiveUser, error)
 		return nil, err
 	}
 	return inactiveUser, err
+}
+
+// RemoveExpiredInactiveUsers 는 재가입 제한 기간이 지난 휴면 회원 정보를 정리합니다.
+func (u UserUsecase) RemoveExpiredInactiveUsers(expiration time.Duration) error {
+	return u.userModel.DeleteInactiveUsersOlderThan(expiration)
 }

@@ -8,6 +8,13 @@ tmp/
 # Test
 *.out
 *.test
+backend/ai-test.txt
+backend/ai-test-result.md
+
 
 # Environment variables
 .env
+
+# Configuration files (contains sensitive data)
+config.yml
+scheduler-config.yml

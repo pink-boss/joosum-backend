@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/sashabaranov/go-openai"
@@ -344,8 +345,27 @@ func (LinkUsecase) GetAIRecommendedTags(url string) (*AITagRecommendationRes, er
 	// URL 이 http:// 혹은 https:// 로 시작하지 않으면 https:// 를 붙입니다.
 	url = util.EnsureHTTPPrefix(url)
 
+	// YouTube URL 감지
+	isYouTube := strings.Contains(url, "youtube.com") || strings.Contains(url, "youtu.be")
+
+	// User-Agent와 헤더를 설정한 HTTP 클라이언트 생성
+	client := &http.Client{
+		Timeout: 15 * time.Second,
+	}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		log.Printf("[AI 태그 추천] HTTP 요청 생성 실패 (url=%s): %v", url, err)
+		return nil, fmt.Errorf("failed to create request: %v", err)
+	}
+
+	// 브라우저처럼 보이도록 헤더 설정 (봇 차단 방지)
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
+	req.Header.Set("Accept-Language", "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7")
+	// Accept-Encoding은 설정하지 않음 - Go의 http.Client가 자동으로 gzip 처리
+
 	// URL에서 본문 내용 크롤링
-	resp, err := http.Get(url)
+	resp, err := client.Do(req)
 	if err != nil {
 		log.Printf("[AI 태그 추천] URL 크롤링 실패 (url=%s): %v", url, err)
 		return nil, fmt.Errorf("failed to fetch URL: %v", err)
@@ -366,34 +386,146 @@ func (LinkUsecase) GetAIRecommendedTags(url string) (*AITagRecommendationRes, er
 	// 본문 텍스트 추출
 	var contentBuilder strings.Builder
 
-	// 1. 제목 추출 (og:title 또는 title 태그)
+	// 1. 제목 추출 (우선순위: og:title > twitter:title > title 태그)
 	title := ""
 	doc.Find("meta[property='og:title']").Each(func(i int, s *goquery.Selection) {
-		if content, exists := s.Attr("content"); exists {
+		if content, exists := s.Attr("content"); exists && title == "" {
 			title = content
 		}
 	})
 	if title == "" {
+		doc.Find("meta[name='twitter:title']").Each(func(i int, s *goquery.Selection) {
+			if content, exists := s.Attr("content"); exists {
+				title = content
+			}
+		})
+	}
+	if title == "" {
 		title = doc.Find("title").First().Text()
 	}
-	contentBuilder.WriteString("제목: ")
-	contentBuilder.WriteString(title)
-	contentBuilder.WriteString("\n\n")
+	title = strings.TrimSpace(title)
+	if title != "" {
+		contentBuilder.WriteString("제목: ")
+		contentBuilder.WriteString(title)
+		contentBuilder.WriteString("\n\n")
+	}
 
-	// 2. 메타 디스크립션 추출
-	doc.Find("meta[property='og:description'], meta[name='description']").Each(func(i int, s *goquery.Selection) {
-		if content, exists := s.Attr("content"); exists && i == 0 {
-			contentBuilder.WriteString("설명: ")
-			contentBuilder.WriteString(content)
-			contentBuilder.WriteString("\n\n")
+	// 2. 메타 디스크립션 추출 (우선순위: og:description > twitter:description > description)
+	description := ""
+	doc.Find("meta[property='og:description']").Each(func(i int, s *goquery.Selection) {
+		if content, exists := s.Attr("content"); exists && description == "" {
+			description = content
 		}
 	})
+	if description == "" {
+		doc.Find("meta[name='twitter:description']").Each(func(i int, s *goquery.Selection) {
+			if content, exists := s.Attr("content"); exists {
+				description = content
+			}
+		})
+	}
+	if description == "" {
+		doc.Find("meta[name='description']").Each(func(i int, s *goquery.Selection) {
+			if content, exists := s.Attr("content"); exists {
+				description = content
+			}
+		})
+	}
+	description = strings.TrimSpace(description)
+	if description != "" {
+		contentBuilder.WriteString("설명: ")
+		contentBuilder.WriteString(description)
+		contentBuilder.WriteString("\n\n")
+	}
 
-	// 3. 본문 내용 추출 (article, main, section, p 태그)
-	contentBuilder.WriteString("본문 내용:\n")
-	doc.Find("article, main, section").Each(func(i int, s *goquery.Selection) {
-		// 광고, 댓글, 네비게이션 영역 제외
-		s.Find("nav, aside, footer, .ad, .advertisement, .comment").Remove()
+	// 3. 키워드 메타 태그 추출
+	keywords := ""
+	doc.Find("meta[name='keywords']").Each(func(i int, s *goquery.Selection) {
+		if content, exists := s.Attr("content"); exists && keywords == "" {
+			keywords = content
+		}
+	})
+	if keywords != "" {
+		contentBuilder.WriteString("키워드: ")
+		contentBuilder.WriteString(keywords)
+		contentBuilder.WriteString("\n\n")
+	}
+
+	// 4. YouTube 특별 처리: 더 많은 메타데이터 추출
+	if isYouTube {
+		// YouTube는 name="description"과 name="keywords"를 사용
+		videoDesc := ""
+		doc.Find("meta[name='description']").Each(func(i int, s *goquery.Selection) {
+			if content, exists := s.Attr("content"); exists && content != "" && videoDesc == "" {
+				videoDesc = content
+			}
+		})
+		if videoDesc != "" && videoDesc != description {
+			contentBuilder.WriteString("동영상 상세 설명: ")
+			contentBuilder.WriteString(videoDesc)
+			contentBuilder.WriteString("\n\n")
+		}
+
+		videoKeywords := ""
+		doc.Find("meta[name='keywords']").Each(func(i int, s *goquery.Selection) {
+			if content, exists := s.Attr("content"); exists && content != "" && videoKeywords == "" {
+				videoKeywords = content
+			}
+		})
+		if videoKeywords != "" && videoKeywords != keywords {
+			contentBuilder.WriteString("동영상 키워드: ")
+			contentBuilder.WriteString(videoKeywords)
+			contentBuilder.WriteString("\n\n")
+		}
+
+		// itemprop 메타데이터 추출
+		doc.Find("meta[itemprop='name']").Each(func(i int, s *goquery.Selection) {
+			if content, exists := s.Attr("content"); exists && content != "" {
+				if !strings.Contains(contentBuilder.String(), content) {
+					contentBuilder.WriteString("동영상 제목: ")
+					contentBuilder.WriteString(content)
+					contentBuilder.WriteString("\n")
+				}
+			}
+		})
+		doc.Find("meta[itemprop='description']").Each(func(i int, s *goquery.Selection) {
+			if content, exists := s.Attr("content"); exists && content != "" {
+				if !strings.Contains(contentBuilder.String(), content) {
+					contentBuilder.WriteString("추가 설명: ")
+					contentBuilder.WriteString(content)
+					contentBuilder.WriteString("\n")
+				}
+			}
+		})
+
+		log.Printf("[AI 태그 추천] YouTube 특별 처리 완료 (url=%s, 현재 길이=%d)", url, contentBuilder.Len())
+	}
+
+	// 5. Naver 특별 처리: 동적 페이지 대응
+	isNaver := strings.Contains(url, "naver.com") || strings.Contains(url, "navercorp.com")
+	if isNaver {
+		// Naver 채용 같은 동적 페이지는 메타 태그가 거의 없을 수 있음
+		// URL에서 컨텍스트 정보 추출
+		if strings.Contains(url, "recruit") || strings.Contains(url, "career") {
+			contentBuilder.WriteString("\n페이지 유형: 채용 공고\n")
+		}
+
+		// URL 파라미터에서 정보 추출
+		if strings.Contains(url, "annoId=") {
+			contentBuilder.WriteString("공고 ID가 포함된 URL입니다.\n")
+		}
+
+		log.Printf("[AI 태그 추천] Naver 특별 처리 완료 (url=%s, 현재 길이=%d)", url, contentBuilder.Len())
+	}
+
+	// 6. 본문 내용 추출 (article, main, section, div 태그)
+	initialLen := contentBuilder.Len()
+	contentBuilder.WriteString("\n본문 내용:\n")
+
+	// 더 다양한 선택자로 본문 추출 시도
+	doc.Find("article, main, [role='main'], .content, .post-content, .article-content, #content").Each(func(i int, s *goquery.Selection) {
+		// 광고, 댓글, 네비게이션, 헤더, 푸터 영역 제외
+		s.Find("nav, aside, header, footer, .ad, .advertisement, .comment, .sidebar, .menu, script, style").Remove()
 		text := strings.TrimSpace(s.Text())
 		if text != "" && len(text) > 50 {
 			contentBuilder.WriteString(text)
@@ -401,8 +533,20 @@ func (LinkUsecase) GetAIRecommendedTags(url string) (*AITagRecommendationRes, er
 		}
 	})
 
-	// section이 없는 경우 p 태그에서 직접 추출
-	if contentBuilder.Len() < 200 {
+	// 본문이 충분하지 않으면 section 태그 시도
+	if contentBuilder.Len()-initialLen < 200 {
+		doc.Find("section").Each(func(i int, s *goquery.Selection) {
+			s.Find("nav, aside, footer, .ad, .advertisement, .comment").Remove()
+			text := strings.TrimSpace(s.Text())
+			if text != "" && len(text) > 50 {
+				contentBuilder.WriteString(text)
+				contentBuilder.WriteString("\n")
+			}
+		})
+	}
+
+	// 여전히 부족하면 p 태그에서 직접 추출
+	if contentBuilder.Len()-initialLen < 200 {
 		doc.Find("p").Each(func(i int, s *goquery.Selection) {
 			text := strings.TrimSpace(s.Text())
 			if text != "" && len(text) > 30 {
@@ -412,25 +556,42 @@ func (LinkUsecase) GetAIRecommendedTags(url string) (*AITagRecommendationRes, er
 		})
 	}
 
-	// 4. 해시태그 추출
+	// 7. 해시태그 추출
 	hashtags := []string{}
-	doc.Find("a[href*='tag'], .hashtag, [class*='tag']").Each(func(i int, s *goquery.Selection) {
+	doc.Find("a[href*='tag'], .hashtag, [class*='tag'], [class*='keyword']").Each(func(i int, s *goquery.Selection) {
 		text := strings.TrimSpace(s.Text())
-		if strings.HasPrefix(text, "#") {
+		if strings.HasPrefix(text, "#") || (len(text) > 2 && len(text) < 20) {
 			hashtags = append(hashtags, text)
 		}
 	})
 	if len(hashtags) > 0 {
-		contentBuilder.WriteString("\n해시태그: ")
+		contentBuilder.WriteString("\n해시태그/키워드: ")
 		contentBuilder.WriteString(strings.Join(hashtags, ", "))
 	}
 
 	content := contentBuilder.String()
 
-	// 본문이 너무 짧으면 에러
+	// 메타 태그만으로 충분한 내용이 있으면 진행 (제목 + 설명이 충분한 경우)
+	metaContentLength := len(title) + len(description) + len(keywords)
+
+	// 최소한의 정보가 있는지 확인
+	// 1. 메타 태그가 있거나
+	// 2. 특별 처리된 페이지(YouTube, Naver)에서 컨텍스트가 추가되었거나
+	// 3. 전체 콘텐츠가 50자 이상이면 진행
+	hasMetaTags := len(title) > 0 || len(description) > 0 || len(keywords) > 0
+	hasContext := (isYouTube || isNaver) && len(content) > 50
+	hasMinimalInfo := hasMetaTags || hasContext
+
+	// 본문이 너무 짧은 경우 체크
 	if len(content) < 100 {
-		log.Printf("[AI 태그 추천] 본문 추출 실패: 길이 부족 (url=%s, length=%d)", url, len(content))
-		return nil, fmt.Errorf("insufficient content extracted from URL")
+		if hasMinimalInfo {
+			log.Printf("[AI 태그 추천] 본문이 부족하지만 메타 태그/컨텍스트로 진행 (url=%s, content_length=%d, meta_length=%d, title_length=%d, desc_length=%d, hasContext=%v)",
+				url, len(content), metaContentLength, len(title), len(description), hasContext)
+			// 메타 태그 또는 컨텍스트 내용으로 진행 - AI가 판단하도록 함
+		} else {
+			log.Printf("[AI 태그 추천] 본문 추출 실패: 정보 없음 (url=%s, length=%d, meta_length=%d)", url, len(content), metaContentLength)
+			return nil, fmt.Errorf("insufficient content extracted from URL")
+		}
 	}
 
 	// 본문이 너무 길면 최대 8000자로 제한 (OpenAI 토큰 제한 고려)
@@ -493,7 +654,7 @@ func callOpenAIForTags(content string, url string) ([]string, error) {
 
 	ctx := context.Background()
 	req := openai.ChatCompletionRequest{
-		Model: "gpt-5-nano", // GPT-5 nano 모델 사용
+		Model: "gpt-4o-mini", // GPT-4o mini 모델 사용
 		Messages: []openai.ChatCompletionMessage{
 			{
 				Role:    openai.ChatMessageRoleSystem,
@@ -504,8 +665,8 @@ func callOpenAIForTags(content string, url string) ([]string, error) {
 				Content: userPrompt,
 			},
 		},
-		Temperature: 0.3, // 일관성을 위해 낮은 temperature 사용
-		MaxTokens:   200,
+		Temperature:           0.3, // 일관성을 위해 낮은 temperature 사용
+		MaxCompletionTokens:   200,
 	}
 
 	resp, err := client.CreateChatCompletion(ctx, req)
@@ -520,6 +681,18 @@ func callOpenAIForTags(content string, url string) ([]string, error) {
 	}
 
 	responseText := strings.TrimSpace(resp.Choices[0].Message.Content)
+
+	// 마크다운 코드 블록 제거 (```json ... ``` 형식)
+	if strings.HasPrefix(responseText, "```") {
+		// 첫 번째 줄바꿈 이후부터 마지막 ``` 이전까지 추출
+		lines := strings.Split(responseText, "\n")
+		if len(lines) > 2 {
+			// 첫 줄(```json)과 마지막 줄(```) 제거
+			responseText = strings.Join(lines[1:len(lines)-1], "\n")
+			responseText = strings.TrimSpace(responseText)
+			log.Printf("[AI 태그 추천] 마크다운 코드 블록 제거 완료 (url=%s)", url)
+		}
+	}
 
 	// JSON 배열 파싱
 	var tags []string

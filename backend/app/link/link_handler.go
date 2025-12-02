@@ -2,10 +2,12 @@ package link
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+
 	"joosum-backend/app/tag"
 	"joosum-backend/app/user"
 	"joosum-backend/pkg/util"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -51,6 +53,7 @@ type DeleteLinkReq struct {
 func (h LinkHandler) GetAIRecommendedTags(c *gin.Context) {
 	var req AITagRecommendationReq
 	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Printf("[AI 태그 추천] 요청 바인딩 실패: %v", err)
 		util.SendError(c, http.StatusBadRequest, util.CodeInvalidRequestBody)
 		return
 	}
@@ -62,6 +65,7 @@ func (h LinkHandler) GetAIRecommendedTags(c *gin.Context) {
 
 	result, err := h.linkUsecase.GetAIRecommendedTags(req.URL)
 	if err != nil {
+		log.Printf("[AI 태그 추천] URL=%s 처리 중 오류: %v", req.URL, err)
 		c.Error(fmt.Errorf("GetAIRecommendedTags failed: %v", err))
 		util.SendError(c, http.StatusInternalServerError, util.CodeInternalServerError)
 		return

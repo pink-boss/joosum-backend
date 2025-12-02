@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
@@ -346,16 +347,19 @@ func (LinkUsecase) GetAIRecommendedTags(url string) (*AITagRecommendationRes, er
 	// URL에서 본문 내용 크롤링
 	resp, err := http.Get(url)
 	if err != nil {
+		log.Printf("[AI 태그 추천] URL 크롤링 실패 (url=%s): %v", url, err)
 		return nil, fmt.Errorf("failed to fetch URL: %v", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		log.Printf("[AI 태그 추천] URL 응답 코드 비정상 (url=%s, status=%s)", url, resp.Status)
 		return nil, fmt.Errorf("status code error: %d %s", resp.StatusCode, resp.Status)
 	}
 
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
+		log.Printf("[AI 태그 추천] HTML 파싱 실패 (url=%s): %v", url, err)
 		return nil, fmt.Errorf("failed to parse HTML: %v", err)
 	}
 
@@ -425,6 +429,7 @@ func (LinkUsecase) GetAIRecommendedTags(url string) (*AITagRecommendationRes, er
 
 	// 본문이 너무 짧으면 에러
 	if len(content) < 100 {
+		log.Printf("[AI 태그 추천] 본문 추출 실패: 길이 부족 (url=%s, length=%d)", url, len(content))
 		return nil, fmt.Errorf("insufficient content extracted from URL")
 	}
 
@@ -436,6 +441,7 @@ func (LinkUsecase) GetAIRecommendedTags(url string) (*AITagRecommendationRes, er
 	// OpenAI API 호출하여 태그 추천 받기
 	tags, err := callOpenAIForTags(content, url)
 	if err != nil {
+		log.Printf("[AI 태그 추천] OpenAI 태그 생성 실패 (url=%s): %v", url, err)
 		return nil, fmt.Errorf("failed to get AI recommendations: %v", err)
 	}
 
@@ -449,6 +455,7 @@ func (LinkUsecase) GetAIRecommendedTags(url string) (*AITagRecommendationRes, er
 func callOpenAIForTags(content string, url string) ([]string, error) {
 	apiKey := localConfig.GetEnvConfig("openaiApiKey")
 	if apiKey == "" {
+		log.Printf("[AI 태그 추천] OpenAI API 키가 설정되지 않았습니다.")
 		return nil, fmt.Errorf("OpenAI API key not configured")
 	}
 
@@ -503,10 +510,12 @@ func callOpenAIForTags(content string, url string) ([]string, error) {
 
 	resp, err := client.CreateChatCompletion(ctx, req)
 	if err != nil {
+		log.Printf("[AI 태그 추천] OpenAI API 호출 실패 (url=%s): %v", url, err)
 		return nil, fmt.Errorf("OpenAI API error: %v", err)
 	}
 
 	if len(resp.Choices) == 0 {
+		log.Printf("[AI 태그 추천] OpenAI 응답이 비어 있습니다 (url=%s)", url)
 		return nil, fmt.Errorf("no response from OpenAI")
 	}
 
@@ -518,6 +527,7 @@ func callOpenAIForTags(content string, url string) ([]string, error) {
 	if err != nil {
 		// JSON 파싱 실패 시 응답에서 태그 추출 시도
 		// 예: "["태그1", "태그2"]" 형식이 아닌 경우 처리
+		log.Printf("[AI 태그 추천] OpenAI 응답 파싱 실패 (url=%s, response=%s, err=%v)", url, responseText, err)
 		return nil, fmt.Errorf("failed to parse AI response as JSON: %v, response: %s", err, responseText)
 	}
 

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -15,6 +16,26 @@ import (
 	localConfig "joosum-backend/pkg/config"
 	"joosum-backend/pkg/util"
 )
+
+// YouTubeVideoInfo YouTube API에서 가져온 동영상 정보
+type YouTubeVideoInfo struct {
+	Title       string   `json:"title"`
+	Description string   `json:"description"`
+	Tags        []string `json:"tags"`
+	CategoryID  string   `json:"categoryId"`
+}
+
+// YouTubeAPIResponse YouTube Data API v3 응답 구조
+type YouTubeAPIResponse struct {
+	Items []struct {
+		Snippet struct {
+			Title       string   `json:"title"`
+			Description string   `json:"description"`
+			Tags        []string `json:"tags"`
+			CategoryID  string   `json:"categoryId"`
+		} `json:"snippet"`
+	} `json:"items"`
+}
 
 type LinkUsecase struct {
 	linkModel     LinkModel
@@ -340,6 +361,75 @@ func (LinkUsecase) GetThumnailURL(url string) (*LinkThumbnailRes, error) {
 
 }
 
+// extractYouTubeVideoID YouTube URL에서 video ID를 추출합니다
+func extractYouTubeVideoID(urlStr string) string {
+	// youtube.com/watch?v=VIDEO_ID 형식
+	if strings.Contains(urlStr, "youtube.com/watch") {
+		parsedURL, err := url.Parse(urlStr)
+		if err == nil {
+			return parsedURL.Query().Get("v")
+		}
+	}
+
+	// youtu.be/VIDEO_ID 형식
+	if strings.Contains(urlStr, "youtu.be/") {
+		parts := strings.Split(urlStr, "youtu.be/")
+		if len(parts) > 1 {
+			videoID := strings.Split(parts[1], "?")[0]
+			return strings.TrimSpace(videoID)
+		}
+	}
+
+	return ""
+}
+
+// getYouTubeVideoInfo YouTube Data API를 사용하여 동영상 정보를 가져옵니다
+func getYouTubeVideoInfo(videoID string) (*YouTubeVideoInfo, error) {
+	apiKey := localConfig.GetEnvConfig("youtubeApiKey")
+	if apiKey == "" {
+		log.Printf("[YouTube API] API 키가 설정되지 않았습니다. 크롤링 방식으로 진행합니다.")
+		return nil, nil // API 키가 없으면 nil 반환 (에러 아님)
+	}
+
+	apiURL := fmt.Sprintf("https://www.googleapis.com/youtube/v3/videos?part=snippet&id=%s&key=%s", videoID, apiKey)
+
+	resp, err := http.Get(apiURL)
+	if err != nil {
+		log.Printf("[YouTube API] API 호출 실패 (videoID=%s): %v", videoID, err)
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("[YouTube API] API 응답 코드 비정상 (videoID=%s, status=%d)", videoID, resp.StatusCode)
+		return nil, fmt.Errorf("YouTube API returned status %d", resp.StatusCode)
+	}
+
+	var apiResponse YouTubeAPIResponse
+	if err := json.NewDecoder(resp.Body).Decode(&apiResponse); err != nil {
+		log.Printf("[YouTube API] 응답 파싱 실패 (videoID=%s): %v", videoID, err)
+		return nil, err
+	}
+
+	if len(apiResponse.Items) == 0 {
+		log.Printf("[YouTube API] 동영상을 찾을 수 없습니다 (videoID=%s)", videoID)
+		return nil, fmt.Errorf("video not found")
+	}
+
+	snippet := apiResponse.Items[0].Snippet
+	videoInfo := &YouTubeVideoInfo{
+		Title:       snippet.Title,
+		Description: snippet.Description,
+		Tags:        snippet.Tags,
+		CategoryID:  snippet.CategoryID,
+	}
+
+	log.Printf("[YouTube API] 동영상 정보 가져오기 성공 (videoID=%s, title=%s, tags=%d개)",
+		videoID, videoInfo.Title, len(videoInfo.Tags))
+
+	return videoInfo, nil
+}
+
 // GetAIRecommendedTags AI를 사용하여 URL의 본문 내용을 분석하고 추천 태그를 생성합니다
 func (LinkUsecase) GetAIRecommendedTags(url string) (*AITagRecommendationRes, error) {
 	// URL 이 http:// 혹은 https:// 로 시작하지 않으면 https:// 를 붙입니다.
@@ -451,52 +541,67 @@ func (LinkUsecase) GetAIRecommendedTags(url string) (*AITagRecommendationRes, er
 		contentBuilder.WriteString("\n\n")
 	}
 
-	// 4. YouTube 특별 처리: 더 많은 메타데이터 추출
+	// 4. YouTube 특별 처리: YouTube Data API 우선 사용
 	if isYouTube {
-		// YouTube는 name="description"과 name="keywords"를 사용
-		videoDesc := ""
-		doc.Find("meta[name='description']").Each(func(i int, s *goquery.Selection) {
-			if content, exists := s.Attr("content"); exists && content != "" && videoDesc == "" {
-				videoDesc = content
-			}
-		})
-		if videoDesc != "" && videoDesc != description {
-			contentBuilder.WriteString("동영상 상세 설명: ")
-			contentBuilder.WriteString(videoDesc)
-			contentBuilder.WriteString("\n\n")
-		}
+		videoID := extractYouTubeVideoID(url)
+		if videoID != "" {
+			// YouTube Data API 시도
+			videoInfo, err := getYouTubeVideoInfo(videoID)
+			if err == nil && videoInfo != nil {
+				// API 성공: API 데이터 우선 사용
+				contentBuilder.WriteString("\n=== YouTube API 정보 ===\n")
+				contentBuilder.WriteString("동영상 제목: ")
+				contentBuilder.WriteString(videoInfo.Title)
+				contentBuilder.WriteString("\n\n")
 
-		videoKeywords := ""
-		doc.Find("meta[name='keywords']").Each(func(i int, s *goquery.Selection) {
-			if content, exists := s.Attr("content"); exists && content != "" && videoKeywords == "" {
-				videoKeywords = content
-			}
-		})
-		if videoKeywords != "" && videoKeywords != keywords {
-			contentBuilder.WriteString("동영상 키워드: ")
-			contentBuilder.WriteString(videoKeywords)
-			contentBuilder.WriteString("\n\n")
-		}
+				if videoInfo.Description != "" {
+					contentBuilder.WriteString("동영상 설명: ")
+					// 설명이 너무 길면 앞부분만 사용
+					desc := videoInfo.Description
+					if len(desc) > 1000 {
+						desc = desc[:1000] + "..."
+					}
+					contentBuilder.WriteString(desc)
+					contentBuilder.WriteString("\n\n")
+				}
 
-		// itemprop 메타데이터 추출
-		doc.Find("meta[itemprop='name']").Each(func(i int, s *goquery.Selection) {
-			if content, exists := s.Attr("content"); exists && content != "" {
-				if !strings.Contains(contentBuilder.String(), content) {
-					contentBuilder.WriteString("동영상 제목: ")
-					contentBuilder.WriteString(content)
-					contentBuilder.WriteString("\n")
+				if len(videoInfo.Tags) > 0 {
+					contentBuilder.WriteString("동영상 태그: ")
+					contentBuilder.WriteString(strings.Join(videoInfo.Tags, ", "))
+					contentBuilder.WriteString("\n\n")
+				}
+
+				log.Printf("[YouTube API] API 데이터 사용 (videoID=%s, title=%s)", videoID, videoInfo.Title)
+			} else {
+				// API 실패 또는 키 없음: 크롤링 방식으로 대체
+				log.Printf("[YouTube API] API 사용 불가, 크롤링 방식으로 진행 (videoID=%s)", videoID)
+
+				// 기존 크롤링 방식
+				videoDesc := ""
+				doc.Find("meta[name='description']").Each(func(i int, s *goquery.Selection) {
+					if content, exists := s.Attr("content"); exists && content != "" && videoDesc == "" {
+						videoDesc = content
+					}
+				})
+				if videoDesc != "" && videoDesc != description {
+					contentBuilder.WriteString("동영상 상세 설명: ")
+					contentBuilder.WriteString(videoDesc)
+					contentBuilder.WriteString("\n\n")
+				}
+
+				videoKeywords := ""
+				doc.Find("meta[name='keywords']").Each(func(i int, s *goquery.Selection) {
+					if content, exists := s.Attr("content"); exists && content != "" && videoKeywords == "" {
+						videoKeywords = content
+					}
+				})
+				if videoKeywords != "" && videoKeywords != keywords {
+					contentBuilder.WriteString("동영상 키워드: ")
+					contentBuilder.WriteString(videoKeywords)
+					contentBuilder.WriteString("\n\n")
 				}
 			}
-		})
-		doc.Find("meta[itemprop='description']").Each(func(i int, s *goquery.Selection) {
-			if content, exists := s.Attr("content"); exists && content != "" {
-				if !strings.Contains(contentBuilder.String(), content) {
-					contentBuilder.WriteString("추가 설명: ")
-					contentBuilder.WriteString(content)
-					contentBuilder.WriteString("\n")
-				}
-			}
-		})
+		}
 
 		log.Printf("[AI 태그 추천] YouTube 특별 처리 완료 (url=%s, 현재 길이=%d)", url, contentBuilder.Len())
 	}
